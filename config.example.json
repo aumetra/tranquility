@@ -1,0 +1,11 @@
+{
+    "port": 8080,
+    "databaseUrl": "postgres://localhost/tranquility",
+    "domain": "tranquility.example.com",
+    "tls": {
+        "reverseProxy": false,
+
+        "certificate": "tranquility.crt",
+        "secretKey": "tranquility.key"
+    }
+}
