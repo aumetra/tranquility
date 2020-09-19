@@ -2,7 +2,7 @@ use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use std::{fs::File, io::BufReader};
 
-pub static CONFIGURATION: OnceCell<Configuration> = OnceCell::new();
+static CONFIGURATION: OnceCell<Configuration> = OnceCell::new();
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,4 +29,8 @@ pub fn init_once_cell(config_path: String) {
     CONFIGURATION
         .set(serde_json::from_reader(config_file).unwrap())
         .ok();
+}
+
+pub fn get() -> &'static Configuration {
+    CONFIGURATION.get().unwrap()
 }

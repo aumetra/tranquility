@@ -6,7 +6,7 @@ pub async fn run() {
         .map(|| format!("Running Tranquility v{}", env!("CARGO_PKG_VERSION")))
         .with(logging);
 
-    let config = crate::config::CONFIGURATION.get().unwrap();
+    let config = crate::config::get();
     let server = warp::serve(routes);
 
     if !config.tls.reverse_proxy {

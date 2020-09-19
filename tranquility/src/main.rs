@@ -9,4 +9,6 @@ async fn main() {
 
 mod cli;
 mod config;
+mod error;
+mod fetcher;
 mod server;
