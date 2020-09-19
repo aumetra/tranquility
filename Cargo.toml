@@ -1,16 +1,5 @@
-[package]
-name = "tranquility"
-version = "0.1.0"
-authors = ["Glitch <smallglitch@cryptolab.net>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-clap = "3.0.0-beta.1"
-once_cell = "1.4"
-pretty_env_logger = "0.4"
-serde = { version = "1.0", default-features = false, features = [ "derive" ] }
-serde_json = "1.0"
-tokio = { version = "0.2", features = [ "full" ] }
-warp = { version = "0.2", features = [ "compression", "tls" ] }
+[workspace]
+members = [
+    "tranquility",
+    "tranquility-types",
+]
