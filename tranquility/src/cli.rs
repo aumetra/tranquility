@@ -19,5 +19,6 @@ pub async fn run() {
     pretty_env_logger::init();
 
     crate::config::init_once_cell(options.config);
+
     crate::server::run().await;
 }

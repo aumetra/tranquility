@@ -3,6 +3,7 @@ use warp::Filter;
 pub async fn run() {
     let logging = warp::log("");
     let routes = warp::path!("api" / "register")
+        .and(warp::post())
         .and(warp::body::form())
         .and_then(crate::routes::register::register)
         .with(logging);

@@ -6,10 +6,12 @@ use warp::reject::{Reject, Rejection};
 
 #[derive(Debug, DeriveError)]
 pub enum Error {
-    #[error("Argon2 operation failed")]
+    #[error("argon2 operation failed")]
     Argon2Error(#[from] Argon2Error),
+
     #[error("reqwest returned an error")]
     ReqwestError(#[from] ReqwestError),
+
     #[error("serde-json returned an error")]
     SerdeJsonError(#[from] SerdeJsonError),
 }

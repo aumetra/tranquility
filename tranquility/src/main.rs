@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate diesel;
+
 use std::env;
 
 #[tokio::main]
@@ -9,6 +12,7 @@ async fn main() {
 
 mod cli;
 mod config;
+mod database;
 mod error;
 mod fetcher;
 mod hashing;
