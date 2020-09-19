@@ -1,4 +1,4 @@
-use super::Attachment;
+use super::{Attachment, Tag};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -13,7 +13,9 @@ pub struct PublicKey {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
-    pub _context: Vec<Value>,
+    #[serde(rename = "@context")]
+    pub _context: Value,
+
     pub id: String,
     // (Should) always equal "Person"
     pub r#type: String,
@@ -24,6 +26,8 @@ pub struct Actor {
     pub username: String,
 
     pub summary: String,
+    // In case you mention someone in your summary
+    pub tag: Vec<Tag>,
     // Profile picture
     pub icon: Option<Attachment>,
     // Header image
