@@ -1,3 +1,4 @@
+use argon2::Error as Argon2Error;
 use reqwest::Error as ReqwestError;
 use serde_json::Error as SerdeJsonError;
 use thiserror::Error as DeriveError;
@@ -5,6 +6,8 @@ use warp::reject::{Reject, Rejection};
 
 #[derive(Debug, DeriveError)]
 pub enum Error {
+    #[error("Argon2 operation failed")]
+    Argon2Error(#[from] Argon2Error),
     #[error("reqwest returned an error")]
     ReqwestError(#[from] ReqwestError),
     #[error("serde-json returned an error")]

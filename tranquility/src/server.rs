@@ -2,8 +2,9 @@ use warp::Filter;
 
 pub async fn run() {
     let logging = warp::log("");
-    let routes = warp::any()
-        .map(|| format!("Running Tranquility v{}", env!("CARGO_PKG_VERSION")))
+    let routes = warp::path!("api" / "register")
+        .and(warp::body::form())
+        .and_then(crate::routes::register::register)
         .with(logging);
 
     let config = crate::config::get();
