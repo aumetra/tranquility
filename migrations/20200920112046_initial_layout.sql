@@ -27,5 +27,25 @@ CREATE TABLE activities (
     updated_at      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP
 );
 
-SELECT diesel_manage_updated_at('actors');
-SELECT diesel_manage_updated_at('activities');
+CREATE OR REPLACE FUNCTION add_updated_at_trigger(_table REGCLASS) RETURNS VOID AS 
+$$
+    BEGIN
+        EXECUTE format('CREATE TRIGGER set_updated_at BEFORE UPDATE ON %s FOR EACH ROW EXECUTE PROCEDURE set_updated_at()', _table);
+    END; 
+$$ 
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS 
+$$
+    BEGIN
+        IF (NEW IS DISTINCT FROM OLD AND NEW.updated_at IS NOT DISTINCT FROM OLD.updated_at) 
+        THEN
+            NEW.updated_at := CURRENT_TIMESTAMP;
+        END IF;
+        RETURN NEW;
+    END; 
+$$ 
+LANGUAGE plpgsql;
+
+SELECT add_updated_at_trigger('actors');
+SELECT add_updated_at_trigger('activities');

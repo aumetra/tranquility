@@ -3,3 +3,7 @@ members = [
     "tranquility",
     "tranquility-types",
 ]
+
+[profile.release]
+lto = true
+opt-level = 3

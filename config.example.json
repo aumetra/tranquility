@@ -4,7 +4,6 @@
     "domain": "tranquility.example.com",
     "tls": {
         "reverseProxy": false,
-
         "certificate": "tranquility.crt",
         "secretKey": "tranquility.key"
     }
