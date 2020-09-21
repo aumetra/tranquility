@@ -27,3 +27,6 @@ pub async fn init() -> Result<(), Error> {
 
     Ok(())
 }
+
+pub mod actor;
+pub mod model;

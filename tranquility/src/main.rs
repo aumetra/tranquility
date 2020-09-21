@@ -9,9 +9,9 @@ async fn main() {
 
 mod cli;
 mod config;
+mod crypto;
 mod database;
 mod error;
 mod fetcher;
-mod hashing;
 mod routes;
 mod server;

@@ -2,29 +2,28 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE actors (
-    id              UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID    PRIMARY KEY     DEFAULT uuid_generate_v4(),
     username        TEXT    NOT NULL,
     email           TEXT,
     password_hash   TEXT,
+    private_key     TEXT,
 
     actor           JSONB   NOT NULL,
-    url             TEXT    NOT NULL,
 
-    created_at      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE          (url),
     UNIQUE          (email)
 );
 
 CREATE TABLE activities (
-    id              UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
-    owner_id        UUID    NOT NULL    REFERENCES  actors(id),
+    id              UUID    PRIMARY KEY     DEFAULT uuid_generate_v4(),
+    owner_id        UUID    NOT NULL        REFERENCES  actors(id),
 
     data            JSONB   NOT NULL,
 
-    created_at      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP   NOT NULL    DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE OR REPLACE FUNCTION add_updated_at_trigger(_table REGCLASS) RETURNS VOID AS 

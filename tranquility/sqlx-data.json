@@ -1,0 +1,128 @@
+{
+  "db": "PostgreSQL",
+  "29e2480bba61e5004e6369b6154c7d9cc401ea6b22627eb4f3f91fbc7ad8c2b7": {
+    "query": "\n                INSERT INTO actors\n                (username, actor)\n                VALUES \n                ($1, $2)\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "a0656b77f1c18d6f804cdcf69580eed7748a858284be888cbcc4337512014512": {
+    "query": "SELECT COUNT(*) FROM actors WHERE username = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "a3bb85c961adadac39eb73cd04ae9d1923da9839a8dcb694eb3cab21b03e9f03": {
+    "query": "\n                INSERT INTO actors\n                ( username, email, password_hash, private_key, actor ) \n                VALUES \n                ( $1, $2, $3, $4, $5 )\n                RETURNING *\n                ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "b14f32f7eff503bd146b1d0f723e8352a88268a69e80e9dd66295233d9920a75": {
+    "query": "\n                INSERT INTO actors\n                ( username, actor )\n                VALUES \n                ( $1, $2 )\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "e582ad8db64ef9ead4c680b3cd36fce8a53fe89c2c62d90e85ce8145d5ece471": {
+    "query": "\n                UPDATE actors\n                SET actor = $1\n                WHERE id = $2\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  }
+}
