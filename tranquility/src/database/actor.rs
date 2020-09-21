@@ -85,3 +85,25 @@ pub mod insert {
         Ok(())
     }
 }
+
+pub mod select {
+    use crate::{database::model::Actor, error::Error};
+    use uuid::Uuid;
+
+    pub async fn by_id(id: Uuid) -> Result<Actor, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let actor = sqlx::query_as!(
+            Actor,
+            r#"
+                SELECT * FROM actors
+                WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(actor)
+    }
+}

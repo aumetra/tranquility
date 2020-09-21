@@ -5,6 +5,7 @@ use serde_json::Error as SerdeJsonError;
 use sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError};
 use std::error::Error as StdError;
 use thiserror::Error as DeriveError;
+use uuid::Error as UuidError;
 use warp::reject::{Reject, Rejection};
 
 #[derive(Debug, DeriveError)]
@@ -35,6 +36,9 @@ pub enum Error {
 
     #[error("serde-json operation failed")]
     SerdeJsonError(#[from] SerdeJsonError),
+
+    #[error("UUID operation failed")]
+    UuidError(#[from] UuidError),
 }
 
 impl Reject for Error {}
