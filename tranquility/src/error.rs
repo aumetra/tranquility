@@ -6,6 +6,7 @@ use sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError};
 use std::error::Error as StdError;
 use thiserror::Error as DeriveError;
 use uuid::Error as UuidError;
+use validator::ValidationErrors;
 use warp::reject::{Reject, Rejection};
 
 #[derive(Debug, DeriveError)]
@@ -18,9 +19,6 @@ pub enum Error {
 
     #[error("An error occurred")]
     GeneralError(#[from] Box<dyn StdError + Send + Sync>),
-
-    #[error("Invalid username")]
-    InvalidUsername,
 
     #[error("reqwest operation failed")]
     ReqwestError(#[from] ReqwestError),
@@ -39,6 +37,9 @@ pub enum Error {
 
     #[error("UUID operation failed")]
     UuidError(#[from] UuidError),
+
+    #[error("Validation error")]
+    ValidationError(#[from] ValidationErrors),
 }
 
 impl Reject for Error {}

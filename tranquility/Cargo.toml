@@ -25,6 +25,7 @@ thiserror = "1.0"
 tokio = { version = "0.2", features = [ "full" ] }
 tranquility-types = { path = "../tranquility-types" }
 uuid = "0.8"
+validator = { version = "0.11", features = [ "derive" ] }
 warp = { version = "0.2", features = [ "compression", "tls" ] }
 
 # Needed because of sqlx-rt which depends on "native-tls" (required OpenSSL dev libraries on Linux)

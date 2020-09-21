@@ -2,7 +2,7 @@ use warp::Filter;
 
 pub async fn run() {
     let logging = warp::log("");
-    let activitypub_headers =
+    let activitypub_header_check =
         warp::header::exact_ignore_case("accept", "application/activity+json").or(
             warp::header::exact_ignore_case(
                 "accept",
@@ -14,9 +14,10 @@ pub async fn run() {
         .and(warp::post())
         .and(warp::body::form())
         .and_then(crate::routes::register::register);
+
     let users = warp::path!("users" / String)
         .and(warp::get())
-        .and(activitypub_headers)
+        .and(activitypub_header_check)
         .map(|uuid, _| uuid)
         .and_then(crate::routes::users::get_actor);
 
