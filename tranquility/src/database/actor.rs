@@ -4,13 +4,7 @@ pub mod insert {
     use serde_json::Value;
     use tranquility_types::activitypub::actor;
 
-    pub async fn local(
-        username: String,
-        email: String,
-        password_hash: String,
-        public_key: String,
-        private_key: String,
-    ) -> Result<(), Error> {
+    pub async fn local(username: String, email: String, password: String) -> Result<(), Error> {
         let conn_pool = crate::database::connection::get()?;
 
         // Check if the username is unique
@@ -21,6 +15,13 @@ pub mod insert {
         if num_rows > 0 {
             return Err(Error::DuplicateUsername);
         }
+
+        // Hash the password and generate the RSA key pair
+        let password_hash = crate::crypto::password::hash(password).await?;
+        let rsa_private_key = crate::crypto::rsa::generate().await?;
+        let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(rsa_private_key)?;
+
+        let mut transaction = conn_pool.begin().await?;
 
         let actor = sqlx::query_as!(
             Actor,
@@ -34,22 +35,20 @@ pub mod insert {
             username,
             email,
             password_hash,
-            private_key,
+            private_key_pem,
             Value::default()
         )
-        .fetch_one(conn_pool)
+        .fetch_one(&mut transaction)
         .await?;
 
         let config = crate::config::get();
         let ap_actor = actor::create(
             &actor.id.to_simple_ref().to_string(),
             &actor.username,
-            public_key,
+            public_key_pem,
             &config.domain,
         );
         let ap_actor = serde_json::to_value(ap_actor)?;
-
-        log::warn!("{}", actor.id);
 
         sqlx::query!(
             r#"
@@ -60,8 +59,10 @@ pub mod insert {
             ap_actor,
             actor.id
         )
-        .execute(conn_pool)
+        .execute(&mut transaction)
         .await?;
+
+        transaction.commit().await?;
 
         Ok(())
     }
@@ -100,6 +101,23 @@ pub mod select {
                 WHERE id = $1
             "#,
             id
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(actor)
+    }
+
+    pub async fn by_url(url: String) -> Result<Actor, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let actor = sqlx::query_as!(
+            Actor,
+            r#"
+                SELECT * FROM actors
+                WHERE actor->>'id' = $1
+            "#,
+            url
         )
         .fetch_one(conn_pool)
         .await?;

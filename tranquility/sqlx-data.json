@@ -1,5 +1,67 @@
 {
   "db": "PostgreSQL",
+  "2db11cd7547b378a0424d5c2671a72ae9043dc07f46a90f84bb9eb2bfc2f2a19": {
+    "query": "\n                SELECT * FROM actors\n                WHERE actor->>'id' = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "a0656b77f1c18d6f804cdcf69580eed7748a858284be888cbcc4337512014512": {
     "query": "SELECT COUNT(*) FROM actors WHERE username = $1",
     "describe": {

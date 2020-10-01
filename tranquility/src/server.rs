@@ -21,7 +21,18 @@ pub async fn run() {
         .map(|uuid, _| uuid)
         .and_then(crate::routes::users::get_actor);
 
-    let routes = register.or(users).with(logging);
+    let inbox = warp::path!("users" / String / "inbox")
+        .and(warp::post())
+        .and(warp::header::value("authorization"))
+        .and(warp::body::json())
+        .and_then(crate::routes::inbox::verify_request)
+        .and_then(crate::routes::inbox::inbox);
+
+    let routes = register
+        .or(users)
+        .or(inbox)
+        .with(logging)
+        .recover(crate::error::recover);
 
     let config = crate::config::get();
     let server = warp::serve(routes);
