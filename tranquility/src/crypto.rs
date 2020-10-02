@@ -18,19 +18,6 @@ pub mod rsa {
     }
 }
 
-pub mod parse {
-    use crate::error::Error;
-    use openssl::pkey::{PKey, Private, Public};
-
-    pub fn private(key_bytes: &[u8]) -> Result<PKey<Private>, Error> {
-        Ok(PKey::private_key_from_pem(key_bytes)?)
-    }
-
-    pub fn public(key_bytes: &[u8]) -> Result<PKey<Public>, Error> {
-        Ok(PKey::public_key_from_pem(key_bytes)?)
-    }
-}
-
 pub mod password {
     use crate::error::Error;
     use argon2::Config;

@@ -1,4 +1,5 @@
 use argon2::Error as Argon2Error;
+use http_signatures::Error as HttpSignaturesError;
 use openssl::error::ErrorStack as OpensslErrorStack;
 use reqwest::Error as ReqwestError;
 use serde_json::Error as SerdeJsonError;
@@ -27,8 +28,11 @@ pub enum Error {
     #[error("An error occurred")]
     GeneralError(#[from] Box<dyn StdError + Send + Sync>),
 
+    #[error("HTTP signatures error")]
+    HttpSignaturesError(#[from] HttpSignaturesError),
+
     #[error("Invalid HTTP signature")]
-    InvalidHTTPSignature,
+    InvalidHttpSignature,
 
     #[error("OpenSSL operation failed")]
     OpensslError(#[from] OpensslErrorStack),
@@ -66,7 +70,7 @@ impl From<Error> for Rejection {
 pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(error) = rejection.find::<Error>() {
         match error {
-            Error::InvalidHTTPSignature => Ok(warp::reply::with_status(
+            Error::InvalidHttpSignature => Ok(warp::reply::with_status(
                 error.to_string(),
                 StatusCode::UNAUTHORIZED,
             )),

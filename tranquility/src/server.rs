@@ -23,7 +23,15 @@ pub async fn run() {
 
     let inbox = warp::path!("users" / String / "inbox")
         .and(warp::post())
-        .and(warp::header::value("authorization"))
+        .and(
+            warp::header::value("authorization")
+                .or(warp::header::value("signature"))
+                .unify(),
+        )
+        .and(warp::method())
+        .and(warp::path::full())
+        .and(warp::query::raw())
+        .and(warp::header::headers_cloned())
         .and(warp::body::json())
         .and_then(crate::routes::inbox::verify_request)
         .and_then(crate::routes::inbox::inbox);

@@ -12,6 +12,7 @@ chrono = "0.4"
 clap = "3.0.0-beta.2"
 futures-util = "0.3"
 log = "0.4"
+http-signatures = { git = "https://github.com/smallglitch/http-signatures.git", branch = "main", features = [ "from-reqwest" ] }
 once_cell = "1.4"
 openssl = "0.10"
 pretty_env_logger = "0.4"
@@ -29,4 +30,4 @@ warp = { version = "0.2", features = [ "compression", "tls" ] }
 
 [features]
 default = [ ]
-vendored = [ "openssl/vendored" ]
+vendored-openssl = [ "http-signatures/vendored-openssl", "openssl/vendored" ]
