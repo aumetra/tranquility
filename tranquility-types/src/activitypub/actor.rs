@@ -2,7 +2,7 @@ use super::{Attachment, Tag};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKey {
     pub id: String,
@@ -10,7 +10,7 @@ pub struct PublicKey {
     pub public_key_pem: String,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
     #[serde(rename = "@context")]
@@ -27,12 +27,14 @@ pub struct Actor {
 
     pub summary: String,
     // In case you mention someone in your summary
+    #[serde(default)]
     pub tag: Vec<Tag>,
     // Profile picture
     pub icon: Option<Attachment>,
     // Header image
     pub image: Option<Attachment>,
 
+    #[serde(default)]
     pub manually_approves_followers: bool,
 
     pub inbox: String,

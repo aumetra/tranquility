@@ -7,7 +7,11 @@ pub async fn run() {
             warp::header::exact_ignore_case(
                 "accept",
                 "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
-            ),
+            )
+            .or(warp::header::exact_ignore_case(
+                "accept",
+                "application/ld+json",
+            )),
         );
 
     let register = warp::path!("api" / "register")
@@ -23,11 +27,6 @@ pub async fn run() {
 
     let inbox = warp::path!("users" / String / "inbox")
         .and(warp::post())
-        .and(
-            warp::header::value("authorization")
-                .or(warp::header::value("signature"))
-                .unify(),
-        )
         .and(warp::method())
         .and(warp::path::full())
         .and(warp::query::raw())

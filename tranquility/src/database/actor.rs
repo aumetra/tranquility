@@ -73,9 +73,9 @@ pub mod insert {
         sqlx::query!(
             r#"
                 INSERT INTO actors
-                ( username, actor )
+                ( username, actor, remote )
                 VALUES 
-                ( $1, $2 )
+                ( $1, $2, TRUE )
                 "#,
             username,
             actor

@@ -2,22 +2,26 @@ use super::{Attachment, Tag};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Object {
-    #[serde(rename = "@context")]
+    #[serde(default, rename = "@context")]
     pub _context: Value,
 
     pub id: String,
     pub r#type: String,
+    #[serde(default)]
     pub actor: String,
     pub attributed_to: String,
 
     pub content: String,
     pub published: String,
+    #[serde(default)]
     pub sensitive: bool,
 
+    #[serde(default)]
     pub attachment: Vec<Attachment>,
+    #[serde(default)]
     pub tag: Vec<Tag>,
 
     pub to: Vec<String>,

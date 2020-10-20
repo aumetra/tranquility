@@ -43,6 +43,11 @@
           "ordinal": 7,
           "name": "updated_at",
           "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
         }
       ],
       "parameters": {
@@ -58,8 +63,22 @@
         true,
         false,
         false,
+        false,
         false
       ]
+    }
+  },
+  "77a244c665c98772ddd97efb136a412ae92c8ad05d743ee64a839fec2270c15e": {
+    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n                ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
     }
   },
   "a0656b77f1c18d6f804cdcf69580eed7748a858284be888cbcc4337512014512": {
@@ -125,6 +144,11 @@
           "ordinal": 7,
           "name": "updated_at",
           "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
         }
       ],
       "parameters": {
@@ -144,21 +168,9 @@
         true,
         false,
         false,
+        false,
         false
       ]
-    }
-  },
-  "b14f32f7eff503bd146b1d0f723e8352a88268a69e80e9dd66295233d9920a75": {
-    "query": "\n                INSERT INTO actors\n                ( username, actor )\n                VALUES \n                ( $1, $2 )\n                ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Jsonb"
-        ]
-      },
-      "nullable": []
     }
   },
   "cbd18f929fc7a9d022ea1bb8bff1c88322cd86750bc333393f9b6553e5a75cf4": {
@@ -204,6 +216,11 @@
           "ordinal": 7,
           "name": "updated_at",
           "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
         }
       ],
       "parameters": {
@@ -217,6 +234,7 @@
         true,
         true,
         true,
+        false,
         false,
         false,
         false

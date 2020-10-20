@@ -10,6 +10,7 @@ pub struct Actor {
     pub private_key: Option<String>,
 
     pub actor: Value,
+    pub remote: bool,
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

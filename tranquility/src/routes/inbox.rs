@@ -1,8 +1,7 @@
 use crate::error::Error;
 use http_signatures::HttpRequest;
-use tranquility_types::activitypub::Activity;
+use tranquility_types::activitypub::{Activity, Object};
 use warp::{
-    http::HeaderValue,
     http::{HeaderMap, Method},
     path::FullPath,
     Rejection, Reply,
@@ -12,7 +11,6 @@ pub async fn verify_request(
     // Do we even care about the user ID?
     // Theoretically we could just use one shared inbox and get rid of the unique inboxes
     _user_id: String,
-    signature_header: HeaderValue,
     method: Method,
     path: FullPath,
     query: String,
@@ -33,11 +31,7 @@ pub async fn verify_request(
 
         let request = HttpRequest::new(method.as_str(), path.as_str(), query, &headers);
 
-        Ok(http_signatures::verify(
-            request,
-            &signature_header,
-            public_key,
-        )?)
+        Ok(http_signatures::verify(request, public_key)?)
     })
     .await
     .unwrap()?;
@@ -49,6 +43,6 @@ pub async fn verify_request(
     }
 }
 
-pub async fn inbox(activity: Activity) -> Result<impl Reply, Rejection> {
+pub async fn inbox(mut activity: Activity) -> Result<impl Reply, Rejection> {
     Ok("inbox")
 }
