@@ -1,6 +1,8 @@
 pub mod rsa {
-    use crate::error::Error;
-    use openssl::{pkey::Private, rsa::Rsa};
+    use {
+        crate::error::Error,
+        openssl::{pkey::Private, rsa::Rsa},
+    };
 
     const KEY_SIZE: u32 = 2048;
 
@@ -19,8 +21,7 @@ pub mod rsa {
 }
 
 pub mod password {
-    use crate::error::Error;
-    use argon2::Config;
+    use {crate::error::Error, argon2::Config};
 
     pub async fn hash(password: String) -> Result<String, Error> {
         tokio::task::spawn_blocking(move || {

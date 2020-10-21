@@ -1,9 +1,7 @@
 use crate::error::Error;
 
 pub mod connection {
-    use crate::error::Error;
-    use once_cell::sync::OnceCell;
-    use sqlx::postgres::PgPool;
+    use {crate::error::Error, once_cell::sync::OnceCell, sqlx::postgres::PgPool};
 
     static DATABASE_POOL: OnceCell<PgPool> = OnceCell::new();
 

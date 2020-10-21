@@ -1,6 +1,4 @@
-use chrono::NaiveDateTime;
-use serde_json::Value;
-use uuid::Uuid;
+use {chrono::NaiveDateTime, serde_json::Value, uuid::Uuid};
 
 pub struct Actor {
     pub id: Uuid,

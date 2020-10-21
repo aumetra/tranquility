@@ -1,17 +1,19 @@
-use argon2::Error as Argon2Error;
-use http_signatures::Error as HttpSignaturesError;
-use openssl::error::ErrorStack as OpensslErrorStack;
-use reqwest::Error as ReqwestError;
-use serde_json::Error as SerdeJsonError;
-use sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError};
-use std::error::Error as StdError;
-use thiserror::Error as DeriveError;
-use uuid::Error as UuidError;
-use validator::ValidationErrors;
-use warp::{
-    http::StatusCode,
-    reject::{Reject, Rejection},
-    Reply,
+use {
+    argon2::Error as Argon2Error,
+    http_signatures::Error as HttpSignaturesError,
+    openssl::error::ErrorStack as OpensslErrorStack,
+    reqwest::Error as ReqwestError,
+    serde_json::Error as SerdeJsonError,
+    sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
+    std::error::Error as StdError,
+    thiserror::Error as DeriveError,
+    uuid::Error as UuidError,
+    validator::ValidationErrors,
+    warp::{
+        http::StatusCode,
+        reject::{Reject, Rejection},
+        Reply,
+    },
 };
 
 #[derive(Debug, DeriveError)]

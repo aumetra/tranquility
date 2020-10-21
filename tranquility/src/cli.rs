@@ -1,5 +1,4 @@
-use clap::Clap;
-use std::env;
+use {clap::Clap, std::env};
 
 #[derive(Clap)]
 #[clap(version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"))]
@@ -16,7 +15,7 @@ pub async fn run() {
     if options.verbose {
         env::set_var("RUST_LOG", "debug");
     }
-    pretty_env_logger::init();
+    tracing_subscriber::fmt::init();
 
     crate::config::init_once_cell(options.config);
     crate::database::init().await.unwrap();

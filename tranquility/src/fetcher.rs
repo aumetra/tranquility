@@ -1,7 +1,9 @@
-use crate::error::Error;
-use reqwest::IntoUrl;
-use serde_json::Value;
-use tranquility_types::activitypub::{Activity, Actor, Object};
+use {
+    crate::error::Error,
+    reqwest::IntoUrl,
+    serde_json::Value,
+    tranquility_types::activitypub::{Activity, Actor, Object},
+};
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
@@ -15,8 +17,8 @@ pub async fn fetch_actor(url: String) -> Result<Actor, Error> {
     match crate::database::actor::select::by_url(url.clone()).await {
         Ok(actor) => return Ok(serde_json::from_value(actor.actor)?),
         Err(e) => {
-            log::debug!("{}", e);
-            log::debug!("Actor not found in database. Attempting remote fetch...");
+            debug!("{}", e);
+            debug!("Actor not found in database. Attempting remote fetch...");
         }
     }
 
@@ -28,7 +30,7 @@ pub async fn fetch_actor(url: String) -> Result<Actor, Error> {
             Ok(actor)
         }
         _ => {
-            log::debug!("Remote server returned content we can't interpret");
+            debug!("Remote server returned content we can't interpret");
 
             Err(Error::FetchError)
         }

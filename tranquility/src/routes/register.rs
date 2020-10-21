@@ -1,9 +1,11 @@
-use crate::error::Error;
-use once_cell::sync::Lazy;
-use regex::Regex;
-use serde::Deserialize;
-use validator::Validate;
-use warp::{http::StatusCode, Rejection, Reply};
+use {
+    crate::error::Error,
+    once_cell::sync::Lazy,
+    regex::Regex,
+    serde::Deserialize,
+    validator::Validate,
+    warp::{http::StatusCode, Rejection, Reply},
+};
 
 static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[[:alnum:]\-_]+$"#).unwrap());
 

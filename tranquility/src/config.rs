@@ -1,6 +1,8 @@
-use once_cell::sync::OnceCell;
-use serde::Deserialize;
-use std::{fs::File, io::BufReader};
+use {
+    once_cell::sync::OnceCell,
+    serde::Deserialize,
+    std::{fs::File, io::BufReader},
+};
 
 static CONFIGURATION: OnceCell<Configuration> = OnceCell::new();
 

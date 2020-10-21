@@ -1,23 +1,31 @@
 pub mod insert {
-    use crate::{database::model::Actor, error::Error};
-    use futures_util::future::TryFutureExt;
-    use serde_json::Value;
-    use tranquility_types::activitypub::actor;
+    use {
+        crate::{database::model::Actor, error::Error},
+        serde_json::Value,
+        tranquility_types::activitypub::actor,
+    };
+
+    async fn is_username_taken(username: &String) -> Result<bool, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let num_rows = sqlx::query!("SELECT COUNT(*) FROM actors WHERE username = $1", username)
+            .fetch_one(conn_pool)
+            .await
+            .map(|result| result.count.unwrap_or(0))?;
+
+        Ok(num_rows > 0)
+    }
 
     pub async fn local(username: String, email: String, password: String) -> Result<(), Error> {
         let conn_pool = crate::database::connection::get()?;
 
-        // Check if the username is unique
-        let num_rows = sqlx::query!("SELECT COUNT(*) FROM actors WHERE username = $1", username)
-            .fetch_one(conn_pool)
-            .map_ok(|row| row.count.unwrap_or_default())
-            .await?;
-        if num_rows > 0 {
+        if is_username_taken(&username).await? {
             return Err(Error::DuplicateUsername);
         }
 
         // Hash the password and generate the RSA key pair
         let password_hash = crate::crypto::password::hash(password).await?;
+
         let rsa_private_key = crate::crypto::rsa::generate().await?;
         let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(rsa_private_key)?;
 
@@ -88,8 +96,10 @@ pub mod insert {
 }
 
 pub mod select {
-    use crate::{database::model::Actor, error::Error};
-    use uuid::Uuid;
+    use {
+        crate::{database::model::Actor, error::Error},
+        uuid::Uuid,
+    };
 
     pub async fn by_id(id: Uuid) -> Result<Actor, Error> {
         let conn_pool = crate::database::connection::get()?;

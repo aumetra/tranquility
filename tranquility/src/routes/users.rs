@@ -1,6 +1,8 @@
-use crate::error::Error;
-use uuid::Uuid;
-use warp::{Rejection, Reply};
+use {
+    crate::error::Error,
+    uuid::Uuid,
+    warp::{Rejection, Reply},
+};
 
 pub async fn get_actor(uuid: String) -> Result<impl Reply, Rejection> {
     let uuid = Uuid::parse_str(&uuid).map_err(|err| Error::from(err))?;

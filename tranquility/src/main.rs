@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate tracing;
+
 use std::env;
 
 #[tokio::main]

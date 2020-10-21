@@ -1,10 +1,12 @@
-use crate::error::Error;
-use http_signatures::HttpRequest;
-use tranquility_types::activitypub::{Activity, Object};
-use warp::{
-    http::{HeaderMap, Method},
-    path::FullPath,
-    Rejection, Reply,
+use {
+    crate::error::Error,
+    http_signatures::HttpRequest,
+    tranquility_types::activitypub::{Activity, Object},
+    warp::{
+        http::{HeaderMap, Method},
+        path::FullPath,
+        Rejection, Reply,
+    },
 };
 
 pub async fn verify_request(

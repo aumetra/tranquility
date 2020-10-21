@@ -69,6 +69,32 @@ const CREATE_ACTIVTY_OBJECT: &str = r#"
 }
 "#;
 
+const MASTODON_WEBFINGER_RESOURCE: &str = r#"
+{
+    "subject": "acct:Gargron@mastodon.social",
+    "aliases": [
+      "https://mastodon.social/@Gargron",
+      "https://mastodon.social/users/Gargron"
+    ],
+    "links": [
+      {
+        "rel": "http://webfinger.net/rel/profile-page",
+        "type": "text/html",
+        "href": "https://mastodon.social/@Gargron"
+      },
+      {
+        "rel": "self",
+        "type": "application/activity+json",
+        "href": "https://mastodon.social/users/Gargron"
+      },
+      {
+        "rel": "http://ostatus.org/schema/1.0/subscribe",
+        "template": "https://mastodon.social/authorize_interaction?uri={uri}"
+      }
+    ]
+  }
+"#;
+
 #[test]
 fn decode_create_activity_url() {
     let _activity: crate::activitypub::Activity = serde_json::from_str(CREATE_ACTIVTY).unwrap();
@@ -78,4 +104,10 @@ fn decode_create_activity_url() {
 fn decode_create_activity_object() {
     let _activity: crate::activitypub::Activity =
         serde_json::from_str(CREATE_ACTIVTY_OBJECT).unwrap();
+}
+
+#[test]
+fn decode_webfinger_resource() {
+    let _resource: crate::webfinger::Resource =
+        serde_json::from_str(MASTODON_WEBFINGER_RESOURCE).unwrap();
 }
