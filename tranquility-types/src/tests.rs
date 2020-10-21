@@ -95,6 +95,49 @@ const MASTODON_WEBFINGER_RESOURCE: &str = r#"
   }
 "#;
 
+const RFC_JRD: &str = r#"
+{
+    "subject":"http://blog.example.com/article/id/314",
+    "expires":"2010-01-30T09:30:00Z",
+
+    "aliases":[
+        "http://blog.example.com/cool_new_thing",
+        "http://blog.example.com/steve/article/7"
+    ],
+
+    "properties": {
+        "http://blgx.example.net/ns/version":"1.3",
+        "http://blgx.example.net/ns/ext":null
+    },
+
+    "links": [
+        {
+            "rel":"author",
+            "type":"text/html",
+            "href":"http://blog.example.com/author/steve",
+            "titles": {
+                "default":"About the Author",
+                "en-us":"Author Information"
+            },
+            "properties": {
+                "http://example.com/role":"editor"
+            }
+        },
+        {
+            "rel":"author",
+            "href":"http://example.com/author/john",
+            "titles": {
+                "default":"The other author"
+            }
+        },
+        {
+            "rel":"copyright",
+            "template":"http://example.com/copyright?id={uri}"
+        }
+    ]
+}
+"#;
+
 #[test]
 fn decode_create_activity_url() {
     let _activity: crate::activitypub::Activity = serde_json::from_str(CREATE_ACTIVTY).unwrap();
@@ -107,7 +150,12 @@ fn decode_create_activity_object() {
 }
 
 #[test]
-fn decode_webfinger_resource() {
+fn decode_rfc_jrd() {
+    let _jrd: crate::webfinger::Resource = serde_json::from_str(RFC_JRD).unwrap();
+}
+
+#[test]
+fn decode_mastodon_webfinger_resource() {
     let _resource: crate::webfinger::Resource =
         serde_json::from_str(MASTODON_WEBFINGER_RESOURCE).unwrap();
 }

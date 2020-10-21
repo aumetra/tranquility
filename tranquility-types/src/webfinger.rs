@@ -1,6 +1,6 @@
 use {serde::Deserialize, std::collections::HashMap};
 
-pub type KvPairs = HashMap<String, String>;
+pub type KvPairs = HashMap<String, Option<String>>;
 
 #[derive(Deserialize)]
 pub struct Link {
@@ -10,6 +10,8 @@ pub struct Link {
     pub r#type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub template: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub titles: Option<KvPairs>,
