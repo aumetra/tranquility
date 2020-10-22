@@ -8,8 +8,8 @@ pub struct Link {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub r#type: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub href: Option<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub href: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
 
