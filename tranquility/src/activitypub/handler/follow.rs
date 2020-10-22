@@ -7,7 +7,7 @@ use {
 pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     let actor_url = match activity.object {
         ObjectField::Actor(ref actor) => actor.id.clone(),
-        ObjectField::Url(url) => url.clone(),
+        ObjectField::Url(ref url) => url.clone(),
         _ => return Err(Error::UnknownActivity),
     };
 
