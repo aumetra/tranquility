@@ -33,8 +33,8 @@ pub enum Error {
     #[error("HTTP signatures error")]
     HttpSignaturesError(#[from] HttpSignaturesError),
 
-    #[error("Invalid HTTP signature")]
-    InvalidHttpSignature,
+    #[error("Unauthorized")]
+    Unauthorized,
 
     #[error("OpenSSL operation failed")]
     OpensslError(#[from] OpensslErrorStack),
@@ -50,6 +50,9 @@ pub enum Error {
 
     #[error("serde-json operation failed")]
     SerdeJsonError(#[from] SerdeJsonError),
+
+    #[error("Unknown activity")]
+    UnknownActivity,
 
     #[error("Unknown key identifier")]
     UnknownKeyIdentifier,
@@ -72,7 +75,7 @@ impl From<Error> for Rejection {
 pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(error) = rejection.find::<Error>() {
         match error {
-            Error::InvalidHttpSignature => Ok(warp::reply::with_status(
+            Error::Unauthorized => Ok(warp::reply::with_status(
                 error.to_string(),
                 StatusCode::UNAUTHORIZED,
             )),

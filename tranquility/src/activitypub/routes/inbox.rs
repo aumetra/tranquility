@@ -1,7 +1,7 @@
 use {
-    crate::error::Error,
+    crate::{activitypub::handler, error::Error},
     http_signatures::HttpRequest,
-    tranquility_types::activitypub::{Activity, Object},
+    tranquility_types::activitypub::Activity,
     warp::{
         http::{HeaderMap, Method},
         path::FullPath,
@@ -41,10 +41,20 @@ pub async fn verify_request(
     if valid {
         Ok(activity)
     } else {
-        Err(Error::InvalidHttpSignature.into())
+        Err(Error::Unauthorized.into())
     }
 }
 
-pub async fn inbox(mut activity: Activity) -> Result<impl Reply, Rejection> {
-    Ok("inbox")
+pub async fn inbox(activity: Activity) -> Result<impl Reply, Rejection> {
+    let response = match activity.r#type.as_str() {
+        "Create" => handler::create::handle(activity).await,
+        "Delete" => handler::delete::handle(activity).await,
+        "Follow" => handler::follow::handle(activity).await,
+        "Like" => handler::like::handle(activity).await,
+        "Undo" => handler::undo::handle(activity).await,
+        "Update" => handler::update::handle(activity).await,
+        _ => Err(Error::UnknownActivity),
+    };
+
+    response.map_err(|err| Rejection::from(err))
 }

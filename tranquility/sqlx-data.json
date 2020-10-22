@@ -1,5 +1,52 @@
 {
   "db": "PostgreSQL",
+  "079ce9654063b1edb6751e98f90529b1b232b18d0f0e09ec327852bfec71a956": {
+    "query": "\n            UPDATE actors\n            SET actor = $1, username = $2\n            WHERE actor->>'id' = $3\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "1cc37513682cc8f45779f16e69f150bac516e8b24103098ac341ec1b53d02f6c": {
+    "query": "\n                SELECT COUNT(*) FROM actors \n                WHERE username = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "24e4fe2f4ea68903e66f4cbf9b99c5588989692315d70eb3a67eaf9aaf1a200e": {
+    "query": "\n            UPDATE actors\n            SET actor = $1\n            WHERE actor->>'id' = $2\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "2db11cd7547b378a0424d5c2671a72ae9043dc07f46a90f84bb9eb2bfc2f2a19": {
     "query": "\n                SELECT * FROM actors\n                WHERE actor->>'id' = $1\n            ",
     "describe": {
@@ -68,8 +115,22 @@
       ]
     }
   },
-  "77a244c665c98772ddd97efb136a412ae92c8ad05d743ee64a839fec2270c15e": {
-    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n                ",
+  "44822e290a7c50c819269447534cdf469920d42dd1d5d82ae8dbd6b236c1c810": {
+    "query": "\n            INSERT INTO activities \n            ( owner_id, data, url ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Jsonb",
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "4e13c3586676d7c8419d4b6101aaa5e16fc29811f8d8f61123d75b3d0eb71c9f": {
+    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n            ",
     "describe": {
       "columns": [],
       "parameters": {
@@ -81,14 +142,51 @@
       "nullable": []
     }
   },
-  "a0656b77f1c18d6f804cdcf69580eed7748a858284be888cbcc4337512014512": {
-    "query": "SELECT COUNT(*) FROM actors WHERE username = $1",
+  "556eafca2a66e58e7f6682958f806ac5a9d72ee1d3b32495abc13339e055c870": {
+    "query": "\n                DELETE FROM activities\n                WHERE data->'object'->>'id' = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "858ce09bf8d5b6453bdd45bba96942e7c6f08ab4f9542973a757d56de71c03d0": {
+    "query": "\n                SELECT * FROM activities\n                WHERE url = $1\n            ",
     "describe": {
       "columns": [
         {
           "ordinal": 0,
-          "name": "count",
-          "type_info": "Int8"
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "url",
+          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -97,7 +195,62 @@
         ]
       },
       "nullable": [
-        null
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "94d726a059da1483a9e77fbd5fb11722ede4234610341a3255e40d7b3cc32bd5": {
+    "query": "\n                SELECT * FROM activities\n                WHERE id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "url",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ]
     }
   },
@@ -171,6 +324,30 @@
         false,
         false
       ]
+    }
+  },
+  "ba1111eb39810d0af1aa6656103dd72f82cac1c13ab90ccbf719fcec01d1e6b6": {
+    "query": "\n                DELETE FROM activities\n                WHERE id = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "ca464101b814c1b8b36fd28da0d37f3a6340dedb5b1dd22d82dbc0ccfed387cb": {
+    "query": "\n                DELETE FROM activities\n                WHERE data->>'id' = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": []
     }
   },
   "cbd18f929fc7a9d022ea1bb8bff1c88322cd86750bc333393f9b6553e5a75cf4": {

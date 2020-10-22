@@ -2,42 +2,12 @@ use warp::Filter;
 
 pub async fn run() {
     let logging = warp::log("");
-    let activitypub_header_check =
-        warp::header::exact_ignore_case("accept", "application/activity+json").or(
-            warp::header::exact_ignore_case(
-                "accept",
-                "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
-            )
-            .or(warp::header::exact_ignore_case(
-                "accept",
-                "application/ld+json",
-            )),
-        );
 
-    let register = warp::path!("api" / "register")
-        .and(warp::post())
-        .and(warp::body::form())
-        .and_then(crate::routes::register::register);
+    let activitypub = crate::activitypub::routes::routes();
+    let api = crate::api::routes();
 
-    let users = warp::path!("users" / String)
-        .and(warp::get())
-        .and(activitypub_header_check)
-        .map(|uuid, _| uuid)
-        .and_then(crate::routes::users::get_actor);
-
-    let inbox = warp::path!("users" / String / "inbox")
-        .and(warp::post())
-        .and(warp::method())
-        .and(warp::path::full())
-        .and(warp::query::raw())
-        .and(warp::header::headers_cloned())
-        .and(warp::body::json())
-        .and_then(crate::routes::inbox::verify_request)
-        .and_then(crate::routes::inbox::inbox);
-
-    let routes = register
-        .or(users)
-        .or(inbox)
+    let routes = activitypub
+        .or(api)
         .with(logging)
         .recover(crate::error::recover);
 

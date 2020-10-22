@@ -1,0 +1,30 @@
+use {
+    crate::error::Error,
+    tranquility_types::activitypub::{activity::ObjectField, Activity},
+    warp::http::StatusCode,
+};
+
+pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
+    // Normalize the activity
+    match activity.object {
+        ObjectField::Url(url) => {
+            let object = crate::fetcher::fetch_entity(url.as_str())
+                .await?
+                .into_object()
+                .ok_or(Error::FetchError)?;
+
+            activity.object = ObjectField::Object(object);
+        }
+        _ => (),
+    }
+
+    // Are they actually publishing the object for themselves?
+    if activity.actor != activity.object.as_object().unwrap().attributed_to {
+        return Err(Error::Unauthorized);
+    }
+
+    let db_actor = crate::database::actor::select::by_url(activity.actor.clone()).await?;
+    crate::database::activity::insert(db_actor.id, activity).await?;
+
+    Ok(StatusCode::CREATED)
+}

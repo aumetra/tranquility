@@ -1,3 +1,28 @@
+use {crate::error::Error, tranquility_types::activitypub::Actor};
+
+pub async fn update(actor: Actor) -> Result<(), Error> {
+    let conn_pool = crate::database::connection::get()?;
+
+    let username = actor.username.clone();
+    let url = actor.id.clone();
+    let actor = serde_json::to_value(actor)?;
+
+    sqlx::query!(
+        r#"
+            UPDATE actors
+            SET actor = $1, username = $2
+            WHERE actor->>'id' = $3
+        "#,
+        actor,
+        username,
+        url
+    )
+    .execute(conn_pool)
+    .await?;
+
+    Ok(())
+}
+
 pub mod insert {
     use {
         crate::{database::model::Actor, error::Error},
@@ -8,10 +33,16 @@ pub mod insert {
     async fn is_username_taken(username: &String) -> Result<bool, Error> {
         let conn_pool = crate::database::connection::get()?;
 
-        let num_rows = sqlx::query!("SELECT COUNT(*) FROM actors WHERE username = $1", username)
-            .fetch_one(conn_pool)
-            .await
-            .map(|result| result.count.unwrap_or(0))?;
+        let num_rows = sqlx::query!(
+            r#"
+                SELECT COUNT(*) FROM actors 
+                WHERE username = $1
+            "#,
+            username
+        )
+        .fetch_one(conn_pool)
+        .await
+        .map(|result| result.count.unwrap_or(0))?;
 
         Ok(num_rows > 0)
     }
@@ -84,7 +115,7 @@ pub mod insert {
                 ( username, actor, remote )
                 VALUES 
                 ( $1, $2, TRUE )
-                "#,
+            "#,
             username,
             actor
         )

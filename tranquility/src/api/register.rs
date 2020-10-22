@@ -25,7 +25,7 @@ pub struct RegisterForm {
     username: String,
     #[validate(email)]
     email: String,
-    #[validate(length(min = 6))]
+    #[validate(length(min = 8))]
     password: String,
 }
 

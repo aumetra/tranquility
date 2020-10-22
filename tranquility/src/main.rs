@@ -10,11 +10,12 @@ async fn main() {
     cli::run().await;
 }
 
+mod activitypub;
+mod api;
 mod cli;
 mod config;
 mod crypto;
 mod database;
 mod error;
 mod fetcher;
-mod routes;
 mod server;

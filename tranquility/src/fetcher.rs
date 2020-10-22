@@ -13,6 +13,55 @@ pub enum Entity {
     Object(Object),
 }
 
+impl Entity {
+    pub fn into_activity(self) -> Option<Activity> {
+        match self {
+            Entity::Activity(activity) => Some(activity),
+            _ => None,
+        }
+    }
+
+    pub fn into_actor(self) -> Option<Actor> {
+        match self {
+            Entity::Actor(actor) => Some(actor),
+            _ => None,
+        }
+    }
+
+    pub fn into_object(self) -> Option<Object> {
+        match self {
+            Entity::Object(object) => Some(object),
+            _ => None,
+        }
+    }
+}
+
+pub async fn fetch_activity(url: String) -> Result<Activity, Error> {
+    match crate::database::activity::select::by_url(url.clone()).await {
+        Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
+        Err(e) => {
+            debug!("{}", e);
+            debug!("Activity not found in database. Attempting remote fetch...");
+        }
+    }
+
+    match fetch_entity(url.as_str()).await? {
+        Entity::Activity(activity) => {
+            let actor = fetch_actor(activity.actor.clone()).await?;
+            let actor = crate::database::actor::select::by_url(actor.id).await?;
+
+            crate::database::activity::insert(actor.id, activity.clone()).await?;
+
+            Ok(activity)
+        }
+        _ => {
+            debug!("Remote server returned content we can't interpret");
+
+            Err(Error::FetchError)
+        }
+    }
+}
+
 pub async fn fetch_actor(url: String) -> Result<Actor, Error> {
     match crate::database::actor::select::by_url(url.clone()).await {
         Ok(actor) => return Ok(serde_json::from_value(actor.actor)?),

@@ -19,6 +19,7 @@ pub struct Activity {
     pub owner_id: Uuid,
 
     pub data: Value,
+    pub url: String,
 
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
