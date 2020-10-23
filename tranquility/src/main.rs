@@ -1,3 +1,7 @@
+// Let this pass because all warnings by clippy regarding
+// this directive are caused by SQLx
+#![allow(clippy::toplevel_ref_arg)]
+
 #[macro_use]
 extern crate tracing;
 

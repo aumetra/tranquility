@@ -74,7 +74,7 @@ pub async fn fetch_actor(url: String) -> Result<Actor, Error> {
     match fetch_entity(url.as_str()).await? {
         Entity::Actor(actor) => {
             let actor_value = serde_json::to_value(&actor)?;
-            crate::database::actor::insert::external(actor.username.clone(), actor_value).await?;
+            crate::database::actor::insert::remote(actor.username.clone(), actor_value).await?;
 
             Ok(actor)
         }

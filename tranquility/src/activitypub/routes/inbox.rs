@@ -21,7 +21,7 @@ pub async fn verify_request(
 ) -> Result<Activity, Rejection> {
     let remote_actor = crate::fetcher::fetch_actor(activity.actor.clone())
         .await
-        .map_err(|err| Error::from(err))?;
+        .map_err(Error::from)?;
 
     let valid = tokio::task::spawn_blocking::<_, Result<bool, Error>>(move || {
         let public_key = remote_actor.public_key.public_key_pem.as_bytes();
@@ -56,5 +56,5 @@ pub async fn inbox(activity: Activity) -> Result<impl Reply, Rejection> {
         _ => Err(Error::UnknownActivity),
     };
 
-    response.map_err(|err| Rejection::from(err))
+    response.map_err(Rejection::from)
 }

@@ -16,9 +16,8 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     let actor = crate::database::actor::select::by_url(actor_url.clone()).await?;
 
     // Normalize the activity
-    match activity.object {
-        ObjectField::Actor(actor) => activity.object = ObjectField::Url(actor.id),
-        _ => (),
+    if let ObjectField::Actor(actor) = activity.object {
+        activity.object = ObjectField::Url(actor.id);
     }
 
     crate::database::activity::insert(actor.id, activity).await?;

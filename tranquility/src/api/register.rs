@@ -3,6 +3,8 @@ use {
     once_cell::sync::Lazy,
     regex::Regex,
     serde::Deserialize,
+    tranquility_types::activitypub::actor,
+    uuid::Uuid,
     validator::Validate,
     warp::{http::StatusCode, Rejection, Reply},
 };
@@ -31,9 +33,30 @@ pub struct RegisterForm {
 
 pub async fn register(form: RegisterForm) -> Result<impl Reply, Rejection> {
     // Validate the inputs
-    form.validate().map_err(|err| Error::from(err))?;
+    form.validate().map_err(Error::from)?;
 
-    crate::database::actor::insert::local(form.username, form.email, form.password).await?;
+    let user_id = Uuid::new_v4();
+    let password_hash = crate::crypto::password::hash(form.password).await?;
+
+    let rsa_private_key = crate::crypto::rsa::generate().await?;
+    let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(rsa_private_key)?;
+
+    let config = crate::config::get();
+    let actor = actor::create(
+        &user_id.to_hyphenated_ref().to_string(),
+        &form.username,
+        public_key_pem,
+        &config.domain,
+    );
+
+    crate::database::actor::insert::local(
+        user_id,
+        actor,
+        form.email,
+        password_hash,
+        private_key_pem,
+    )
+    .await?;
 
     Ok(warp::reply::with_status(
         "Account created",

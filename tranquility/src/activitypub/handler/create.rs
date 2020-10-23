@@ -6,16 +6,13 @@ use {
 
 pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Normalize the activity
-    match activity.object {
-        ObjectField::Url(url) => {
-            let object = crate::fetcher::fetch_entity(url.as_str())
-                .await?
-                .into_object()
-                .ok_or(Error::FetchError)?;
+    if let ObjectField::Url(url) = activity.object {
+        let object = crate::fetcher::fetch_entity(url.as_str())
+            .await?
+            .into_object()
+            .ok_or(Error::FetchError)?;
 
-            activity.object = ObjectField::Object(object);
-        }
-        _ => (),
+        activity.object = ObjectField::Object(object);
     }
 
     // Are they actually publishing the object for themselves?
