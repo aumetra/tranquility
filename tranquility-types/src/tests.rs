@@ -95,6 +95,52 @@ const MASTODON_WEBFINGER_RESOURCE: &str = r#"
   }
 "#;
 
+const PLEROMA_ACTOR: &str = r#"
+{
+    "@context": ["https://www.w3.org/ns/activitystreams", "https://lain.com/schemas/litepub-0.1.jsonld", {
+            "@language": "und"
+        }
+    ],
+    "attachment": [],
+    "capabilities": {
+        "acceptsChatMessages": true
+    },
+    "discoverable": false,
+    "endpoints": {
+        "oauthAuthorizationEndpoint": "https://lain.com/oauth/authorize",
+        "oauthRegistrationEndpoint": "https://lain.com/api/v1/apps",
+        "oauthTokenEndpoint": "https://lain.com/oauth/token",
+        "sharedInbox": "https://lain.com/inbox",
+        "uploadMedia": "https://lain.com/api/ap/upload_media"
+    },
+    "followers": "https://lain.com/users/lain/followers",
+    "following": "https://lain.com/users/lain/following",
+    "icon": {
+        "type": "Image",
+        "url": "https://lain.com/media/2c67ab791a9c8df78b003eb09a931b0693a15992697b0f2a2cb2a8e0dee4ec28.png"
+    },
+    "id": "https://lain.com/users/lain",
+    "image": {
+        "type": "Image",
+        "url": "https://lain.com/media/2398f2000f757c0707c9b43dae9868271766a73e314b1d4d945adcfeee7d674f.jpg"
+    },
+    "inbox": "https://lain.com/users/lain/inbox",
+    "manuallyApprovesFollowers": false,
+    "name": "bodhisattva\n\nbodhisattva",
+    "outbox": "https://lain.com/users/lain/outbox",
+    "preferredUsername": "lain",
+    "publicKey": {
+        "id": "https://lain.com/users/lain#main-key",
+        "owner": "https://lain.com/users/lain",
+        "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsnyIJ/uSrx/bVfsLmB0b\nmIiX5lBIuGJqSa7/br3Xl/zcLennthAhl3seSAC1EXtkhVJfN+2NVP8GajiKtVnl\nNTIyi1fzH+w9s2YtH9DD5onz8lpy2Aaq5ax+eA7L+4TvYjpvQigmqBwayh0hxPGZ\nGzMfuAh5BTtHsd7hWkeyVzTGb1s9bAtsJukCoygLYnzbZNuAxRIXgvQ1I3QDkLXU\nu6Gykg67yN/TOrUfBWs5rZLRqbM5Re5AD0VipCA7n1iLYDewDCoeFsaIlW7Qw3mK\nA4Anw8UouNOrFu2+YcKGSMLk8GfiFYsjUrROjv/wuRQMQXRb5R71IwsRk1y+sYka\nSwIDAQAB\n-----END PUBLIC KEY-----\n\n"
+    },
+    "summary": "No more hiding",
+    "tag": [],
+    "type": "Person",
+    "url": "https://lain.com/users/lain"
+}
+"#;
+
 const RFC_JRD: &str = r#"
 {
     "subject":"http://blog.example.com/article/id/314",
@@ -137,6 +183,11 @@ const RFC_JRD: &str = r#"
     ]
 }
 "#;
+
+#[test]
+fn decode_actor() {
+    let _actor: crate::activitypub::Actor = serde_json::from_str(PLEROMA_ACTOR).unwrap();
+}
 
 #[test]
 fn decode_create_activity_url() {
