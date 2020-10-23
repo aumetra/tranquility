@@ -20,8 +20,8 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         return Err(Error::Unauthorized);
     }
 
-    let db_actor = crate::database::actor::select::by_url(activity.actor.clone()).await?;
-    crate::database::activity::insert(db_actor.id, activity).await?;
+    let db_actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
+    crate::database::activity::insert(db_actor.id, &activity).await?;
 
     Ok(StatusCode::CREATED)
 }

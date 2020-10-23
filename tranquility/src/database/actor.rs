@@ -1,21 +1,18 @@
 use {crate::error::Error, tranquility_types::activitypub::Actor};
 
-pub async fn update(actor: Actor) -> Result<(), Error> {
+pub async fn update(actor: &Actor) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get()?;
 
-    let username = actor.username.clone();
-    let url = actor.id.clone();
-    let actor = serde_json::to_value(actor)?;
-
+    let actor_value = serde_json::to_value(actor)?;
     sqlx::query!(
         r#"
             UPDATE actors
             SET actor = $1, username = $2
             WHERE actor->>'id' = $3
         "#,
-        actor,
-        username,
-        url
+        actor_value,
+        actor.username,
+        actor.id
     )
     .execute(conn_pool)
     .await?;
@@ -24,9 +21,7 @@ pub async fn update(actor: Actor) -> Result<(), Error> {
 }
 
 pub mod insert {
-    use {
-        crate::error::Error, serde_json::Value, tranquility_types::activitypub::Actor, uuid::Uuid,
-    };
+    use {crate::error::Error, tranquility_types::activitypub::Actor, uuid::Uuid};
 
     pub async fn local(
         id: Uuid,
@@ -58,9 +53,10 @@ pub mod insert {
         Ok(())
     }
 
-    pub async fn remote(username: String, actor: Value) -> Result<(), Error> {
+    pub async fn remote(username: &str, actor: &Actor) -> Result<(), Error> {
         let conn_pool = crate::database::connection::get()?;
 
+        let actor = serde_json::to_value(actor)?;
         sqlx::query!(
             r#"
                 INSERT INTO actors
@@ -101,7 +97,7 @@ pub mod select {
         Ok(actor)
     }
 
-    pub async fn by_url(url: String) -> Result<Actor, Error> {
+    pub async fn by_url(url: &str) -> Result<Actor, Error> {
         let conn_pool = crate::database::connection::get()?;
 
         let actor = sqlx::query_as!(

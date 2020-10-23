@@ -36,8 +36,8 @@ impl Entity {
     }
 }
 
-pub async fn fetch_activity(url: String) -> Result<Activity, Error> {
-    match crate::database::activity::select::by_url(url.clone()).await {
+pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
+    match crate::database::activity::select::by_url(url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => {
             debug!("{}", e);
@@ -45,12 +45,12 @@ pub async fn fetch_activity(url: String) -> Result<Activity, Error> {
         }
     }
 
-    match fetch_entity(url.as_str()).await? {
+    match fetch_entity(url).await? {
         Entity::Activity(activity) => {
-            let actor = fetch_actor(activity.actor.clone()).await?;
-            let actor = crate::database::actor::select::by_url(actor.id).await?;
+            let actor = fetch_actor(activity.actor.as_ref()).await?;
+            let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
 
-            crate::database::activity::insert(actor.id, activity.clone()).await?;
+            crate::database::activity::insert(actor.id, &activity).await?;
 
             Ok(activity)
         }
@@ -62,8 +62,8 @@ pub async fn fetch_activity(url: String) -> Result<Activity, Error> {
     }
 }
 
-pub async fn fetch_actor(url: String) -> Result<Actor, Error> {
-    match crate::database::actor::select::by_url(url.clone()).await {
+pub async fn fetch_actor(url: &str) -> Result<Actor, Error> {
+    match crate::database::actor::select::by_url(url).await {
         Ok(actor) => return Ok(serde_json::from_value(actor.actor)?),
         Err(e) => {
             debug!("{}", e);
@@ -71,10 +71,9 @@ pub async fn fetch_actor(url: String) -> Result<Actor, Error> {
         }
     }
 
-    match fetch_entity(url.as_str()).await? {
+    match fetch_entity(url).await? {
         Entity::Actor(actor) => {
-            let actor_value = serde_json::to_value(&actor)?;
-            crate::database::actor::insert::remote(actor.username.clone(), actor_value).await?;
+            crate::database::actor::insert::remote(actor.username.as_ref(), &actor).await?;
 
             Ok(actor)
         }

@@ -1,9 +1,9 @@
 use {crate::error::Error, tranquility_types::activitypub::Activity, uuid::Uuid};
 
-pub async fn insert(owner_id: Uuid, activity: Activity) -> Result<(), Error> {
+pub async fn insert(owner_id: Uuid, activity: &Activity) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get()?;
 
-    let url = activity.id.clone();
+    let url = activity.id.as_str();
     let activity = serde_json::to_value(activity)?;
 
     sqlx::query!(
@@ -42,7 +42,7 @@ pub mod delete {
         Ok(())
     }
 
-    pub async fn by_url(url: String) -> Result<(), Error> {
+    pub async fn by_url(url: &str) -> Result<(), Error> {
         let conn_pool = crate::database::connection::get()?;
 
         sqlx::query!(
@@ -58,7 +58,7 @@ pub mod delete {
         Ok(())
     }
 
-    pub async fn by_object_url(url: String) -> Result<(), Error> {
+    pub async fn by_object_url(url: &str) -> Result<(), Error> {
         let conn_pool = crate::database::connection::get()?;
 
         sqlx::query!(
@@ -98,7 +98,7 @@ pub mod select {
         Ok(activity)
     }
 
-    pub async fn by_url(url: String) -> Result<Activity, Error> {
+    pub async fn by_url(url: &str) -> Result<Activity, Error> {
         let conn_pool = crate::database::connection::get()?;
 
         let activity = sqlx::query_as!(

@@ -7,7 +7,7 @@ pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
         return Err(Error::Unauthorized);
     }
 
-    crate::database::activity::delete::by_object_url(object.id.clone()).await?;
+    crate::database::activity::delete::by_object_url(object.id.as_ref()).await?;
 
     Ok(StatusCode::CREATED)
 }

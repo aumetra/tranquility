@@ -10,9 +10,9 @@ pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     }
 
     // Fetch the actor (just in case)
-    crate::fetcher::fetch_actor(actor.id.clone()).await?;
+    crate::fetcher::fetch_actor(actor.id.as_str()).await?;
 
-    crate::database::actor::update(actor.clone()).await?;
+    crate::database::actor::update(actor).await?;
 
     Ok(StatusCode::CREATED)
 }

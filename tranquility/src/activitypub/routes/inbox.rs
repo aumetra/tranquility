@@ -19,7 +19,7 @@ pub async fn verify_request(
     headers: HeaderMap,
     activity: Activity,
 ) -> Result<Activity, Rejection> {
-    let remote_actor = crate::fetcher::fetch_actor(activity.actor.clone())
+    let remote_actor = crate::fetcher::fetch_actor(activity.actor.as_ref())
         .await
         .map_err(Error::from)?;
 
