@@ -23,6 +23,7 @@ pub struct Actor {
     // Display name
     pub name: String,
     // Unique username
+    #[serde(rename = "preferredUsername")]
     pub username: String,
 
     pub summary: String,
