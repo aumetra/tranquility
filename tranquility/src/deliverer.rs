@@ -3,7 +3,6 @@ use {
     itertools::Itertools,
     reqwest::{Client, Request, Result as ReqwestResult},
     serde_json::Value,
-    std::sync::Arc,
     tranquility_types::activitypub::{Activity, PUBLIC_IDENTIFIER},
 };
 
@@ -16,7 +15,7 @@ fn prepare_request(client: &Client, url: &str, activity: &Value) -> ReqwestResul
 }
 
 pub fn deliver(activity: Activity) -> Result<(), Error> {
-    let activity_value = Arc::new(serde_json::to_value(&activity)?);
+    let activity_value = serde_json::to_value(&activity)?;
 
     let recipient_list = activity
         .to
@@ -27,10 +26,8 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
         .collect_vec();
 
     let client = &crate::REQWEST_CLIENT;
-    for url in recipient_list {
-        let activity_value = Arc::clone(&activity_value);
-
-        tokio::spawn(async move {
+    tokio::spawn(async move {
+        for url in recipient_list {
             let remote_actor = match crate::fetcher::fetch_actor(&url).await {
                 Ok(actor) => actor,
                 Err(err) => {
@@ -50,8 +47,8 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
                 Ok(_) => (),
                 Err(err) => warn!("Couldn't deliver activity: {}", err),
             }
-        });
-    }
+        }
+    });
 
     Ok(())
 }
