@@ -1,5 +1,74 @@
 {
   "db": "PostgreSQL",
+  "014b2aa30a3da006a89718db65a3c9d6a8514affd371ade8eaac18c296807a16": {
+    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n                RETURNING *\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "079ce9654063b1edb6751e98f90529b1b232b18d0f0e09ec327852bfec71a956": {
     "query": "\n            UPDATE actors\n            SET actor = $1, username = $2\n            WHERE actor->>'id' = $3\n        ",
     "describe": {

@@ -1,5 +1,5 @@
 use {
-    crate::error::Error,
+    crate::{database::model::Actor as DBActor, error::Error},
     reqwest::IntoUrl,
     serde_json::Value,
     tranquility_types::activitypub::{Activity, Actor, Object},
@@ -45,7 +45,7 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
 
     match fetch_entity(url).await? {
         Entity::Activity(activity) => {
-            let actor = fetch_actor(activity.actor.as_ref()).await?;
+            let (actor, _actor_db) = fetch_actor(activity.actor.as_ref()).await?;
             let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
 
             crate::database::activity::insert(actor.id, &activity).await?;
@@ -60,9 +60,9 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     }
 }
 
-pub async fn fetch_actor(url: &str) -> Result<Actor, Error> {
+pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
     match crate::database::actor::select::by_url(url).await {
-        Ok(actor) => return Ok(serde_json::from_value(actor.actor)?),
+        Ok(actor) => return Ok((serde_json::from_value(actor.actor.clone())?, actor)),
         Err(e) => {
             debug!("{}", e);
             debug!("Actor not found in database. Attempting remote fetch...");
@@ -71,9 +71,10 @@ pub async fn fetch_actor(url: &str) -> Result<Actor, Error> {
 
     match fetch_entity(url).await? {
         Entity::Actor(actor) => {
-            crate::database::actor::insert::remote(actor.username.as_ref(), &actor).await?;
+            let db_actor =
+                crate::database::actor::insert::remote(actor.username.as_ref(), &actor).await?;
 
-            Ok(actor)
+            Ok((actor, db_actor))
         }
         _ => {
             debug!("Remote server returned content we can't interpret");

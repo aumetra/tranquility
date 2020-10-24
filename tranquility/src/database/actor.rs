@@ -21,7 +21,11 @@ pub async fn update(actor: &Actor) -> Result<(), Error> {
 }
 
 pub mod insert {
-    use {crate::error::Error, tranquility_types::activitypub::Actor, uuid::Uuid};
+    use {
+        crate::{database::model::Actor as DBActor, error::Error},
+        tranquility_types::activitypub::Actor,
+        uuid::Uuid,
+    };
 
     pub async fn local(
         id: Uuid,
@@ -53,24 +57,26 @@ pub mod insert {
         Ok(())
     }
 
-    pub async fn remote(username: &str, actor: &Actor) -> Result<(), Error> {
+    pub async fn remote(username: &str, actor: &Actor) -> Result<DBActor, Error> {
         let conn_pool = crate::database::connection::get()?;
 
         let actor = serde_json::to_value(actor)?;
-        sqlx::query!(
+        let db_actor = sqlx::query_as!(
+            DBActor,
             r#"
                 INSERT INTO actors
                 ( username, actor, remote )
                 VALUES 
                 ( $1, $2, TRUE )
+                RETURNING *
             "#,
             username,
             actor
         )
-        .execute(conn_pool)
+        .fetch_one(conn_pool)
         .await?;
 
-        Ok(())
+        Ok(db_actor)
     }
 }
 
