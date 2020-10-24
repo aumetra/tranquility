@@ -55,3 +55,21 @@ impl ObjectField {
         }
     }
 }
+
+impl From<super::Actor> for ObjectField {
+    fn from(actor: super::Actor) -> ObjectField {
+        ObjectField::Actor(actor)
+    }
+}
+
+impl From<super::Object> for ObjectField {
+    fn from(object: super::Object) -> ObjectField {
+        ObjectField::Object(object)
+    }
+}
+
+impl From<String> for ObjectField {
+    fn from(url: String) -> ObjectField {
+        ObjectField::Url(url)
+    }
+}

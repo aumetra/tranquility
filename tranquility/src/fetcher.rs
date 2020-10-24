@@ -5,8 +5,6 @@ use {
     tranquility_types::activitypub::{Activity, Actor, Object},
 };
 
-static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
-
 pub enum Entity {
     Activity(Activity),
     Actor(Actor),
@@ -86,7 +84,7 @@ pub async fn fetch_actor(url: &str) -> Result<Actor, Error> {
 }
 
 pub async fn fetch_entity<T: IntoUrl>(url: T) -> Result<Entity, Error> {
-    let client = reqwest::Client::builder().user_agent(USER_AGENT).build()?;
+    let client = &crate::REQWEST_CLIENT;
     let request = client
         .get(url)
         .header(
@@ -94,6 +92,7 @@ pub async fn fetch_entity<T: IntoUrl>(url: T) -> Result<Entity, Error> {
             "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
         )
         .build()?;
+
     let entity: Value = client.execute(request).await?.json().await?;
 
     let entity = if entity["type"].as_str().unwrap() == "Person" {

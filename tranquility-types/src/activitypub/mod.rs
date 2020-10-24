@@ -1,5 +1,7 @@
 use serde_json::{json, Value};
 
+pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
+
 pub fn context_field() -> Value {
     json!(["https://www.w3.org/ns/activitystreams"])
 }
