@@ -35,7 +35,7 @@ impl Entity {
 }
 
 pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
-    match crate::database::activity::select::by_url(url).await {
+    match crate::database::object::select::by_url(url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => {
             debug!("{}", e);
@@ -47,7 +47,8 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         let (actor, _actor_db) = fetch_actor(activity.actor.as_ref()).await?;
         let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
 
-        crate::database::activity::insert(actor.id, &activity).await?;
+        let activity_value = serde_json::to_value(&activity)?;
+        crate::database::object::insert(actor.id, &activity.id, activity_value).await?;
 
         Ok(activity)
     } else {
@@ -78,7 +79,31 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
     }
 }
 
-pub async fn fetch_entity<T: IntoUrl + Send>(url: T) -> Result<Entity, Error> {
+pub async fn fetch_object(url: &str) -> Result<Object, Error> {
+    match crate::database::object::select::by_url(url).await {
+        Ok(object) => return Ok(serde_json::from_value(object.data)?),
+        Err(e) => {
+            debug!("{}", e);
+            debug!("Object not found in database. Attempting remote fetch...");
+        }
+    }
+
+    if let Entity::Object(object) = fetch_entity(url).await? {
+        let (actor, _actor_db) = fetch_actor(object.attributed_to.as_ref()).await?;
+        let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
+
+        let object_value = serde_json::to_value(&object)?;
+        crate::database::object::insert(actor.id, &object.id, object_value).await?;
+
+        Ok(object)
+    } else {
+        debug!("Remote server returned content we can't interpret");
+
+        Err(Error::Fetch)
+    }
+}
+
+async fn fetch_entity<T: IntoUrl + Send>(url: T) -> Result<Entity, Error> {
     let client = &crate::REQWEST_CLIENT;
     let request = client
         .get(url)

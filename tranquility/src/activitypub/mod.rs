@@ -2,20 +2,20 @@ use {
     serde::{Deserialize, Serialize},
     tranquility_types::activitypub::{
         activity::{Activity, ObjectField},
-        Actor, PublicKey,
+        Actor, Object, PublicKey, DATE_TIME_FORMAT,
     },
 };
 
-fn default_approved() -> bool {
-    true
-}
-
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 pub struct FollowActivity {
     #[serde(flatten)]
     pub activity: Activity,
-    #[serde(default = "default_approved")]
+    #[serde(default)]
     pub approved: bool,
+}
+
+fn activitypub_datetime() -> String {
+    chrono::Utc::now().format(DATE_TIME_FORMAT).to_string()
 }
 
 pub fn create_activity<T: Into<ObjectField>>(
@@ -29,7 +29,7 @@ pub fn create_activity<T: Into<ObjectField>>(
     let config = crate::config::get();
 
     let prefix = format!("https://{}", config.domain);
-    let id = format!("{}/activity/{}", prefix, id);
+    let id = format!("{}/objects/{}", prefix, id);
 
     Activity {
         id,
@@ -38,6 +38,7 @@ pub fn create_activity<T: Into<ObjectField>>(
         actor: owner_url.into(),
 
         object: object.into(),
+        published: activitypub_datetime(),
 
         to,
         cc,
@@ -79,6 +80,32 @@ pub fn create_actor(user_id: &str, username: &str, public_key_pem: String) -> Ac
 
         public_key,
         ..Actor::default()
+    }
+}
+
+pub fn create_object(
+    id: &str,
+    owner_url: &str,
+    content: &str,
+    to: Vec<String>,
+    cc: Vec<String>,
+) -> Object {
+    let config = crate::config::get();
+
+    let prefix = format!("https://{}", config.domain);
+    let id = format!("{}/objects/{}", prefix, id);
+
+    Object {
+        id,
+
+        content: content.into(),
+        published: activitypub_datetime(),
+
+        attributed_to: owner_url.into(),
+
+        to,
+        cc,
+        ..Object::default()
     }
 }
 

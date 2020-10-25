@@ -13,6 +13,8 @@ pub struct Activity {
 
     // This can either be an "Actor", "Object" or an URL to either of those
     pub object: ObjectField,
+    #[serde(default)]
+    pub published: String,
 
     pub to: Vec<String>,
     #[serde(default)]

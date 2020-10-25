@@ -83,6 +83,19 @@
       "nullable": []
     }
   },
+  "0db67a3667c10583d3a68255e2b205c948ba9ac5a0ee143ba9f4629ace7cf3fc": {
+    "query": "\n            UPDATE objects\n            SET data = $1\n            WHERE id = $2\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "2db11cd7547b378a0424d5c2671a72ae9043dc07f46a90f84bb9eb2bfc2f2a19": {
     "query": "\n                SELECT * FROM actors\n                WHERE actor->>'id' = $1\n            ",
     "describe": {
@@ -165,6 +178,20 @@
       "nullable": []
     }
   },
+  "4c9154bbe03a569f7d55990e9105138f9373b4f130a2357543f23ee1b4755324": {
+    "query": "\n            INSERT INTO objects \n            ( owner_id, data, url ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Jsonb",
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "556eafca2a66e58e7f6682958f806ac5a9d72ee1d3b32495abc13339e055c870": {
     "query": "\n                DELETE FROM activities\n                WHERE data->'object'->>'id' = $1\n            ",
     "describe": {
@@ -172,6 +199,18 @@
       "parameters": {
         "Left": [
           "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "816ea34615b11311477a7fd33e7f34336892453189c756d1edcde49547d527e5": {
+    "query": "\n                DELETE FROM objects\n                WHERE id = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
         ]
       },
       "nullable": []
@@ -290,6 +329,68 @@
       ]
     }
   },
+  "9e4de8956a213126dcfd1d9f2641545928510c6a2cbcd9286202a05e7fa89d74": {
+    "query": "\n                DELETE FROM objects\n                WHERE data->>'id' = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "acf71f09f70ac162e3db490d437fff9c59c01866bd885513052960c4047bafdb": {
+    "query": "\n                SELECT * FROM objects\n                WHERE url = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "url",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "ba1111eb39810d0af1aa6656103dd72f82cac1c13ab90ccbf719fcec01d1e6b6": {
     "query": "\n                DELETE FROM activities\n                WHERE id = $1\n            ",
     "describe": {
@@ -382,6 +483,56 @@
       ]
     }
   },
+  "cc6b4a9f05e8a42b768e900af17153bcd8e0ee07e94637bc86940e28818bd871": {
+    "query": "\n                SELECT * FROM objects\n                WHERE id = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "url",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "ccced91f033c47b0e2c7506c1f0d27be2d052f3b8d9be5abccb70eb3c4165910": {
     "query": "\n                INSERT INTO actors\n                ( id, username, email, password_hash, private_key, actor ) \n                VALUES \n                ( $1, $2, $3, $4, $5, $6 )\n            ",
     "describe": {
@@ -394,6 +545,18 @@
           "Text",
           "Text",
           "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "eb054640e844b636c95f2f4c4669a54447413f44ac6b95ce75a4a89d15b6e055": {
+    "query": "\n                DELETE FROM objects\n                WHERE data->'object'->>'id' = $1\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
         ]
       },
       "nullable": []

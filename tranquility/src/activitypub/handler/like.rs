@@ -9,7 +9,8 @@ pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     crate::fetcher::fetch_actor(activity.actor.as_ref()).await?;
     let actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
 
-    crate::database::activity::insert(actor.id, &activity).await?;
+    let activity_value = serde_json::to_value(&activity)?;
+    crate::database::object::insert(actor.id, &activity.id, activity_value).await?;
 
     Ok(StatusCode::CREATED)
 }

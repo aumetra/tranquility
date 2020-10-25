@@ -10,8 +10,7 @@ pub struct Object {
 
     pub id: String,
     pub r#type: String,
-    #[serde(default)]
-    pub actor: String,
+
     pub attributed_to: String,
 
     pub content: String,

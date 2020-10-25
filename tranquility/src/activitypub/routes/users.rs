@@ -4,7 +4,7 @@ use {
     warp::{Rejection, Reply},
 };
 
-pub async fn get_actor(uuid: String) -> Result<impl Reply, Rejection> {
+pub async fn users(uuid: String) -> Result<impl Reply, Rejection> {
     let uuid = Uuid::parse_str(&uuid).map_err(Error::from)?;
     let actor = crate::database::actor::select::by_id(uuid).await?;
 

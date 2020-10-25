@@ -20,5 +20,5 @@ fn decode_follow_activity() {
     let follow_activity: FollowActivity = serde_json::from_str(FOLLOW_ACTIVITY).unwrap();
 
     assert_eq!(follow_activity.activity.r#type, "Follow");
-    assert!(follow_activity.approved);
+    assert!(!follow_activity.approved);
 }

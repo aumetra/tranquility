@@ -14,7 +14,7 @@ pub struct Actor {
     pub updated_at: NaiveDateTime,
 }
 
-pub struct Activity {
+pub struct Object {
     pub id: Uuid,
     pub owner_id: Uuid,
 

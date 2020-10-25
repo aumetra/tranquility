@@ -6,7 +6,7 @@ pub async fn handle(delete_activity: Activity) -> Result<StatusCode, Error> {
         .as_url()
         .ok_or(Error::UnknownActivity)?;
 
-    let activity = crate::database::activity::select::by_url(activity_url.as_ref()).await?;
+    let activity = crate::database::object::select::by_url(activity_url.as_ref()).await?;
     let activity: Activity = serde_json::from_value(activity.data)?;
 
     // Does the activity belong to the actor?
@@ -14,7 +14,7 @@ pub async fn handle(delete_activity: Activity) -> Result<StatusCode, Error> {
         return Err(Error::Unauthorized);
     }
 
-    crate::database::activity::delete::by_url(activity.id.as_ref()).await?;
+    crate::database::object::delete::by_url(activity.id.as_ref()).await?;
 
     Ok(StatusCode::CREATED)
 }

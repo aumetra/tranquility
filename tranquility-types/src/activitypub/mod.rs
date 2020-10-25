@@ -1,5 +1,6 @@
 use serde_json::{json, Value};
 
+pub const DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.3fZ";
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
 pub fn context_field() -> Value {

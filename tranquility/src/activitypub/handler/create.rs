@@ -6,13 +6,17 @@ use {
 
 pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Normalize the activity
-    if let ObjectField::Url(url) = activity.object {
-        let object = crate::fetcher::fetch_entity(url.as_str())
-            .await?
-            .into_object()
-            .ok_or(Error::Fetch)?;
+    match activity.object {
+        ObjectField::Object(object) => {
+            crate::fetcher::fetch_object(&object.id).await?;
 
-        activity.object = ObjectField::Object(object);
+            activity.object = ObjectField::Url(object.id);
+        }
+        ObjectField::Url(ref url) => {
+            // I know, I could just save the object into the database directly instead of refetching it
+            crate::fetcher::fetch_object(url).await?;
+        }
+        ObjectField::Actor(_) => return Err(Error::UnknownActivity),
     }
 
     // Are they actually publishing the object for themselves?
@@ -24,7 +28,8 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     object.content = ammonia::clean(&object.content);
 
     let db_actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
-    crate::database::activity::insert(db_actor.id, &activity).await?;
+    let activity_value = serde_json::to_value(&activity)?;
+    crate::database::object::insert(db_actor.id, &activity.id, activity_value).await?;
 
     Ok(StatusCode::CREATED)
 }

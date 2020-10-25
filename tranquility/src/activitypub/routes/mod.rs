@@ -25,13 +25,19 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and_then(inbox::verify_request)
         .and_then(inbox::inbox);
 
+    let objects = warp::path!("objects" / String)
+        .and(warp::get())
+        .and(header_requirements())
+        .and_then(objects::objects);
+
     let users = warp::path!("users" / String)
         .and(warp::get())
         .and(header_requirements())
-        .and_then(users::get_actor);
+        .and_then(users::users);
 
-    inbox.or(users)
+    inbox.or(users).or(objects)
 }
 
 pub mod inbox;
+pub mod objects;
 pub mod users;

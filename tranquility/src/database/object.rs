@@ -1,22 +1,17 @@
-use {
-    crate::error::Error, serde_json::Value, tranquility_types::activitypub::Activity, uuid::Uuid,
-};
+use {crate::error::Error, serde_json::Value, uuid::Uuid};
 
-pub async fn insert(owner_id: Uuid, activity: &Activity) -> Result<(), Error> {
+pub async fn insert(owner_id: Uuid, url: &str, object: Value) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get()?;
-
-    let url = activity.id.as_str();
-    let activity = serde_json::to_value(activity)?;
 
     sqlx::query!(
         r#"
-            INSERT INTO activities 
+            INSERT INTO objects 
             ( owner_id, data, url ) 
             VALUES 
             ( $1, $2, $3 )
         "#,
         owner_id,
-        activity,
+        object,
         url
     )
     .execute(conn_pool)
@@ -33,7 +28,7 @@ pub mod delete {
 
         sqlx::query!(
             r#"
-                DELETE FROM activities
+                DELETE FROM objects
                 WHERE id = $1
             "#,
             id
@@ -49,7 +44,7 @@ pub mod delete {
 
         sqlx::query!(
             r#"
-                DELETE FROM activities
+                DELETE FROM objects
                 WHERE data->>'id' = $1
             "#,
             url
@@ -65,7 +60,7 @@ pub mod delete {
 
         sqlx::query!(
             r#"
-                DELETE FROM activities
+                DELETE FROM objects
                 WHERE data->'object'->>'id' = $1
             "#,
             url
@@ -79,17 +74,17 @@ pub mod delete {
 
 pub mod select {
     use {
-        crate::{database::model::Activity, error::Error},
+        crate::{database::model::Object, error::Error},
         uuid::Uuid,
     };
 
-    pub async fn by_id(id: Uuid) -> Result<Activity, Error> {
+    pub async fn by_id(id: Uuid) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get()?;
 
-        let activity = sqlx::query_as!(
-            Activity,
+        let object = sqlx::query_as!(
+            Object,
             r#"
-                SELECT * FROM activities
+                SELECT * FROM objects
                 WHERE id = $1
             "#,
             id
@@ -97,16 +92,16 @@ pub mod select {
         .fetch_one(conn_pool)
         .await?;
 
-        Ok(activity)
+        Ok(object)
     }
 
-    pub async fn by_url(url: &str) -> Result<Activity, Error> {
+    pub async fn by_url(url: &str) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get()?;
 
-        let activity = sqlx::query_as!(
-            Activity,
+        let object = sqlx::query_as!(
+            Object,
             r#"
-                SELECT * FROM activities
+                SELECT * FROM objects
                 WHERE url = $1
             "#,
             url
@@ -114,20 +109,20 @@ pub mod select {
         .fetch_one(conn_pool)
         .await?;
 
-        Ok(activity)
+        Ok(object)
     }
 }
 
-pub async fn update(id: Uuid, activity: Value) -> Result<(), Error> {
+pub async fn update(id: Uuid, object: Value) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get()?;
 
     sqlx::query!(
         r#"
-            UPDATE activities
+            UPDATE objects
             SET data = $1
             WHERE id = $2
         "#,
-        activity,
+        object,
         id,
     )
     .execute(conn_pool)
