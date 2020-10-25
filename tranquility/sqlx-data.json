@@ -165,19 +165,6 @@
       "nullable": []
     }
   },
-  "4e13c3586676d7c8419d4b6101aaa5e16fc29811f8d8f61123d75b3d0eb71c9f": {
-    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n            ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Jsonb"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "556eafca2a66e58e7f6682958f806ac5a9d72ee1d3b32495abc13339e055c870": {
     "query": "\n                DELETE FROM activities\n                WHERE data->'object'->>'id' = $1\n            ",
     "describe": {
@@ -238,6 +225,19 @@
         false,
         false
       ]
+    }
+  },
+  "8d82cae72c5e0407bf52fccd4815d830dc2db2e192f20325db1c001369b6e043": {
+    "query": "\n            UPDATE activities\n            SET data = $1\n            WHERE id = $2\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Uuid"
+        ]
+      },
+      "nullable": []
     }
   },
   "94d726a059da1483a9e77fbd5fb11722ede4234610341a3255e40d7b3cc32bd5": {

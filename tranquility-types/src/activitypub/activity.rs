@@ -63,6 +63,27 @@ impl ObjectField {
             _ => None,
         }
     }
+
+    pub fn as_mut_actor(&mut self) -> Option<&mut super::Actor> {
+        match self {
+            Self::Actor(actor) => Some(actor),
+            _ => None,
+        }
+    }
+
+    pub fn as_mut_object(&mut self) -> Option<&mut super::Object> {
+        match self {
+            Self::Object(object) => Some(object),
+            _ => None,
+        }
+    }
+
+    pub fn as_mut_url(&mut self) -> Option<&mut String> {
+        match self {
+            Self::Url(url) => Some(url),
+            _ => None,
+        }
+    }
 }
 
 impl From<super::Actor> for ObjectField {

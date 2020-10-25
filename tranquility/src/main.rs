@@ -28,3 +28,6 @@ mod deliverer;
 mod error;
 mod fetcher;
 mod server;
+
+#[cfg(test)]
+mod tests;

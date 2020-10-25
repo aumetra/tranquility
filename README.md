@@ -15,8 +15,8 @@ Progress:
 - - - [ ] Outbox
 - - - [ ] Following collection
 - - - [ ] Followers collection
-- - [ ] Activities (incoming)
-- - - [ ] Accept
+- - [x] Activities (incoming)
+- - - [x] Accept
 - - - [x] Create
 - - - [x] Delete
 - - - [x] Follow

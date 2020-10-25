@@ -1,8 +1,4 @@
-use {
-    crate::error::Error,
-    tranquility_types::activitypub::Activity,
-    warp::http::StatusCode,
-};
+use {crate::error::Error, tranquility_types::activitypub::Activity, warp::http::StatusCode};
 
 pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     let follow_activity_url = activity.object.as_url().ok_or(Error::UnknownActivity)?;
@@ -11,6 +7,10 @@ pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     // Check if the person rejecting the follow is actually the followed person
     if &activity.actor != follow_activity.object.as_url().unwrap() {
         return Err(Error::Unauthorized);
+    }
+
+    if follow_activity.r#type != "Follow" {
+        return Err(Error::UnknownActivity);
     }
 
     crate::database::activity::delete::by_id(follow_activity_db.id).await?;

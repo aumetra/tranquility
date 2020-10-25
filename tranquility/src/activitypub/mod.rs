@@ -1,7 +1,22 @@
-use tranquility_types::activitypub::{
-    activity::{Activity, ObjectField},
-    Actor, PublicKey,
+use {
+    serde::{Deserialize, Serialize},
+    tranquility_types::activitypub::{
+        activity::{Activity, ObjectField},
+        Actor, PublicKey,
+    },
 };
+
+fn default_approved() -> bool {
+    true
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct FollowActivity {
+    #[serde(flatten)]
+    pub activity: Activity,
+    #[serde(default = "default_approved")]
+    pub approved: bool,
+}
 
 pub fn create_activity<T: Into<ObjectField>>(
     r#type: &str,

@@ -1,4 +1,6 @@
-use {crate::error::Error, tranquility_types::activitypub::Activity, uuid::Uuid};
+use {
+    crate::error::Error, serde_json::Value, tranquility_types::activitypub::Activity, uuid::Uuid,
+};
 
 pub async fn insert(owner_id: Uuid, activity: &Activity) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get()?;
@@ -114,4 +116,22 @@ pub mod select {
 
         Ok(activity)
     }
+}
+
+pub async fn update(id: Uuid, activity: Value) -> Result<(), Error> {
+    let conn_pool = crate::database::connection::get()?;
+
+    sqlx::query!(
+        r#"
+            UPDATE activities
+            SET data = $1
+            WHERE id = $2
+        "#,
+        activity,
+        id,
+    )
+    .execute(conn_pool)
+    .await?;
+
+    Ok(())
 }

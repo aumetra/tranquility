@@ -47,6 +47,7 @@ pub async fn verify_request(
 
 pub async fn inbox(activity: Activity) -> Result<impl Reply, Rejection> {
     let response = match activity.r#type.as_str() {
+        "Accept" => handler::accept::handle(activity).await,
         "Create" => handler::create::handle(activity).await,
         "Delete" => handler::delete::handle(activity).await,
         "Follow" => handler::follow::handle(activity).await,
