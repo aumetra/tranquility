@@ -11,7 +11,7 @@ use {
 static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[[:alnum:]\-_]+$"#).unwrap());
 
 #[derive(Deserialize, Validate)]
-pub struct RegisterForm {
+pub struct RegistrationForm {
     #[validate(
         length(
             min = 1,
@@ -30,14 +30,14 @@ pub struct RegisterForm {
     password: String,
 }
 
-pub async fn register(form: RegisterForm) -> Result<impl Reply, Rejection> {
+pub async fn register(form: RegistrationForm) -> Result<impl Reply, Rejection> {
     form.validate().map_err(Error::from)?;
 
     let user_id = Uuid::new_v4();
     let password_hash = crate::crypto::password::hash(form.password).await?;
 
     let rsa_private_key = crate::crypto::rsa::generate().await?;
-    let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(rsa_private_key)?;
+    let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(&rsa_private_key)?;
 
     let actor = activitypub::create_actor(
         &user_id.to_hyphenated_ref().to_string(),

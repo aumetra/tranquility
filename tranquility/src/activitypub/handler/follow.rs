@@ -9,7 +9,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     let actor_url = match activity.object {
         ObjectField::Actor(ref actor) => actor.id.as_str(),
         ObjectField::Url(ref url) => url.as_str(),
-        _ => return Err(Error::UnknownActivity),
+        ObjectField::Object(_) => return Err(Error::UnknownActivity),
     };
 
     // Fetch the actor (just in case)
@@ -30,7 +30,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     if !followed_actor.remote {
         let accept_activity_id = Uuid::new_v4();
         let accept_activity = activitypub::create_activity(
-            "Accept".into(),
+            "Accept",
             &accept_activity_id.to_hyphenated_ref().to_string(),
             followed_url,
             activity.id.clone(),

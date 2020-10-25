@@ -1,5 +1,4 @@
 use tranquility_types::activitypub::{
-    self,
     activity::{Activity, ObjectField},
     Actor, PublicKey,
 };
@@ -18,8 +17,6 @@ pub fn create_activity<T: Into<ObjectField>>(
     let id = format!("{}/activity/{}", prefix, id);
 
     Activity {
-        _context: activitypub::context_field(),
-
         id,
         r#type: r#type.into(),
 
@@ -29,6 +26,7 @@ pub fn create_activity<T: Into<ObjectField>>(
 
         to,
         cc,
+        ..Activity::default()
     }
 }
 
@@ -53,8 +51,6 @@ pub fn create_actor(user_id: &str, username: &str, public_key_pem: String) -> Ac
     };
 
     Actor {
-        _context: activitypub::context_field(),
-
         id,
         r#type: "Person".into(),
 
@@ -67,7 +63,7 @@ pub fn create_actor(user_id: &str, username: &str, public_key_pem: String) -> Ac
         following,
 
         public_key,
-        ..Default::default()
+        ..Actor::default()
     }
 }
 

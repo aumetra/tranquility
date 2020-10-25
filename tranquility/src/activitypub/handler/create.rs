@@ -10,7 +10,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         let object = crate::fetcher::fetch_entity(url.as_str())
             .await?
             .into_object()
-            .ok_or(Error::FetchError)?;
+            .ok_or(Error::Fetch)?;
 
         activity.object = ObjectField::Object(object);
     }

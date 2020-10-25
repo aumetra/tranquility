@@ -1,7 +1,10 @@
 use {
     crate::error::Error,
     itertools::Itertools,
-    reqwest::{Client, Request, Result as ReqwestResult},
+    reqwest::{
+        header::{HeaderName, HeaderValue, DATE},
+        Client, Request, Result as ReqwestResult,
+    },
     serde_json::Value,
     tranquility_types::activitypub::{Activity, PUBLIC_IDENTIFIER},
 };
@@ -35,13 +38,39 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
                     return;
                 }
             };
-            let mut request = match prepare_request(&client, &remote_actor.id, &activity_value) {
+            let mut request = match prepare_request(client, &remote_actor.id, &activity_value) {
                 Ok(request) => request,
                 Err(err) => {
                     warn!("Couldn't prepare request: {}", err);
                     return;
                 }
             };
+
+            let date_header_value = match HeaderValue::from_str(&chrono::Utc::now().to_rfc2822()) {
+                Ok(header_value) => header_value,
+                Err(err) => {
+                    warn!(
+                        "Couldn't convert the current DateTime to HeaderValue: {}",
+                        err
+                    );
+                    return;
+                }
+            };
+
+            let activity_bytes = serde_json::to_vec(&activity_value).unwrap();
+            let digest_header_value = match crate::crypto::digest::http_header(activity_bytes).await
+            {
+                Ok(header_value) => header_value,
+                Err(err) => {
+                    warn!("Couldn't calculate the HTTP digest header: {}", err);
+                    return;
+                }
+            };
+
+            request.headers_mut().insert(DATE, date_header_value);
+            request
+                .headers_mut()
+                .insert(HeaderName::from_static("digest"), digest_header_value);
 
             let key_id = remote_actor.public_key.id;
             let private_key = remote_actor_db.private_key.unwrap();
@@ -50,11 +79,9 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
                 let request = request.try_clone().unwrap();
                 let signature_result = tokio::task::spawn_blocking(move || {
                     http_signatures::sign(
-                        // This just takes a reference to the request and tuns it into an `HttpRequest` object
-                        // Yes, it's ugly, but the `Request` type doesn't have something like `.as_ref()`
                         (&request).into(),
                         &key_id,
-                        vec!["(request-target)"],
+                        vec!["(request-target)", "date", "digest"],
                         private_key.as_bytes(),
                     )
                 })

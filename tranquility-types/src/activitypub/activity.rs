@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Activity {
-    #[serde(rename = "@context")]
-    pub _context: Value,
+    #[serde(default = "super::context_field", rename = "@context")]
+    pub context: Value,
 
     pub id: String,
     pub r#type: String,
@@ -19,6 +19,15 @@ pub struct Activity {
     pub cc: Vec<String>,
 }
 
+impl Default for Activity {
+    fn default() -> Self {
+        Self {
+            context: super::context_field(),
+            ..Self::default()
+        }
+    }
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ObjectField {
@@ -28,48 +37,48 @@ pub enum ObjectField {
 }
 
 impl Default for ObjectField {
-    fn default() -> ObjectField {
-        ObjectField::Object(Default::default())
+    fn default() -> Self {
+        Self::Object(Default::default())
     }
 }
 
 impl ObjectField {
     pub fn as_actor(&self) -> Option<&super::Actor> {
         match self {
-            ObjectField::Actor(actor) => Some(actor),
+            Self::Actor(actor) => Some(actor),
             _ => None,
         }
     }
 
     pub fn as_object(&self) -> Option<&super::Object> {
         match self {
-            ObjectField::Object(object) => Some(object),
+            Self::Object(object) => Some(object),
             _ => None,
         }
     }
 
     pub fn as_url(&self) -> Option<&String> {
         match self {
-            ObjectField::Url(url) => Some(url),
+            Self::Url(url) => Some(url),
             _ => None,
         }
     }
 }
 
 impl From<super::Actor> for ObjectField {
-    fn from(actor: super::Actor) -> ObjectField {
-        ObjectField::Actor(actor)
+    fn from(actor: super::Actor) -> Self {
+        Self::Actor(actor)
     }
 }
 
 impl From<super::Object> for ObjectField {
-    fn from(object: super::Object) -> ObjectField {
-        ObjectField::Object(object)
+    fn from(object: super::Object) -> Self {
+        Self::Object(object)
     }
 }
 
 impl From<String> for ObjectField {
-    fn from(url: String) -> ObjectField {
-        ObjectField::Url(url)
+    fn from(url: String) -> Self {
+        Self::Url(url)
     }
 }

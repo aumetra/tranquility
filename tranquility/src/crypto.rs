@@ -1,3 +1,21 @@
+pub mod digest {
+    use {crate::error::Error, reqwest::header::HeaderValue};
+
+    pub async fn http_header(data: Vec<u8>) -> Result<HeaderValue, Error> {
+        tokio::task::spawn_blocking(move || {
+            let sha_hash = openssl::sha::sha256(&data);
+            let base64_encoded_hash = openssl::base64::encode_block(&sha_hash);
+
+            Ok(HeaderValue::from_str(&format!(
+                "SHA-256={}",
+                base64_encoded_hash
+            ))?)
+        })
+        .await
+        .unwrap()
+    }
+}
+
 pub mod rsa {
     use {
         crate::error::Error,
@@ -12,7 +30,7 @@ pub mod rsa {
             .unwrap()
     }
 
-    pub fn to_pem(rsa_key: Rsa<Private>) -> Result<(String, String), Error> {
+    pub fn to_pem(rsa_key: &Rsa<Private>) -> Result<(String, String), Error> {
         let public_key = String::from_utf8(rsa_key.public_key_to_pem()?).unwrap();
         let private_key = String::from_utf8(rsa_key.private_key_to_pem()?).unwrap();
 

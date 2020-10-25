@@ -10,11 +10,11 @@ pub struct PublicKey {
     pub public_key_pem: String,
 }
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
-    #[serde(rename = "@context")]
-    pub _context: Value,
+    #[serde(default = "super::context_field", rename = "@context")]
+    pub context: Value,
 
     pub id: String,
     // (Should) always equal "Person"
@@ -43,4 +43,13 @@ pub struct Actor {
     pub followers: String,
     pub following: String,
     pub public_key: PublicKey,
+}
+
+impl Default for Actor {
+    fn default() -> Self {
+        Self {
+            context: super::context_field(),
+            ..Self::default()
+        }
+    }
 }

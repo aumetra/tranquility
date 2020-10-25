@@ -14,21 +14,21 @@ pub enum Entity {
 impl Entity {
     pub fn into_activity(self) -> Option<Activity> {
         match self {
-            Entity::Activity(activity) => Some(activity),
+            Self::Activity(activity) => Some(activity),
             _ => None,
         }
     }
 
     pub fn into_actor(self) -> Option<Actor> {
         match self {
-            Entity::Actor(actor) => Some(actor),
+            Self::Actor(actor) => Some(actor),
             _ => None,
         }
     }
 
     pub fn into_object(self) -> Option<Object> {
         match self {
-            Entity::Object(object) => Some(object),
+            Self::Object(object) => Some(object),
             _ => None,
         }
     }
@@ -43,20 +43,17 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         }
     }
 
-    match fetch_entity(url).await? {
-        Entity::Activity(activity) => {
-            let (actor, _actor_db) = fetch_actor(activity.actor.as_ref()).await?;
-            let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
+    if let Entity::Activity(activity) = fetch_entity(url).await? {
+        let (actor, _actor_db) = fetch_actor(activity.actor.as_ref()).await?;
+        let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
 
-            crate::database::activity::insert(actor.id, &activity).await?;
+        crate::database::activity::insert(actor.id, &activity).await?;
 
-            Ok(activity)
-        }
-        _ => {
-            debug!("Remote server returned content we can't interpret");
+        Ok(activity)
+    } else {
+        debug!("Remote server returned content we can't interpret");
 
-            Err(Error::FetchError)
-        }
+        Err(Error::Fetch)
     }
 }
 
@@ -69,22 +66,19 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
         }
     }
 
-    match fetch_entity(url).await? {
-        Entity::Actor(actor) => {
-            let db_actor =
-                crate::database::actor::insert::remote(actor.username.as_ref(), &actor).await?;
+    if let Entity::Actor(actor) = fetch_entity(url).await? {
+        let db_actor =
+            crate::database::actor::insert::remote(actor.username.as_ref(), &actor).await?;
 
-            Ok((actor, db_actor))
-        }
-        _ => {
-            debug!("Remote server returned content we can't interpret");
+        Ok((actor, db_actor))
+    } else {
+        debug!("Remote server returned content we can't interpret");
 
-            Err(Error::FetchError)
-        }
+        Err(Error::Fetch)
     }
 }
 
-pub async fn fetch_entity<T: IntoUrl>(url: T) -> Result<Entity, Error> {
+pub async fn fetch_entity<T: IntoUrl + Send>(url: T) -> Result<Entity, Error> {
     let client = &crate::REQWEST_CLIENT;
     let request = client
         .get(url)

@@ -2,11 +2,11 @@ use super::{Attachment, Tag};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Object {
-    #[serde(default, rename = "@context")]
-    pub _context: Value,
+    #[serde(default = "super::context_field", rename = "@context")]
+    pub context: Value,
 
     pub id: String,
     pub r#type: String,
@@ -26,4 +26,13 @@ pub struct Object {
 
     pub to: Vec<String>,
     pub cc: Vec<String>,
+}
+
+impl Default for Object {
+    fn default() -> Self {
+        Self {
+            context: super::context_field(),
+            ..Self::default()
+        }
+    }
 }
