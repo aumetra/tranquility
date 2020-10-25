@@ -24,7 +24,7 @@ Progress:
 - - - [x] Reject
 - - - [x] Undo
 - - [ ] Activities (outgoing)
-- - - [ ] Accept
+- - - [x] Accept
 - - - [ ] Create
 - - - [ ] Delete
 - - - [ ] Follow
