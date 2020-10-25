@@ -38,7 +38,7 @@ pub enum ObjectField {
 
 impl Default for ObjectField {
     fn default() -> Self {
-        Self::Object(Default::default())
+        Self::Object(super::Object::default())
     }
 }
 
