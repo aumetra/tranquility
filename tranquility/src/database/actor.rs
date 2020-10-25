@@ -119,4 +119,22 @@ pub mod select {
 
         Ok(actor)
     }
+
+    pub async fn by_username_local(username: &str) -> Result<Actor, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let actor = sqlx::query_as!(
+            Actor,
+            r#"
+                SELECT * FROM actors
+                WHERE username = $1
+                AND remote = FALSE
+            "#,
+            username
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(actor)
+    }
 }

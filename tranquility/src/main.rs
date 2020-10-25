@@ -28,6 +28,7 @@ mod deliverer;
 mod error;
 mod fetcher;
 mod server;
+mod webfinger;
 
 #[cfg(test)]
 mod tests;

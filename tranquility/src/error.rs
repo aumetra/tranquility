@@ -33,6 +33,9 @@ pub enum Error {
     #[error("HTTP signatures error")]
     HttpSignatures(#[from] HttpSignaturesError),
 
+    #[error("Invalid request")]
+    InvalidRequest,
+
     #[error("Unauthorized")]
     Unauthorized,
 
@@ -77,6 +80,10 @@ impl From<Error> for Rejection {
 
 fn map_error(error: &Error) -> Result<impl Reply, ()> {
     match error {
+        Error::InvalidRequest => Ok(warp::reply::with_status(
+            error.to_string(),
+            StatusCode::BAD_REQUEST,
+        )),
         Error::Unauthorized => Ok(warp::reply::with_status(
             error.to_string(),
             StatusCode::UNAUTHORIZED,

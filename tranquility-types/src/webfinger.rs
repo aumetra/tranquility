@@ -1,8 +1,11 @@
-use {serde::Deserialize, std::collections::HashMap};
+use {
+    serde::{Deserialize, Serialize},
+    std::collections::HashMap,
+};
 
 pub type KvPairs = HashMap<String, Option<String>>;
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct Link {
     pub rel: String,
 
@@ -19,7 +22,7 @@ pub struct Link {
     pub properties: Option<KvPairs>,
 }
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct Resource {
     pub subject: String,
 

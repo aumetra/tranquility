@@ -5,9 +5,11 @@ pub async fn run() {
 
     let activitypub = crate::activitypub::routes::routes();
     let api = crate::api::routes();
+    let webfinger = crate::webfinger::routes();
 
     let routes = activitypub
         .or(api)
+        .or(webfinger)
         .with(logging)
         .recover(crate::error::recover);
 
