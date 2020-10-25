@@ -7,7 +7,7 @@ Progress:
 
 - [ ] Federation
 - - [ ] Webfinger
-- - [ ] HTTP signature signing
+- - [x] HTTP signature signing
 - - [x] HTTP signature verification
 - - [ ] Actors
 - - - [x] The actor itself
@@ -21,7 +21,7 @@ Progress:
 - - - [x] Delete
 - - - [x] Follow
 - - - [x] Like
-- - - [ ] Reject
+- - - [x] Reject
 - - - [x] Undo
 - - [ ] Activities (outgoing)
 - - - [ ] Accept

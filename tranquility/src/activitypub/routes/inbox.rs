@@ -51,6 +51,7 @@ pub async fn inbox(activity: Activity) -> Result<impl Reply, Rejection> {
         "Delete" => handler::delete::handle(activity).await,
         "Follow" => handler::follow::handle(activity).await,
         "Like" => handler::like::handle(activity).await,
+        "Reject" => handler::reject::handle(activity).await,
         "Undo" => handler::undo::handle(activity).await,
         "Update" => handler::update::handle(activity).await,
         _ => Err(Error::UnknownActivity),

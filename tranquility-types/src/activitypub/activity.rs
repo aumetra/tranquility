@@ -31,8 +31,8 @@ impl Default for Activity {
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ObjectField {
-    Object(super::Object),
     Actor(super::Actor),
+    Object(super::Object),
     Url(String),
 }
 
