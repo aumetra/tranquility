@@ -9,11 +9,11 @@ use {
 };
 
 #[derive(Deserialize)]
-pub struct WebfingerQuery {
+pub struct Query {
     resource: String,
 }
 
-pub async fn webfinger(query: WebfingerQuery) -> Result<impl Reply, Rejection> {
+pub async fn webfinger(query: Query) -> Result<impl Reply, Rejection> {
     let resource = query.resource;
     let username = resource
         .trim_start_matches("acct:")
@@ -39,15 +39,15 @@ pub async fn webfinger(query: WebfingerQuery) -> Result<impl Reply, Rejection> {
         ..Resource::default()
     };
 
-    Ok(warp::reply::json(&resource))
+    Ok(warp::reply::with_header(
+        warp::reply::json(&resource),
+        "Content-Type",
+        "application/jrd+json",
+    ))
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
     warp::path!(".well-known" / "webfinger")
-        .and(warp::header::exact_ignore_case(
-            "accept",
-            "application/jrd+json",
-        ))
         .and(warp::query())
         .and_then(webfinger)
 }
