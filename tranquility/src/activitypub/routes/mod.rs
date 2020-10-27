@@ -1,17 +1,20 @@
-use warp::{Filter, Rejection, Reply};
+use {
+    crate::error::Error,
+    warp::{Filter, Rejection, Reply},
+};
 
 fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy {
-    warp::header::exact_ignore_case("accept", "application/activity+json")
-        .or(warp::header::exact_ignore_case(
-            "accept",
-            "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
-        ))
-        .unify()
-        .or(warp::header::exact_ignore_case(
-            "accept",
-            "application/ld+json",
-        ))
-        .unify()
+    warp::header("accept")
+        .and_then(|accept_header_value: String| async move {
+            if accept_header_value.contains("application/activity+json")
+                || accept_header_value.contains("application/ld+json")
+            {
+                Ok(())
+            } else {
+                Err(Rejection::from(Error::InvalidRequest))
+            }
+        })
+        .untuple_one()
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {

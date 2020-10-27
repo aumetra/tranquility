@@ -10,11 +10,13 @@ pub fn context_field() -> Value {
 pub mod activity;
 pub mod actor;
 pub mod attachment;
+pub mod collection;
 pub mod object;
 pub mod tag;
 
 pub use activity::Activity;
 pub use actor::{Actor, PublicKey};
 pub use attachment::Attachment;
+pub use collection::Collection;
 pub use object::Object;
 pub use tag::Tag;

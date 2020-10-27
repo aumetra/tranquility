@@ -2,7 +2,7 @@ use super::{Attachment, Tag};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicKey {
     pub id: String,
@@ -10,7 +10,7 @@ pub struct PublicKey {
     pub public_key_pem: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Actor {
     #[serde(default = "super::context_field", rename = "@context")]

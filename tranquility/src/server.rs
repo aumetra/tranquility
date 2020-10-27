@@ -1,7 +1,7 @@
 use warp::Filter;
 
 pub async fn run() {
-    let logging = warp::log("");
+    let logging = warp::trace::request();
 
     let activitypub = crate::activitypub::routes::routes();
     let api = crate::api::routes();

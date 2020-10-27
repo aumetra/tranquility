@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Activity {
     #[serde(default = "super::context_field", rename = "@context")]
     pub context: Value,
@@ -30,7 +30,7 @@ impl Default for Activity {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ObjectField {
     Actor(super::Actor),

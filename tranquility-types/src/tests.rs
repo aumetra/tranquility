@@ -69,6 +69,34 @@ const CREATE_ACTIVTY_OBJECT: &str = r#"
 }
 "#;
 
+const OUTBOX_COLLECTION: &str = r#"
+{
+    "@context": ["https://www.w3.org/ns/activitystreams", "https://lain.com/schemas/litepub-0.1.jsonld", {
+            "@language": "und"
+        }
+    ],
+    "first": "https://lain.com/users/lain/outbox?page=true",
+    "id": "https://lain.com/users/lain/outbox",
+    "type": "OrderedCollection"
+}
+"#;
+
+const OUTBOX_COLLECTION_WITH_ITEMS: &str = r#"
+{
+    "@context": ["https://www.w3.org/ns/activitystreams", "https://lain.com/schemas/litepub-0.1.jsonld", {
+            "@language": "und"
+        }
+    ],
+    "id": "https://lain.com/users/lain/outbox?page=true",
+    "next": "https://lain.com/users/lain/outbox?max_id=A0aBb8fNE0ZPTtpUu0&page=true",
+    "orderedItems": [
+    ],
+    "partOf": "https://lain.com/users/lain/outbox",
+    "prev": "https://lain.com/users/lain/outbox?min_id=A0acKKUchLqW050hrk&page=true",
+    "type": "OrderedCollectionPage"
+}
+"#;
+
 const MASTODON_WEBFINGER_RESOURCE: &str = r#"
 {
     "subject": "acct:Gargron@mastodon.social",
@@ -198,6 +226,17 @@ fn decode_create_activity_url() {
 fn decode_create_activity_object() {
     let _activity: crate::activitypub::Activity =
         serde_json::from_str(CREATE_ACTIVTY_OBJECT).unwrap();
+}
+
+#[test]
+fn decode_outbox_collection() {
+    let _outbox: crate::activitypub::Collection = serde_json::from_str(OUTBOX_COLLECTION).unwrap();
+}
+
+#[test]
+fn decode_outbox_collection_with_items() {
+    let _outbox: crate::activitypub::Collection =
+        serde_json::from_str(OUTBOX_COLLECTION_WITH_ITEMS).unwrap();
 }
 
 #[test]
