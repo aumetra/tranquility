@@ -49,7 +49,26 @@ impl Default for Actor {
     fn default() -> Self {
         Self {
             context: super::context_field(),
-            ..Self::default()
+
+            id: String::default(),
+            r#type: String::default(),
+
+            name: String::default(),
+            username: String::default(),
+
+            summary: String::default(),
+            tag: Vec::default(),
+
+            icon: None,
+            image: None,
+
+            manually_approves_followers: false,
+
+            inbox: String::default(),
+            outbox: String::default(),
+            followers: String::default(),
+            following: String::default(),
+            public_key: PublicKey::default(),
         }
     }
 }

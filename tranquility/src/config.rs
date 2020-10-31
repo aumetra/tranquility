@@ -33,6 +33,11 @@ pub fn init_once_cell(config_path: String) {
         .ok();
 }
 
+#[cfg(test)]
+pub fn init_once_cell_with_str(data: &str) {
+    CONFIGURATION.set(serde_json::from_str(data).unwrap()).ok();
+}
+
 pub fn get() -> &'static Configuration {
     CONFIGURATION.get().unwrap()
 }

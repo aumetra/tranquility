@@ -25,7 +25,16 @@ impl Default for Activity {
     fn default() -> Self {
         Self {
             context: super::context_field(),
-            ..Self::default()
+
+            id: String::default(),
+            r#type: String::default(),
+            actor: String::default(),
+
+            object: ObjectField::default(),
+            published: String::default(),
+
+            to: Vec::default(),
+            cc: Vec::default(),
         }
     }
 }

@@ -31,7 +31,21 @@ impl Default for Object {
     fn default() -> Self {
         Self {
             context: super::context_field(),
-            ..Self::default()
+
+            id: String::default(),
+            r#type: String::default(),
+
+            attributed_to: String::default(),
+
+            content: String::default(),
+            published: String::default(),
+            sensitive: false,
+
+            attachment: Vec::default(),
+            tag: Vec::default(),
+
+            to: Vec::default(),
+            cc: Vec::default(),
         }
     }
 }

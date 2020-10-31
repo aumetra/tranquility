@@ -7,30 +7,40 @@ use {
 #[serde(rename_all = "camelCase")]
 pub struct Collection {
     #[serde(default = "super::context_field", rename = "@context")]
-    context: Value,
+    pub context: Value,
 
-    id: String,
-    r#type: String,
+    pub id: String,
+    pub r#type: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    first: Option<String>,
+    pub first: Option<String>,
 
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    part_of: String,
+    pub part_of: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    prev: String,
+    pub prev: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    next: String,
+    pub next: String,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    ordered_items: Vec<super::Activity>,
+    pub ordered_items: Vec<super::Activity>,
 }
 
 impl Default for Collection {
     fn default() -> Self {
         Self {
             context: super::context_field(),
-            ..Self::default()
+
+            id: String::default(),
+            r#type: String::default(),
+
+            first: None,
+
+            part_of: String::default(),
+            prev: String::default(),
+            next: String::default(),
+
+            ordered_items: Vec::default(),
         }
     }
 }

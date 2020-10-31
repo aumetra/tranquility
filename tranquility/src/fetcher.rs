@@ -2,7 +2,7 @@ use {
     crate::{database::model::Actor as DBActor, error::Error},
     reqwest::IntoUrl,
     serde_json::Value,
-    tranquility_types::activitypub::{Activity, Actor, Object},
+    tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object},
 };
 
 pub enum Entity {
@@ -35,6 +35,8 @@ impl Entity {
 }
 
 pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
+    debug!("Fetching remote actor...");
+
     match crate::database::object::select::by_url(url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => {
@@ -43,12 +45,20 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         }
     }
 
-    if let Entity::Activity(activity) = fetch_entity(url).await? {
-        let (actor, _actor_db) = fetch_actor(activity.actor.as_ref()).await?;
-        let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
+    if let Entity::Activity(mut activity) = fetch_entity(url).await? {
+        let (_actor, actor_db) = fetch_actor(activity.actor.as_ref()).await?;
+        // Normalize the activity
+        if let Some(object) = activity.object.as_object() {
+            let object_value = serde_json::to_value(object)?;
+            crate::database::object::insert(actor_db.id, object.id.as_str(), object_value).await?;
+
+            activity.object = ObjectField::Url(object.id.to_owned());
+        } else if activity.object.as_actor().is_some() {
+            return Err(Error::UnknownActivity);
+        }
 
         let activity_value = serde_json::to_value(&activity)?;
-        crate::database::object::insert(actor.id, &activity.id, activity_value).await?;
+        crate::database::object::insert(actor_db.id, &activity.id, activity_value).await?;
 
         Ok(activity)
     } else {
@@ -59,6 +69,8 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
 }
 
 pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
+    debug!("Fetching remote actor...");
+
     match crate::database::actor::select::by_url(url).await {
         Ok(actor) => return Ok((serde_json::from_value(actor.actor.clone())?, actor)),
         Err(e) => {
@@ -80,6 +92,8 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
 }
 
 pub async fn fetch_object(url: &str) -> Result<Object, Error> {
+    debug!("Fetching remote object...");
+
     match crate::database::object::select::by_url(url).await {
         Ok(object) => return Ok(serde_json::from_value(object.data)?),
         Err(e) => {
@@ -89,11 +103,10 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
     }
 
     if let Entity::Object(object) = fetch_entity(url).await? {
-        let (actor, _actor_db) = fetch_actor(object.attributed_to.as_ref()).await?;
-        let actor = crate::database::actor::select::by_url(actor.id.as_ref()).await?;
+        let (_actor, actor_db) = fetch_actor(object.attributed_to.as_ref()).await?;
 
         let object_value = serde_json::to_value(&object)?;
-        crate::database::object::insert(actor.id, &object.id, object_value).await?;
+        crate::database::object::insert(actor_db.id, &object.id, object_value).await?;
 
         Ok(object)
     } else {

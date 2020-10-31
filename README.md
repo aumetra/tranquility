@@ -3,6 +3,11 @@
 Tranquility is a small ActivityPub server written in Rust  
 Federation should work with most other implementations (once it actually, you know, federates)  
 
+## Important
+
+Do NOT create a database with the name `tranquility_tests` and run the unit tests  
+The unit tests will delete all data from the database  
+
 Progress:
 
 - [ ] Federation

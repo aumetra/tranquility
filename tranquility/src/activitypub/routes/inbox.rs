@@ -12,7 +12,7 @@ use {
 pub async fn verify_request(
     // Do we even care about the user ID?
     // Theoretically we could just use one shared inbox and get rid of the unique inboxes
-    _user_id: String,
+    _user_id: uuid::Uuid,
     method: Method,
     path: FullPath,
     query: String,

@@ -3,6 +3,9 @@ use serde_json::{json, Value};
 pub const DATE_TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%.3fZ";
 pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Public";
 
+pub const OUTBOX_FOLLOW_COLLECTIONS_TYPE: &str = "OrderedCollection";
+pub const OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE: &str = "OrderedCollectionPage";
+
 pub fn context_field() -> Value {
     json!(["https://www.w3.org/ns/activitystreams"])
 }

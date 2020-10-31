@@ -95,6 +95,36 @@ pub mod select {
         Ok(object)
     }
 
+    pub async fn by_type_and_owner(
+        r#type: &str,
+        owner_id: &Uuid,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Object>, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let objects = sqlx::query_as!(
+            Object,
+            r#"
+                SELECT * FROM objects
+                WHERE owner_id = $1
+                AND data->>'type' = $2
+
+                ORDER BY created_at DESC
+                LIMIT $3
+                OFFSET $4
+            "#,
+            owner_id,
+            r#type,
+            limit,
+            offset
+        )
+        .fetch_all(conn_pool)
+        .await?;
+
+        Ok(objects)
+    }
+
     pub async fn by_url(url: &str) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get()?;
 

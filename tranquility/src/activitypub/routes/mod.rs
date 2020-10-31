@@ -1,5 +1,6 @@
 use {
     crate::error::Error,
+    uuid::Uuid,
     warp::{Filter, Rejection, Reply},
 };
 
@@ -18,7 +19,7 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
-    let inbox = warp::path!("users" / String / "inbox")
+    let inbox = warp::path!("users" / Uuid / "inbox")
         .and(warp::post())
         .and(warp::method())
         .and(warp::path::full())
@@ -28,19 +29,25 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and_then(inbox::verify_request)
         .and_then(inbox::inbox);
 
-    let objects = warp::path!("objects" / String)
+    let objects = warp::path!("objects" / Uuid)
         .and(warp::get())
         .and(header_requirements())
         .and_then(objects::objects);
 
-    let users = warp::path!("users" / String)
+    let outbox = warp::path!("users" / Uuid / "outbox")
+        .and(warp::query())
+        .and(header_requirements())
+        .and_then(outbox::outbox);
+
+    let users = warp::path!("users" / Uuid)
         .and(warp::get())
         .and(header_requirements())
         .and_then(users::users);
 
-    inbox.or(users).or(objects)
+    inbox.or(objects).or(outbox).or(users)
 }
 
 pub mod inbox;
 pub mod objects;
+pub mod outbox;
 pub mod users;

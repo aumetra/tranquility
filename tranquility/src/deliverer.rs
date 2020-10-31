@@ -20,6 +20,7 @@ fn prepare_request(client: &Client, url: &str, activity: &Value) -> ReqwestResul
 pub fn deliver(activity: Activity) -> Result<(), Error> {
     let activity_value = serde_json::to_value(&activity)?;
 
+    let activity_id = activity.id;
     let recipient_list = activity
         .to
         .into_iter()
@@ -31,6 +32,8 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
     let client = &crate::REQWEST_CLIENT;
     tokio::spawn(async move {
         for url in recipient_list {
+            debug!("Delivering activity {} to actor {}...", activity_id, url);
+
             let (remote_actor, remote_actor_db) = match crate::fetcher::fetch_actor(&url).await {
                 Ok(actor) => actor,
                 Err(err) => {
