@@ -33,12 +33,22 @@ Progress:
 - - - [ ] Reject
 - - - [ ] Undo
 
-- [ ] Client API (I'll probably implement the Mastodon API)
+- [ ] Client API (Mastodon API)
 - - [ ] Authorization
+- - - [ ] App registration
+- - - [ ] OAuth
 - - [ ] Accounts
-- - [ ] Get status
-- - [ ] Post status
-- - - [ ] Media upload
+- - - [ ] Block
+- - - [x] Create
+- - - [ ] Delete
+- - - [ ] Follow
+- - - [ ] Retrieve
+- - - [ ] Update
+- - [ ] Statuses
+- - - [ ] Delete
+- - - [ ] Retrieve
+- - - [ ] Publish
+- - [ ] Media upload
 - - [ ] Timelines
 - - - [ ] Home
 - - - [ ] Local
