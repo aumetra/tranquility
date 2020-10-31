@@ -60,7 +60,7 @@ pub async fn following(user_id: Uuid, query: CollectionQuery) -> Result<impl Rep
         prev,
         next,
 
-        ordered_items: last_followed.into(),
+        ordered_items: last_followed,
         ..Collection::default()
     };
 

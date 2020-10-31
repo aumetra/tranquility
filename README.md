@@ -6,7 +6,8 @@ Federation should work with most other implementations (once it actually, you kn
 Progress:
 
 - [ ] Federation
-- - [ ] Webfinger
+- - [x] Webfinger server
+- - [ ] Webfinger client
 - - [x] HTTP signature signing
 - - [x] HTTP signature verification
 - - [ ] Actors
@@ -31,3 +32,14 @@ Progress:
 - - - [ ] Like
 - - - [ ] Reject
 - - - [ ] Undo
+
+- [ ] Client API (I'll probably implement the Mastodon API)
+- - [ ] Authorization
+- - [ ] Accounts
+- - [ ] Get status
+- - [ ] Post status
+- - - [ ] Media upload
+- - [ ] Timelines
+- - - [ ] Home
+- - - [ ] Local
+- - - [ ] Global
