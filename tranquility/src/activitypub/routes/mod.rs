@@ -1,5 +1,6 @@
 use {
     crate::error::Error,
+    serde::Deserialize,
     uuid::Uuid,
     warp::{Filter, Rejection, Reply},
 };
@@ -18,7 +19,20 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
         .untuple_one()
 }
 
+const ACTIVITY_COUNT_PER_PAGE: i64 = 10;
+
+#[derive(Deserialize)]
+pub struct CollectionQuery {
+    offset: Option<u64>,
+}
+
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+    let following = warp::path!("users" / Uuid / "following")
+        .and(warp::get())
+        .and(warp::query())
+        .and(header_requirements())
+        .and_then(following::following);
+
     let inbox = warp::path!("users" / Uuid / "inbox")
         .and(warp::post())
         .and(warp::method())
@@ -35,6 +49,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and_then(objects::objects);
 
     let outbox = warp::path!("users" / Uuid / "outbox")
+        .and(warp::get())
         .and(warp::query())
         .and(header_requirements())
         .and_then(outbox::outbox);
@@ -44,9 +59,10 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(header_requirements())
         .and_then(users::users);
 
-    inbox.or(objects).or(outbox).or(users)
+    following.or(inbox).or(objects).or(outbox).or(users)
 }
 
+pub mod following;
 pub mod inbox;
 pub mod objects;
 pub mod outbox;

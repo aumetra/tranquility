@@ -23,7 +23,26 @@ pub struct Collection {
     pub next: String,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ordered_items: Vec<super::Activity>,
+    pub ordered_items: Vec<Item>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum Item {
+    Activity(super::Activity),
+    Url(String),
+}
+
+impl From<super::Activity> for Item {
+    fn from(item: super::Activity) -> Self {
+        Self::Activity(item)
+    }
+}
+
+impl From<String> for Item {
+    fn from(item: String) -> Self {
+        Self::Url(item)
+    }
 }
 
 impl Default for Collection {

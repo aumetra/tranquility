@@ -1,24 +1,17 @@
 use {
+    super::{CollectionQuery, ACTIVITY_COUNT_PER_PAGE},
     crate::error::Error,
-    serde::Deserialize,
     tranquility_types::activitypub::{
-        Activity, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
+        collection::Item, Activity, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
     },
     uuid::Uuid,
     warp::{Rejection, Reply},
 };
 
-const ACTIVITY_COUNT_PER_PAGE: i64 = 10;
-
-#[derive(Deserialize)]
-pub struct Query {
-    offset: Option<u64>,
-}
-
-pub async fn outbox(user_id: Uuid, query: Query) -> Result<impl Reply, Rejection> {
+pub async fn outbox(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply, Rejection> {
     #[allow(clippy::cast_possible_wrap)]
     let mut offset = query.offset.unwrap_or_default() as i64;
-    
+
     // Set the offset to 0 in case someone decides to pass
     // a number that wraps the signed 64bit integer
     if offset < 0 {
@@ -31,6 +24,7 @@ pub async fn outbox(user_id: Uuid, query: Query) -> Result<impl Reply, Rejection
             .into_iter()
             .map(|db_object| serde_json::from_value(db_object.data).map_err(Error::from))
             .collect::<Result<Vec<Activity>, Error>>()?;
+    let last_activities = last_activities.into_iter().map(Item::from).collect();
 
     let user_db = crate::database::actor::select::by_id(user_id).await?;
     let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;

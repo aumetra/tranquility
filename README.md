@@ -12,8 +12,8 @@ Progress:
 - - [ ] Actors
 - - - [x] The actor itself
 - - - [x] Inbox
-- - - [ ] Outbox
-- - - [ ] Following collection
+- - - [x] Outbox
+- - - [x] Following collection
 - - - [ ] Followers collection
 - - [x] Activities (incoming)
 - - - [x] Accept
