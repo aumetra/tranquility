@@ -5,7 +5,6 @@ use {
     reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
     serde_json::Error as SerdeJsonError,
     sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
-    std::error::Error as StdError,
     thiserror::Error as DeriveError,
     uuid::Error as UuidError,
     validator::ValidationErrors,
@@ -26,9 +25,6 @@ pub enum Error {
 
     #[error("Remote content fetch failed")]
     Fetch,
-
-    #[error("An error occurred")]
-    General(#[from] Box<dyn StdError + Send + Sync>),
 
     #[error("HTTP signatures error")]
     HttpSignatures(#[from] HttpSignaturesError),

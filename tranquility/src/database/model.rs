@@ -1,5 +1,6 @@
 use {chrono::NaiveDateTime, serde_json::Value, uuid::Uuid};
 
+#[derive(Clone)]
 pub struct Actor {
     pub id: Uuid,
     pub username: String,
@@ -14,6 +15,7 @@ pub struct Actor {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Clone)]
 pub struct Object {
     pub id: Uuid,
     pub owner_id: Uuid,

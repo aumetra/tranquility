@@ -83,9 +83,11 @@ pub mod insert {
 pub mod select {
     use {
         crate::{database::model::Actor, error::Error},
+        cached::proc_macro::cached,
         uuid::Uuid,
     };
 
+    #[cached(result, time = 15)]
     pub async fn by_id(id: Uuid) -> Result<Actor, Error> {
         let conn_pool = crate::database::connection::get()?;
 
@@ -103,6 +105,7 @@ pub mod select {
         Ok(actor)
     }
 
+    #[cached(result, time = 15, key = "String", convert = r#"{ url.to_owned() }"#)]
     pub async fn by_url(url: &str) -> Result<Actor, Error> {
         let conn_pool = crate::database::connection::get()?;
 
@@ -120,6 +123,12 @@ pub mod select {
         Ok(actor)
     }
 
+    #[cached(
+        result,
+        time = 15,
+        key = "String",
+        convert = r#"{ username.to_owned() }"#
+    )]
     pub async fn by_username_local(username: &str) -> Result<Actor, Error> {
         let conn_pool = crate::database::connection::get()?;
 
