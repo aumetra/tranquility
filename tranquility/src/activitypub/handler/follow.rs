@@ -38,7 +38,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Send out an accept activity if the followed actor is local
     if follow_activity.approved {
         let accept_activity_id = Uuid::new_v4();
-        let accept_activity = activitypub::create_activity(
+        let accept_activity = activitypub::create::activity(
             "Accept",
             &accept_activity_id.to_hyphenated_ref().to_string(),
             followed_url,

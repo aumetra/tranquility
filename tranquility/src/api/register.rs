@@ -39,7 +39,7 @@ pub async fn register(form: RegistrationForm) -> Result<impl Reply, Rejection> {
     let rsa_private_key = crate::crypto::rsa::generate().await?;
     let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(&rsa_private_key)?;
 
-    let actor = activitypub::create_actor(
+    let actor = activitypub::create::actor(
         &user_id.to_hyphenated_ref().to_string(),
         &form.username,
         public_key_pem,

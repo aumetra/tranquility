@@ -10,6 +10,24 @@ pub fn context_field() -> Value {
     json!(["https://www.w3.org/ns/activitystreams"])
 }
 
+pub trait IsPrivate {
+    fn is_private(&self) -> bool;
+}
+
+impl IsPrivate for Activity {
+    fn is_private(&self) -> bool {
+        !self.cc.contains(&PUBLIC_IDENTIFIER.to_string())
+            && !self.to.contains(&PUBLIC_IDENTIFIER.to_string())
+    }
+}
+
+impl IsPrivate for Object {
+    fn is_private(&self) -> bool {
+        !self.cc.contains(&PUBLIC_IDENTIFIER.to_string())
+            && !self.to.contains(&PUBLIC_IDENTIFIER.to_string())
+    }
+}
+
 pub mod activity;
 pub mod actor;
 pub mod attachment;

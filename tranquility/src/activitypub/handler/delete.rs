@@ -16,7 +16,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         }
     }
 
-    let object = activity.object.as_object().ok_or(Error::UnknownActivity)?;
+    let object = activity.object.as_object().unwrap();
     // Does the object belong to the actor?
     if activity.actor != object.attributed_to {
         return Err(Error::Unauthorized);
