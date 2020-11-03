@@ -1,19 +1,28 @@
 use {
     crate::error::Error,
-    tranquility_types::activitypub::{activity::ObjectField, Activity},
+    tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
     warp::http::StatusCode,
 };
+
+async fn insert_object(activity: &Activity) -> Result<Object, Error> {
+    let (_owner, owner_db) = crate::fetcher::fetch_actor(&activity.actor).await?;
+    let object = activity.object.as_object().unwrap().to_owned();
+    let object_value = serde_json::to_value(&object)?;
+
+    crate::database::object::insert(owner_db.id, &object.id, object_value).await?;
+
+    Ok(object)
+}
 
 pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Normalize the activity
     match activity.object {
-        ObjectField::Object(object) => {
-            crate::fetcher::fetch_object(&object.id).await?;
+        ObjectField::Object(_) => {
+            let object = insert_object(&activity).await?;
 
             activity.object = ObjectField::Url(object.id);
         }
         ObjectField::Url(ref url) => {
-            // I know, I could just save the object into the database directly instead of refetching it
             crate::fetcher::fetch_object(url).await?;
         }
         ObjectField::Actor(_) => return Err(Error::UnknownActivity),
