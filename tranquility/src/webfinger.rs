@@ -29,7 +29,7 @@ pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DBActor
         .next()
         .ok_or(Error::UnexpectedWebfingerResource)?;
 
-    crate::fetcher::fetch_actor(&actor_url.href).await
+    crate::activitypub::fetcher::fetch_actor(&actor_url.href).await
 }
 
 #[derive(Deserialize)]

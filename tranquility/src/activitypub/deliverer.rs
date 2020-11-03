@@ -34,7 +34,7 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
         for url in recipient_list {
             debug!("Delivering activity {} to actor {}...", activity_id, url);
 
-            let (remote_actor, remote_actor_db) = match crate::fetcher::fetch_actor(&url).await {
+            let (remote_actor, remote_actor_db) = match super::fetcher::fetch_actor(&url).await {
                 Ok(actor) => actor,
                 Err(err) => {
                     warn!("Couldn't fetch actor: {}", err);

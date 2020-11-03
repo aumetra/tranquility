@@ -18,6 +18,10 @@ fn activitypub_datetime() -> String {
     chrono::Utc::now().format(DATE_TIME_FORMAT).to_string()
 }
 
+pub fn clean_object(object: &mut Object) {
+    object.content = ammonia::clean(&object.content);
+}
+
 pub fn create_activity<T: Into<ObjectField>>(
     r#type: &str,
     id: &str,
@@ -109,5 +113,7 @@ pub fn create_object(
     }
 }
 
+pub mod deliverer;
+pub mod fetcher;
 pub mod handler;
 pub mod routes;

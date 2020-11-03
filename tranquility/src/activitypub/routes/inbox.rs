@@ -1,5 +1,8 @@
 use {
-    crate::{activitypub::handler, error::Error},
+    crate::{
+        activitypub::{fetcher, handler},
+        error::Error,
+    },
     http_signatures::HttpRequest,
     tranquility_types::activitypub::Activity,
     warp::{
@@ -19,7 +22,7 @@ pub async fn verify_request(
     headers: HeaderMap,
     activity: Activity,
 ) -> Result<Activity, Rejection> {
-    let (remote_actor, _remote_actor_db) = crate::fetcher::fetch_actor(activity.actor.as_ref())
+    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(activity.actor.as_ref())
         .await
         .map_err(Error::from)?;
 

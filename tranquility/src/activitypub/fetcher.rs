@@ -102,7 +102,9 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
         }
     }
 
-    if let Entity::Object(object) = fetch_entity(url).await? {
+    if let Entity::Object(mut object) = fetch_entity(url).await? {
+        crate::activitypub::clean_object(&mut object);
+
         let (_actor, actor_db) = fetch_actor(object.attributed_to.as_ref()).await?;
 
         let object_value = serde_json::to_value(&object)?;

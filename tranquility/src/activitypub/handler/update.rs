@@ -1,4 +1,8 @@
-use {crate::error::Error, tranquility_types::activitypub::Activity, warp::http::StatusCode};
+use {
+    crate::{activitypub::fetcher, error::Error},
+    tranquility_types::activitypub::Activity,
+    warp::http::StatusCode,
+};
 
 pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Update activities are usually only used to update the actor
@@ -16,7 +20,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     actor.summary = ammonia::clean(&actor.summary);
 
     // Fetch the actor (just in case)
-    crate::fetcher::fetch_actor(actor.id.as_str()).await?;
+    fetcher::fetch_actor(actor.id.as_str()).await?;
 
     crate::database::actor::update(actor).await?;
 

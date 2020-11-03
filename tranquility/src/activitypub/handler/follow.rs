@@ -1,6 +1,6 @@
 use {
     crate::{
-        activitypub::{self, FollowActivity},
+        activitypub::{self, deliverer, fetcher, FollowActivity},
         error::Error,
     },
     tranquility_types::activitypub::{activity::ObjectField, Activity},
@@ -16,7 +16,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     };
 
     // Fetch the actor (just in case)
-    let (actor, actor_db) = crate::fetcher::fetch_actor(actor_url).await?;
+    let (actor, actor_db) = fetcher::fetch_actor(actor_url).await?;
 
     // Normalize the activity
     if let ObjectField::Actor(actor) = activity.object {
@@ -55,7 +55,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         )
         .await?;
 
-        crate::deliverer::deliver(accept_activity)?;
+        deliverer::deliver(accept_activity)?;
     }
 
     Ok(StatusCode::CREATED)

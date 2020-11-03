@@ -24,9 +24,7 @@ mod cli;
 mod config;
 mod crypto;
 mod database;
-mod deliverer;
 mod error;
-mod fetcher;
 mod server;
 mod webfinger;
 
