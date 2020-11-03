@@ -1,6 +1,6 @@
 use {
     crate::{activitypub::fetcher, error::Error},
-    tranquility_types::activitypub::Activity,
+    tranquility_types::activitypub::{activity::ObjectField, Activity},
     warp::http::StatusCode,
 };
 
