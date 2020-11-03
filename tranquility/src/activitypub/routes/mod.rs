@@ -1,6 +1,7 @@
 use {
     crate::error::Error,
-    serde::Deserialize,
+    bytes::{buf::BufExt, Buf},
+    serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{Filter, Rejection, Reply},
 };
@@ -17,6 +18,19 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
             }
         })
         .untuple_one()
+}
+
+fn decode_json_body<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
+{
+    struct Json;
+
+    impl Json {
+        pub fn decode<T: DeserializeOwned>(body: impl Buf) -> Result<T, Error> {
+            serde_json::from_reader(body.reader()).map_err(Error::from)
+        }
+    }
+
+    warp::body::aggregate().and_then(|body| async move { Ok::<T, Rejection>(Json::decode(body)?) })
 }
 
 fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
@@ -49,7 +63,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(warp::path::full())
         .and(optional_raw_query())
         .and(warp::header::headers_cloned())
-        .and(warp::body::json())
+        .and(decode_json_body())
         .and_then(inbox::verify_request)
         .and_then(inbox::inbox);
 
