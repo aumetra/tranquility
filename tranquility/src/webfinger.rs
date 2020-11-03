@@ -1,5 +1,5 @@
 use {
-    crate::error::Error,
+    crate::{database::model::Actor as DBActor, error::Error},
     serde::Deserialize,
     tranquility_types::{
         activitypub::Actor,
@@ -7,6 +7,30 @@ use {
     },
     warp::{Filter, Rejection, Reply},
 };
+
+pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DBActor), Error> {
+    let resource = format!("acct:{}@{}", username, domain);
+    let url = format!(
+        "https://{}/.well-known/webfinger?resource={}",
+        domain, resource
+    );
+
+    let client = &crate::REQWEST_CLIENT;
+    let request = client
+        .get(&url)
+        .header("Accept", "application/jrd+json")
+        .build()?;
+    let resource: Resource = client.execute(request).await?.json().await?;
+
+    let actor_url = resource
+        .links
+        .iter()
+        .filter(|link| link.rel == "self")
+        .next()
+        .ok_or(Error::UnexpectedWebfingerResource)?;
+
+    crate::fetcher::fetch_actor(&actor_url.href).await
+}
 
 #[derive(Deserialize)]
 pub struct Query {

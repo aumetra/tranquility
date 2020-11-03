@@ -7,15 +7,15 @@ Progress:
 
 - [ ] Federation
 - - [x] Webfinger server
-- - [ ] Webfinger client
+- - [x] Webfinger client
 - - [x] HTTP signature signing
 - - [x] HTTP signature verification
-- - [ ] Actors
+- - [x] Actors
 - - - [x] The actor itself
 - - - [x] Inbox
 - - - [x] Outbox
 - - - [x] Following collection
-- - - [ ] Followers collection
+- - - [x] Followers collection
 - - [x] Activities (incoming)
 - - - [x] Accept
 - - - [x] Create

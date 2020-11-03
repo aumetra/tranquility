@@ -27,6 +27,12 @@ pub struct CollectionQuery {
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+    let followers = warp::path!("users" / Uuid / "followers")
+        .and(warp::get())
+        .and(warp::query())
+        .and(header_requirements())
+        .and_then(followers::followers);
+
     let following = warp::path!("users" / Uuid / "following")
         .and(warp::get())
         .and(warp::query())
@@ -59,9 +65,15 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(header_requirements())
         .and_then(users::users);
 
-    following.or(inbox).or(objects).or(outbox).or(users)
+    followers
+        .or(following)
+        .or(inbox)
+        .or(objects)
+        .or(outbox)
+        .or(users)
 }
 
+pub mod followers;
 pub mod following;
 pub mod inbox;
 pub mod objects;

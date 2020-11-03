@@ -101,6 +101,42 @@ pub mod select {
         result,
         time = 15,
         key = "String",
+        convert = r#"{ format!("{}{}{}{}", r#type, object_url, limit, offset) }"#
+    )]
+    pub async fn by_type_and_object_url(
+        r#type: &str,
+        object_url: &str,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Object>, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let objects = sqlx::query_as!(
+            Object,
+            r#"
+                SELECT * FROM objects
+                WHERE data->>'type' = $1
+                AND data->>'object' = $2
+
+                ORDER BY created_at DESC
+                LIMIT $3
+                OFFSET $4
+            "#,
+            r#type,
+            object_url,
+            limit,
+            offset
+        )
+        .fetch_all(conn_pool)
+        .await?;
+
+        Ok(objects)
+    }
+
+    #[cached(
+        result,
+        time = 15,
+        key = "String",
         convert = r#"{ format!("{}{}{}{}", r#type, owner_id, limit, offset) }"#
     )]
     pub async fn by_type_and_owner(

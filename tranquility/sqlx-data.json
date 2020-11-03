@@ -178,6 +178,59 @@
       "nullable": []
     }
   },
+  "53a810cc3387d1a46ad3002269cec5df30f710af3b11f1936df36641cf7e3d05": {
+    "query": "\n                SELECT * FROM objects\n                WHERE data->>'type' = $1\n                AND data->>'object' = $2\n\n                ORDER BY created_at DESC\n                LIMIT $3\n                OFFSET $4\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "url",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "816ea34615b11311477a7fd33e7f34336892453189c756d1edcde49547d527e5": {
     "query": "\n                DELETE FROM objects\n                WHERE id = $1\n            ",
     "describe": {

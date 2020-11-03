@@ -53,6 +53,9 @@ pub enum Error {
     #[error("serde-json operation failed")]
     SerdeJson(#[from] SerdeJsonError),
 
+    #[error("Unexpected webfinger resource")]
+    UnexpectedWebfingerResource,
+
     #[error("Unknown activity")]
     UnknownActivity,
 
