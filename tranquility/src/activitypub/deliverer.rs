@@ -84,7 +84,7 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
                     http_signatures::sign(
                         &request,
                         &key_id,
-                        &vec!["(request-target)", "date", "digest"],
+                        &["(request-target)", "date", "digest"],
                         private_key.as_bytes(),
                     )
                 })
