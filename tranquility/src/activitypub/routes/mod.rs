@@ -19,6 +19,10 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
         .untuple_one()
 }
 
+fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
+    warp::query::raw().or_else(|_| async { Ok::<(String,), Rejection>((String::new(),)) })
+}
+
 const ACTIVITY_COUNT_PER_PAGE: i64 = 10;
 
 #[derive(Deserialize)]
@@ -43,7 +47,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(warp::post())
         .and(warp::method())
         .and(warp::path::full())
-        .and(warp::query::raw())
+        .and(optional_raw_query())
         .and(warp::header::headers_cloned())
         .and(warp::body::json())
         .and_then(inbox::verify_request)
