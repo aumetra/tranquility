@@ -25,8 +25,7 @@ pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DBActor
     let actor_url = resource
         .links
         .iter()
-        .filter(|link| link.rel == "self")
-        .next()
+        .find(|link| link.rel == "self")
         .ok_or(Error::UnexpectedWebfingerResource)?;
 
     crate::activitypub::fetcher::fetch_actor(&actor_url.href).await

@@ -883,7 +883,7 @@ dependencies = [
 [[package]]
 name = "http-signatures"
 version = "0.1.0"
-source = "git+https://github.com/smallglitch/http-signatures.git?branch=main#bd723d0278c519c39b1ba38ed44e7c0980941d86"
+source = "git+https://github.com/smallglitch/http-signatures.git?branch=main#f94852e2c66a8251a5b3950c2404b158408ecc91"
 dependencies = [
  "base64 0.13.0",
  "http",

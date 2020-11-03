@@ -82,9 +82,9 @@ pub fn deliver(activity: Activity) -> Result<(), Error> {
                 let request = request.try_clone().unwrap();
                 let signature_result = tokio::task::spawn_blocking(move || {
                     http_signatures::sign(
-                        (&request).into(),
+                        &request,
                         &key_id,
-                        vec!["(request-target)", "date", "digest"],
+                        &vec!["(request-target)", "date", "digest"],
                         private_key.as_bytes(),
                     )
                 })
