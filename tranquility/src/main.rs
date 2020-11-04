@@ -7,15 +7,24 @@ extern crate tracing;
 use {once_cell::sync::Lazy, reqwest::Client, std::env};
 
 const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+const VERSION: &str = concat!(
+    "v",
+    env!("CARGO_PKG_VERSION"),
+    "-",
+    env!("GIT_BRANCH"),
+    "-",
+    env!("GIT_COMMIT")
+);
 
 static REQWEST_CLIENT: Lazy<Client> =
     Lazy::new(|| Client::builder().user_agent(USER_AGENT).build().unwrap());
 
 #[tokio::main]
 async fn main() {
-    env::set_var("RUST_LOG", "info");
+    cli::run();
 
-    cli::run().await;
+    crate::database::init().await.unwrap();
+    crate::server::run().await;
 }
 
 mod activitypub;
