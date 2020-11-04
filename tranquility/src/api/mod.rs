@@ -1,20 +1,15 @@
-use {
-    serde::de::DeserializeOwned,
-    warp::{Filter, Rejection, Reply},
-};
-
-pub fn form_urlencoded_json<T: DeserializeOwned + Send>(
-) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
-    warp::body::form().or(warp::body::json()).unify()
-}
+use warp::{Filter, Rejection, Reply};
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+    let mastodon_api = mastodon::routes();
+
     let register = warp::path!("api" / "register")
         .and(warp::post())
         .and(warp::body::form())
         .and_then(register::register);
 
-    register
+    mastodon_api.or(register)
 }
 
+pub mod mastodon;
 pub mod register;

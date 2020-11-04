@@ -164,6 +164,145 @@
       ]
     }
   },
+  "3c50e1b4edd7c6fe9a073e140df1b2d0f009bbfefbe5fe920b632a87a74bae6e": {
+    "query": "\n            INSERT INTO oauth_tokens\n            ( application_id, actor_id, access_token, refresh_token, valid_until )\n            VALUES\n            ( $1, $2, $3, $4, $5 )\n            RETURNING *\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "access_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "refresh_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text",
+          "Text",
+          "Timestamp"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "4467a6aee265a780c75b257f65014a4f240bafc85cbf06bf071db8c69b09c7fe": {
+    "query": "\n            INSERT INTO oauth_applications\n            ( client_name, client_id, client_secret, redirect_uris, scopes, website )\n            VALUES\n            ( $1, $2, $3, $4, $5, $6 )\n            RETURNING *\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "client_secret",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "redirect_uris",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "scopes",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "website",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "4c9154bbe03a569f7d55990e9105138f9373b4f130a2357543f23ee1b4755324": {
     "query": "\n            INSERT INTO objects \n            ( owner_id, data, url ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
     "describe": {
@@ -222,6 +361,65 @@
         ]
       },
       "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "708ecddc1fbbfc4019348593cacbe917cbdb91d800dc855af80ae4e74607f673": {
+    "query": "\n            INSERT INTO oauth_authorizations\n            ( application_id, actor_id, code, valid_until )\n            VALUES\n            ( $1, $2, $3, $4 )\n            RETURNING *\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text",
+          "Timestamp"
+        ]
+      },
+      "nullable": [
+        false,
         false,
         false,
         false,

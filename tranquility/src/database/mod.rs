@@ -34,4 +34,5 @@ pub async fn init() -> Result<(), Error> {
 
 pub mod actor;
 pub mod model;
+pub mod oauth;
 pub mod object;
