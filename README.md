@@ -34,9 +34,9 @@ Progress:
 - - - [ ] Undo
 
 - [ ] Client API (Mastodon API)
-- - [ ] Authorization
+- - [x] Authorization
 - - - [x] App registration
-- - - [ ] OAuth
+- - - [x] OAuth
 - - [ ] Accounts
 - - - [ ] Block
 - - - [x] Create
