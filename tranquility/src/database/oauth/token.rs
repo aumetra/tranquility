@@ -5,7 +5,7 @@ use {
 };
 
 pub async fn insert(
-    application_id: Uuid,
+    application_id: Option<Uuid>,
     actor_id: Uuid,
     access_token: String,
     refresh_token: Option<String>,

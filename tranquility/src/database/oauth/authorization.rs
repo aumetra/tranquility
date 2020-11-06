@@ -18,6 +18,27 @@ pub mod delete {
     }
 }
 
+pub mod select {
+    use crate::{database::model::OAuthAuthorization, error::Error};
+
+    pub async fn by_code(code: &str) -> Result<OAuthAuthorization, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let authorization = sqlx::query_as!(
+            OAuthAuthorization,
+            r#"
+                    SELECT * FROM oauth_authorizations
+                    WHERE code = $1
+                "#,
+            code
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(authorization)
+    }
+}
+
 pub async fn insert(
     application_id: Uuid,
     actor_id: Uuid,

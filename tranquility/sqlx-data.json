@@ -220,7 +220,7 @@
       },
       "nullable": [
         false,
-        false,
+        true,
         false,
         false,
         true,
@@ -835,6 +835,62 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "d3be14b5b5486d7a9052bd411c029f8fa093389e857c2091358cbf981b67408a": {
+    "query": "\n                    SELECT * FROM oauth_authorizations\n                    WHERE code = $1\n                ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
     }
   },
   "eb054640e844b636c95f2f4c4669a54447413f44ac6b95ce75a4a89d15b6e055": {

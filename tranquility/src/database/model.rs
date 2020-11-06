@@ -63,7 +63,7 @@ pub struct OAuthAuthorization {
 pub struct OAuthToken {
     pub id: Uuid,
 
-    pub application_id: Uuid,
+    pub application_id: Option<Uuid>,
     pub actor_id: Uuid,
 
     pub access_token: String,

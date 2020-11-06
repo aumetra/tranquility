@@ -23,8 +23,13 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 
         warp::path!("oauth" / "authorize").and(get.or(post))
     };
+    let token = warp::path!("oauth" / "token")
+        .and(warp::post())
+        .and(warp::body::form())
+        .and_then(token::token);
 
-    authorize
+    authorize.or(token)
 }
 
 pub mod authorize;
+pub mod token;

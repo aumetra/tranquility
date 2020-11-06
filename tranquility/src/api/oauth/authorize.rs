@@ -33,7 +33,7 @@ pub async fn get() -> Result<impl Reply, Rejection> {
     Ok(warp::reply::html(page))
 }
 
-pub async fn post(form: Form, query: Query) -> Result<Either<impl Reply, impl Reply>, Rejection> {
+pub async fn post(form: Form, query: Query) -> Result<impl Reply, Rejection> {
     let actor = crate::database::actor::select::by_username_local(&form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
@@ -50,6 +50,9 @@ pub async fn post(form: Form, query: Query) -> Result<Either<impl Reply, impl Re
 
     let client =
         crate::database::oauth::application::select::by_client_id(&query.client_id).await?;
+    if client.redirect_uris != query.redirect_uri {
+        return Err(Error::InvalidRequest.into());
+    }
 
     let authorization_code = crate::crypto::token::generate()?;
 
