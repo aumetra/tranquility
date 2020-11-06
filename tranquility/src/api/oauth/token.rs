@@ -121,7 +121,7 @@ async fn password_grant(username: String, password: String) -> Result<impl Reply
 
 pub async fn token(form: Form) -> Result<impl Reply, Rejection> {
     let response = match form.grant_type.as_str() {
-        "code" => Either::A(
+        "authorization_code" => Either::A(
             code_grant(
                 form.client_id.unwrap(),
                 form.client_secret.unwrap(),
