@@ -16,28 +16,6 @@ pub mod digest {
     }
 }
 
-pub mod rsa {
-    use {
-        crate::error::Error,
-        openssl::{pkey::Private, rsa::Rsa},
-    };
-
-    const KEY_SIZE: u32 = 2048;
-
-    pub async fn generate() -> Result<Rsa<Private>, Error> {
-        tokio::task::spawn_blocking(|| Ok(Rsa::generate(KEY_SIZE)?))
-            .await
-            .unwrap()
-    }
-
-    pub fn to_pem(rsa_key: &Rsa<Private>) -> Result<(String, String), Error> {
-        let public_key = String::from_utf8(rsa_key.public_key_to_pem()?).unwrap();
-        let private_key = String::from_utf8(rsa_key.private_key_to_pem()?).unwrap();
-
-        Ok((public_key, private_key))
-    }
-}
-
 pub mod password {
     use {crate::error::Error, argon2::Config};
 
@@ -62,5 +40,41 @@ pub mod password {
         })
         .await
         .unwrap()
+    }
+}
+
+pub mod rsa {
+    use {
+        crate::error::Error,
+        openssl::{pkey::Private, rsa::Rsa},
+    };
+
+    const KEY_SIZE: u32 = 2048;
+
+    pub async fn generate() -> Result<Rsa<Private>, Error> {
+        tokio::task::spawn_blocking(|| Ok(Rsa::generate(KEY_SIZE)?))
+            .await
+            .unwrap()
+    }
+
+    pub fn to_pem(rsa_key: &Rsa<Private>) -> Result<(String, String), Error> {
+        let public_key = String::from_utf8(rsa_key.public_key_to_pem()?).unwrap();
+        let private_key = String::from_utf8(rsa_key.private_key_to_pem()?).unwrap();
+
+        Ok((public_key, private_key))
+    }
+}
+
+pub mod token {
+    use crate::error::Error;
+
+    const TOKEN_LENGTH: usize = 32;
+
+    pub fn generate() -> Result<String, Error> {
+        // The hex crate encodes bytes using two characters
+        let mut token = [0; TOKEN_LENGTH / 2];
+        openssl::rand::rand_bytes(&mut token)?;
+
+        Ok(hex::encode(token))
     }
 }

@@ -35,7 +35,7 @@ Progress:
 
 - [ ] Client API (Mastodon API)
 - - [ ] Authorization
-- - - [ ] App registration
+- - - [x] App registration
 - - - [ ] OAuth
 - - [ ] Accounts
 - - - [ ] Block

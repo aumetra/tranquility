@@ -18,3 +18,4 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 }
 
 pub mod apps;
+pub mod convert;

@@ -370,6 +370,72 @@
       ]
     }
   },
+  "6854d3b40b1aff71872d8a1fcf32d398463fa8b6f89d7f90d4a0031ce839f597": {
+    "query": "\n            INSERT INTO oauth_applications\n            ( client_name, client_secret, redirect_uris, scopes, website )\n            VALUES\n            ( $1, $2, $3, $4, $5 )\n            RETURNING *\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "client_secret",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "redirect_uris",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "scopes",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "website",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "708ecddc1fbbfc4019348593cacbe917cbdb91d800dc855af80ae4e74607f673": {
     "query": "\n            INSERT INTO oauth_authorizations\n            ( application_id, actor_id, code, valid_until )\n            VALUES\n            ( $1, $2, $3, $4 )\n            RETURNING *\n        ",
     "describe": {
