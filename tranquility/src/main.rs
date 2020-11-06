@@ -24,6 +24,7 @@ async fn main() {
     cli::run();
 
     crate::database::init().await.unwrap();
+    crate::daemon::start();
     crate::server::run().await;
 }
 
@@ -32,6 +33,7 @@ mod api;
 mod cli;
 mod config;
 mod crypto;
+mod daemon;
 mod database;
 mod error;
 mod server;

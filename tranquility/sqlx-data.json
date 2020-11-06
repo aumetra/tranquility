@@ -370,6 +370,16 @@
       ]
     }
   },
+  "5d39960e48f65a3e6a915d12d4e50c38e9a132551cdf4efbaffc89605ee9735e": {
+    "query": "DELETE FROM oauth_authorizations WHERE valid_until < NOW()",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": []
+    }
+  },
   "708ecddc1fbbfc4019348593cacbe917cbdb91d800dc855af80ae4e74607f673": {
     "query": "\n            INSERT INTO oauth_authorizations\n            ( application_id, actor_id, code, valid_until )\n            VALUES\n            ( $1, $2, $3, $4 )\n            RETURNING *\n        ",
     "describe": {

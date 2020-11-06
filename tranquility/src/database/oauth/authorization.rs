@@ -4,6 +4,20 @@ use {
     uuid::Uuid,
 };
 
+pub mod delete {
+    use crate::error::Error;
+
+    pub async fn expired() -> Result<(), Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
+            .execute(conn_pool)
+            .await?;
+
+        Ok(())
+    }
+}
+
 pub async fn insert(
     application_id: Uuid,
     actor_id: Uuid,
