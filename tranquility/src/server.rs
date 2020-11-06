@@ -1,6 +1,7 @@
 use warp::Filter;
 
 pub async fn run() {
+    let compression = warp::compression::gzip();
     let logging = warp::trace::request();
 
     let activitypub = crate::activitypub::routes::routes();
@@ -10,6 +11,7 @@ pub async fn run() {
     let routes = activitypub
         .or(api)
         .or(webfinger)
+        .with(compression)
         .with(logging)
         .recover(crate::error::recover);
 

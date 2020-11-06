@@ -1,0 +1,87 @@
+use {
+    super::{AuthorizeFormTemplate, TokenTemplate},
+    crate::{crypto::password, error::Error, util::Either},
+    askama::Template,
+    chrono::Duration,
+    once_cell::sync::Lazy,
+    serde::Deserialize,
+    std::convert::TryFrom,
+    uuid::Uuid,
+    warp::{http::Uri, Rejection, Reply},
+};
+
+static AUTHORIZATION_CODE_VALIDITY: Lazy<Duration> = Lazy::new(|| Duration::minutes(5));
+
+#[derive(Deserialize)]
+pub struct Form {
+    username: String,
+    password: String,
+}
+
+#[derive(Deserialize)]
+pub struct Query {
+    response_type: String,
+    client_id: Uuid,
+    redirect_uri: String,
+    // scope: Option<String>,
+    state: Option<String>,
+}
+
+pub async fn get() -> Result<impl Reply, Rejection> {
+    let page = AuthorizeFormTemplate.render().unwrap();
+
+    Ok(warp::reply::html(page))
+}
+
+pub async fn post(form: Form, query: Query) -> Result<Either<impl Reply, impl Reply>, Rejection> {
+    let actor = crate::database::actor::select::by_username_local(&form.username).await?;
+    if !password::verify(form.password, actor.password_hash.unwrap()).await {
+        return Err(Error::Unauthorized.into());
+    }
+
+    // RFC 6749:
+    // ```
+    // response_type
+    //    REQUIRED.  Value MUST be set to "code".
+    // ```
+    if query.response_type != "code" {
+        return Err(Error::InvalidRequest.into());
+    }
+
+    let client =
+        crate::database::oauth::application::select::by_client_id(&query.client_id).await?;
+
+    let authorization_code = crate::crypto::token::generate()?;
+
+    let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
+    let valid_until = chrono::Utc::now() + validity_duration;
+
+    let authorization_code = crate::database::oauth::authorization::insert(
+        client.id,
+        actor.id,
+        authorization_code,
+        valid_until.naive_utc(),
+    )
+    .await?;
+
+    // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
+    if query.redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
+        let page = TokenTemplate {
+            token: authorization_code.code,
+        }
+        .render()
+        .map_err(Error::from)?;
+
+        Ok(Either::A(warp::reply::html(page)))
+    } else {
+        let redirect_uri = format!(
+            "{}?code={}&state={}",
+            query.redirect_uri,
+            authorization_code.code,
+            query.state.unwrap_or_default()
+        );
+        let redirect_uri: Uri = Uri::try_from(redirect_uri).map_err(|_| Error::InvalidRequest)?;
+
+        Ok(Either::B(warp::redirect::temporary(redirect_uri)))
+    }
+}

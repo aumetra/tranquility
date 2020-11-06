@@ -73,6 +73,53 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
+name = "askama"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70a6e7ebd44d0047fd48206c83c5cd3214acc7b9d87f001da170145c47ef7d12"
+dependencies = [
+ "askama_derive",
+ "askama_escape",
+ "askama_shared",
+]
+
+[[package]]
+name = "askama_derive"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1d7169690c4f56343dcd821ab834972a22570a2662a19a84fd7775d5e1c3881"
+dependencies = [
+ "askama_shared",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "askama_escape"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90c108c1a94380c89d2215d0ac54ce09796823cca0fd91b299cfff3b33e346fb"
+
+[[package]]
+name = "askama_shared"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62fc272363345c8cdc030e4c259d9d028237f8b057dc9bb327772a257bde6bb5"
+dependencies = [
+ "askama_escape",
+ "humansize",
+ "nom",
+ "num-traits",
+ "percent-encoding",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn",
+ "toml",
+]
+
+[[package]]
 name = "async-compression"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -285,9 +332,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.61"
+version = "1.0.62"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed67cbde08356238e75fc4656be4749481eeffb09e19f320a25237d5221c985d"
+checksum = "f1770ced377336a88a67c473594ccc14eca6f4559217c34f64aac8f83d641b40"
 
 [[package]]
 name = "cfg-if"
@@ -915,6 +962,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "494b4d60369511e7dea41cf646832512a94e542f68bb9c49e54518e0f468eb47"
 
 [[package]]
+name = "humansize"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6cab2627acfc432780848602f3f558f7e9dd427352224b0d9324025796d2a5e"
+
+[[package]]
 name = "hyper"
 version = "0.13.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1330,6 +1383,16 @@ name = "new_debug_unreachable"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
+
+[[package]]
+name = "nom"
+version = "5.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffb4262d26ed83a1c0a33a38fe2bb15797329c85770da05e6b828ddb782627af"
+dependencies = [
+ "memchr",
+ "version_check",
+]
 
 [[package]]
 name = "num-integer"
@@ -2490,6 +2553,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75cf45bb0bef80604d001caaec0d09da99611b3c0fd39d3080468875cdb65645"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "tower-service"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2586,6 +2658,7 @@ name = "tranquility"
 version = "0.1.0"
 dependencies = [
  "ammonia",
+ "askama",
  "bytes",
  "cached",
  "chrono",
@@ -2741,6 +2814,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fde2f6a4bea1d6e007c4ad38c6839fa71cbb63b6dbf5b595aa38dc9b1093c11"
 dependencies = [
  "rand 0.7.3",
+ "serde",
 ]
 
 [[package]]

@@ -1,5 +1,6 @@
 use {
     argon2::Error as Argon2Error,
+    askama::Error as AskamaError,
     http_signatures::Error as HttpSignaturesError,
     openssl::error::ErrorStack as OpensslErrorStack,
     reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
@@ -19,6 +20,9 @@ use {
 pub enum Error {
     #[error("argon2 operation failed")]
     Argon2(#[from] Argon2Error),
+
+    #[error("Template formatting failed")]
+    Askama(#[from] AskamaError),
 
     #[error("Username taken")]
     DuplicateUsername,

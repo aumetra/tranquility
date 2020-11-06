@@ -35,6 +35,7 @@ mod crypto;
 mod database;
 mod error;
 mod server;
+mod util;
 mod webfinger;
 
 #[cfg(test)]

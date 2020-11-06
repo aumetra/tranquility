@@ -34,3 +34,27 @@ pub async fn insert(
 
     Ok(client)
 }
+
+pub mod select {
+    use {
+        crate::{database::model::OAuthApplication, error::Error},
+        uuid::Uuid,
+    };
+
+    pub async fn by_client_id(client_id: &Uuid) -> Result<OAuthApplication, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let application = sqlx::query_as!(
+            OAuthApplication,
+            r#"
+                SELECT * FROM oauth_applications
+                WHERE client_id = $1
+            "#,
+            client_id,
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(application)
+    }
+}
