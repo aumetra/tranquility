@@ -17,7 +17,7 @@ pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejec
                 .next()
                 .ok_or(Error::Unauthorized)?
                 .to_lowercase()
-                != "Bearer"
+                != "bearer"
             {
                 return Err::<_, Rejection>(Error::Unauthorized.into());
             }
