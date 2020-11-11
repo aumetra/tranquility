@@ -7,6 +7,7 @@ use {
     serde_json::Error as SerdeJsonError,
     sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
     thiserror::Error as DeriveError,
+    url::ParseError as UrlParseError,
     uuid::Error as UuidError,
     validator::ValidationErrors,
     warp::{
@@ -35,6 +36,9 @@ pub enum Error {
 
     #[error("Invalid request")]
     InvalidRequest,
+
+    #[error("Malformed URL")]
+    MalformedUrl,
 
     #[error("Unauthorized")]
     Unauthorized,
@@ -65,6 +69,9 @@ pub enum Error {
 
     #[error("Unknown key identifier")]
     UnknownKeyIdentifier,
+
+    #[error("URL couldn't be parsed")]
+    UrlParse(#[from] UrlParseError),
 
     #[error("UUID operation failed")]
     Uuid(#[from] UuidError),

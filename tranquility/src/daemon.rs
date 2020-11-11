@@ -2,7 +2,7 @@ use {std::time::Duration, tokio::time};
 
 const DELETE_INTERVAL: Duration = Duration::from_secs(60);
 
-pub async fn delete_expired_authorization_codes() {
+async fn delete_expired_authorization_codes() {
     let mut query_interval = time::interval(DELETE_INTERVAL);
 
     loop {

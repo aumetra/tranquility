@@ -164,6 +164,62 @@
       ]
     }
   },
+  "3b01aaf6344f26b5338695a232aa1d9e8bb509f9a72d16720f82e2e8a7b9b80b": {
+    "query": "\n                SELECT * FROM oauth_authorizations\n                WHERE code = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "3c50e1b4edd7c6fe9a073e140df1b2d0f009bbfefbe5fe920b632a87a74bae6e": {
     "query": "\n            INSERT INTO oauth_tokens\n            ( application_id, actor_id, access_token, refresh_token, valid_until )\n            VALUES\n            ( $1, $2, $3, $4, $5 )\n            RETURNING *\n        ",
     "describe": {
@@ -837,8 +893,8 @@
       "nullable": []
     }
   },
-  "d3be14b5b5486d7a9052bd411c029f8fa093389e857c2091358cbf981b67408a": {
-    "query": "\n                    SELECT * FROM oauth_authorizations\n                    WHERE code = $1\n                ",
+  "e63b5931efd1a85178617cfb31222e9d81718e0d7c51f186298a8691ae5f0aa9": {
+    "query": "\n                SELECT * FROM oauth_tokens\n                WHERE access_token = $1\n            ",
     "describe": {
       "columns": [
         {
@@ -858,21 +914,26 @@
         },
         {
           "ordinal": 3,
-          "name": "code",
+          "name": "access_token",
           "type_info": "Text"
         },
         {
           "ordinal": 4,
+          "name": "refresh_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
           "name": "valid_until",
           "type_info": "Timestamp"
         },
         {
-          "ordinal": 5,
+          "ordinal": 6,
           "name": "created_at",
           "type_info": "Timestamp"
         },
         {
-          "ordinal": 6,
+          "ordinal": 7,
           "name": "updated_at",
           "type_info": "Timestamp"
         }
@@ -884,9 +945,10 @@
       },
       "nullable": [
         false,
+        true,
         false,
         false,
-        false,
+        true,
         false,
         false,
         false

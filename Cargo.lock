@@ -2479,6 +2479,7 @@ dependencies = [
  "signal-hook-registry",
  "slab",
  "tokio-macros",
+ "tracing",
  "winapi 0.3.9",
 ]
 
@@ -2679,6 +2680,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tranquility-types",
+ "url",
  "uuid",
  "validator",
  "warp",

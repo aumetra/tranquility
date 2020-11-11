@@ -68,10 +68,10 @@ pub mod rsa {
 pub mod token {
     use crate::error::Error;
 
-    const TOKEN_LENGTH: usize = 32;
+    const TOKEN_LENGTH: usize = 40;
 
     pub fn generate() -> Result<String, Error> {
-        // The hex crate encodes bytes using two characters
+        // Two characters are needed to encode one byte as hex
         let mut token = [0; TOKEN_LENGTH / 2];
         openssl::rand::rand_bytes(&mut token)?;
 

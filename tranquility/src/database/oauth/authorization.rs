@@ -27,9 +27,9 @@ pub mod select {
         let authorization = sqlx::query_as!(
             OAuthAuthorization,
             r#"
-                    SELECT * FROM oauth_authorizations
-                    WHERE code = $1
-                "#,
+                SELECT * FROM oauth_authorizations
+                WHERE code = $1
+            "#,
             code
         )
         .fetch_one(conn_pool)

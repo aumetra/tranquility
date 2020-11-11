@@ -33,7 +33,7 @@ Progress:
 - - - [ ] Reject
 - - - [ ] Undo
 
-- [ ] Client API (Mastodon API)
+- [ ] Client API ((mostly) Mastodon API)
 - - [x] Authorization
 - - - [x] App registration
 - - - [x] OAuth

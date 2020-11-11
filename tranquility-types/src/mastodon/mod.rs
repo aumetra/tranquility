@@ -1,3 +1,23 @@
-pub mod apps;
+pub mod account;
+pub mod app;
+pub mod attachment;
+pub mod card;
+pub mod emoji;
+pub mod field;
+pub mod mention;
+pub mod poll;
+pub mod source;
+pub mod status;
+pub mod tag;
 
-pub use apps::App;
+pub use account::Account;
+pub use app::App;
+pub use attachment::Attachment;
+pub use card::Card;
+pub use emoji::Emoji;
+pub use field::Field;
+pub use mention::Mention;
+pub use poll::Poll;
+pub use source::Source;
+pub use status::Status;
+pub use tag::{History, Tag};

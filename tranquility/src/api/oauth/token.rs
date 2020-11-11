@@ -58,8 +58,8 @@ async fn code_grant(
 
     let authorization_code = crate::database::oauth::authorization::select::by_code(&code).await?;
 
-    let valid_duration = *ACCESS_TOKEN_VALID_DURATION;
-    let valid_until = chrono::Utc::now() + valid_duration;
+    let valid_until = *ACCESS_TOKEN_VALID_DURATION;
+    let valid_until = chrono::Utc::now() + valid_until;
 
     let access_token = crate::crypto::token::generate()?;
     let access_token = crate::database::oauth::token::insert(
@@ -83,7 +83,7 @@ async fn code_grant(
     } else {
         let response = AccessTokenResponse {
             access_token: access_token.access_token,
-            created_at: valid_duration.num_seconds(),
+            created_at: ACCESS_TOKEN_VALID_DURATION.num_seconds(),
             ..AccessTokenResponse::default()
         };
 

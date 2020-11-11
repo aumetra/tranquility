@@ -33,3 +33,24 @@ pub async fn insert(
 
     Ok(token)
 }
+
+pub mod select {
+    use crate::{database::model::OAuthToken, error::Error};
+
+    pub async fn by_token(token: &str) -> Result<OAuthToken, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let token = sqlx::query_as!(
+            OAuthToken,
+            r#"
+                SELECT * FROM oauth_tokens
+                WHERE access_token = $1
+            "#,
+            token
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(token)
+    }
+}
