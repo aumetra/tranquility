@@ -27,6 +27,7 @@ pub fn activity<T: Into<ObjectField>>(
 
         to,
         cc,
+
         ..Activity::default()
     }
 }
@@ -64,6 +65,7 @@ pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {
         following,
 
         public_key,
+
         ..Actor::default()
     }
 }
@@ -90,6 +92,7 @@ pub fn object(
 
         to,
         cc,
+
         ..Object::default()
     }
 }

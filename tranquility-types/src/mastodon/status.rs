@@ -3,7 +3,7 @@ use {
     std::boxed::Box,
 };
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct Status {
     pub id: String,
     pub created_at: String,

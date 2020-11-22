@@ -13,6 +13,7 @@ pub struct Object {
 
     pub attributed_to: String,
 
+    pub summary: String,
     pub content: String,
     pub published: String,
     #[serde(default)]
@@ -37,6 +38,7 @@ impl Default for Object {
 
             attributed_to: String::default(),
 
+            summary: String::default(),
             content: String::default(),
             published: String::default(),
             sensitive: false,

@@ -1,26 +1,9 @@
 use {
-    crate::error::Error,
-    serde::Deserialize,
-    tranquility_types::activitypub::{Activity, IsPrivate, Object},
+    crate::{activitypub::ActivityObject, error::Error},
+    tranquility_types::activitypub::IsPrivate,
     uuid::Uuid,
     warp::{Rejection, Reply},
 };
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum ActivityObject {
-    Activity(Activity),
-    Object(Object),
-}
-
-impl IsPrivate for ActivityObject {
-    fn is_private(&self) -> bool {
-        match self {
-            ActivityObject::Activity(activity) => activity.is_private(),
-            ActivityObject::Object(object) => object.is_private(),
-        }
-    }
-}
 
 pub async fn objects(id: Uuid) -> Result<impl Reply, Rejection> {
     let object = crate::database::object::select::by_id(id).await?;

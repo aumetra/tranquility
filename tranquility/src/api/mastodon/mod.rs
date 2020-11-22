@@ -1,8 +1,15 @@
 use {
     crate::{database::model::Actor, error::Error},
+    once_cell::sync::Lazy,
     serde::de::DeserializeOwned,
+    tranquility_types::mastodon::App,
     warp::{Filter, Rejection, Reply},
 };
+
+static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
+    name: "Web".into(),
+    ..App::default()
+});
 
 pub fn form_urlencoded_json<T: DeserializeOwned + Send>(
 ) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {

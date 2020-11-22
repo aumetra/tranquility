@@ -7,13 +7,13 @@ use {
 
 async fn accounts(id: Uuid) -> Result<impl Reply, Rejection> {
     let db_actor = crate::database::actor::select::by_id(id).await?;
-    let mastodon_account = db_actor.into_mastodon()?;
+    let mastodon_account = db_actor.into_mastodon().await?;
 
     Ok(warp::reply::json(&mastodon_account))
 }
 
 async fn verify_credentials(db_actor: DBActor) -> Result<impl Reply, Rejection> {
-    let mastodon_account = db_actor.into_mastodon()?;
+    let mastodon_account = db_actor.into_mastodon().await?;
 
     Ok(warp::reply::json(&mastodon_account))
 }

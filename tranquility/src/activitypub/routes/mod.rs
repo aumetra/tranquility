@@ -1,11 +1,13 @@
 use {
     crate::error::Error,
-    bytes::{buf::BufExt, Buf},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
-    warp::{Filter, Rejection, Reply},
+    warp::{hyper::body::Bytes, Filter, Rejection, Reply},
 };
 
+// I wish I could use "warp::header::exact()" or something like it but the "Accept" header
+// of, for example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
+// Because that can change for every implementation I'll just use ".contains()" on the header value
 fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy {
     warp::header("accept")
         .and_then(|accept_header_value: String| async move {
@@ -20,21 +22,24 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
         .untuple_one()
 }
 
-fn decode_json_body<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
+// The standard "warp::body::json()" filter only decodes content from requests
+// that have the header "Content-Type: application/json" but the inbox
+// requests have the types of either "application/ld+json" or "application/activity+json"
+fn custom_json_type<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
 {
     struct Json;
 
     impl Json {
-        pub fn decode<T: DeserializeOwned>(body: impl Buf) -> Result<T, Error> {
-            serde_json::from_reader(body.reader()).map_err(Error::from)
+        pub fn decode<T: DeserializeOwned>(body: &Bytes) -> Result<T, Error> {
+            serde_json::from_slice(body).map_err(Error::from)
         }
     }
 
-    warp::body::aggregate().and_then(|body| async move { Ok::<T, Rejection>(Json::decode(body)?) })
+    warp::body::bytes().and_then(|body| async move { Ok::<T, Rejection>(Json::decode(&body)?) })
 }
 
 fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
-    warp::query::raw().or_else(|_| async { Ok::<(String,), Rejection>((String::new(),)) })
+    warp::query::raw().or_else(|_| async { Ok::<_, Rejection>((String::new(),)) })
 }
 
 const ACTIVITY_COUNT_PER_PAGE: i64 = 10;
@@ -63,7 +68,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(warp::path::full())
         .and(optional_raw_query())
         .and(warp::header::headers_cloned())
-        .and(decode_json_body())
+        .and(custom_json_type())
         .and_then(inbox::verify_request)
         .and_then(inbox::inbox);
 

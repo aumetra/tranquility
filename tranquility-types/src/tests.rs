@@ -219,13 +219,17 @@ fn decode_actor() {
 
 #[test]
 fn decode_create_activity_url() {
-    let _activity: crate::activitypub::Activity = serde_json::from_str(CREATE_ACTIVTY).unwrap();
+    let activity: crate::activitypub::Activity = serde_json::from_str(CREATE_ACTIVTY).unwrap();
+
+    assert!(activity.object.as_url().is_some());
 }
 
 #[test]
 fn decode_create_activity_object() {
-    let _activity: crate::activitypub::Activity =
+    let activity: crate::activitypub::Activity =
         serde_json::from_str(CREATE_ACTIVTY_OBJECT).unwrap();
+
+    assert!(activity.object.as_object().is_some());
 }
 
 #[test]

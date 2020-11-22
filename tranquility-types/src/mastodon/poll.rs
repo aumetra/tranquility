@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct Poll {
     pub id: String,
 
@@ -20,7 +20,7 @@ pub struct Poll {
     pub emojis: Vec<super::Emoji>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct PollOption {
     pub title: String,
     pub votes_count: i64,

@@ -32,7 +32,7 @@ pub async fn create(form: RegisterForm) -> Result<impl Reply, Rejection> {
         form.website,
     )
     .await?;
-    let mastodon_application = application.into_mastodon()?;
+    let mastodon_application = application.into_mastodon().await?;
 
     Ok(warp::reply::json(&mastodon_application))
 }
