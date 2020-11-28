@@ -1,5 +1,5 @@
 use {
-    super::{CollectionQuery, ACTIVITY_COUNT_PER_PAGE},
+    super::{CollectionQuery, ACTIVITIES_PER_PAGE},
     crate::{activitypub::FollowActivity, error::Error},
     tranquility_types::activitypub::{
         collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
@@ -21,7 +21,7 @@ pub async fn following(user_id: Uuid, query: CollectionQuery) -> Result<impl Rep
     let last_follow_activities = crate::database::object::select::by_type_and_owner(
         "Follow",
         &user_id,
-        ACTIVITY_COUNT_PER_PAGE,
+        ACTIVITIES_PER_PAGE,
         offset,
     )
     .await?
@@ -38,14 +38,10 @@ pub async fn following(user_id: Uuid, query: CollectionQuery) -> Result<impl Rep
     let user_db = crate::database::actor::select::by_id(user_id).await?;
     let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;
 
-    let next = format!(
-        "{}?offset={}",
-        user.following,
-        offset + ACTIVITY_COUNT_PER_PAGE
-    );
+    let next = format!("{}?offset={}", user.following, offset + ACTIVITIES_PER_PAGE);
 
-    let prev = if offset >= ACTIVITY_COUNT_PER_PAGE {
-        offset - ACTIVITY_COUNT_PER_PAGE
+    let prev = if offset >= ACTIVITIES_PER_PAGE {
+        offset - ACTIVITIES_PER_PAGE
     } else {
         0
     };

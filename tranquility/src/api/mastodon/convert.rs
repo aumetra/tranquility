@@ -1,37 +1,38 @@
 use {
     crate::{
         activitypub::ActivityObject,
-        database::model::{Actor as DBActor, OAuthApplication},
+        database::model::{Actor as DBActor, OAuthApplication, Object as DBObject},
         error::Error,
     },
     async_trait::async_trait,
     serde::Serialize,
     tranquility_types::{
         activitypub::{Activity, Actor, Object},
-        mastodon::{Account, App, Status},
+        mastodon::{Account, App, Source, Status},
     },
     url::Url,
     warp::Rejection,
 };
 
 #[async_trait]
-pub trait IntoMastodon: Clone + Send + Sync {
-    type ApiEntity: Serialize;
+pub trait IntoMastodon<ApiEntity>: Clone + Send + Sync
+where
+    ApiEntity: Serialize + 'static,
+{
     type Error: Into<Rejection>;
 
-    async fn into_mastodon(self) -> Result<Self::ApiEntity, Self::Error>;
+    async fn into_mastodon(self) -> Result<ApiEntity, Self::Error>;
 
-    async fn into_mastodon_cloned(&self) -> Result<Self::ApiEntity, Self::Error> {
+    async fn into_mastodon_cloned(&self) -> Result<ApiEntity, Self::Error> {
         self.clone().into_mastodon().await
     }
 }
 
 #[async_trait]
-impl IntoMastodon for Activity {
-    type ApiEntity = Status;
+impl IntoMastodon<Status> for Activity {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Self::ApiEntity, Self::Error> {
+    async fn into_mastodon(self) -> Result<Status, Self::Error> {
         let object =
             crate::activitypub::fetcher::fetch_object(self.object.as_url().unwrap()).await?;
 
@@ -40,11 +41,10 @@ impl IntoMastodon for Activity {
 }
 
 #[async_trait]
-impl IntoMastodon for ActivityObject {
-    type ApiEntity = Status;
+impl IntoMastodon<Status> for ActivityObject {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Self::ApiEntity, Self::Error> {
+    async fn into_mastodon(self) -> Result<Status, Self::Error> {
         match self {
             ActivityObject::Activity(activity) => activity.into_mastodon(),
             ActivityObject::Object(object) => object.into_mastodon(),
@@ -54,11 +54,10 @@ impl IntoMastodon for ActivityObject {
 }
 
 #[async_trait]
-impl IntoMastodon for DBActor {
-    type ApiEntity = Account;
+impl IntoMastodon<Account> for DBActor {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Self::ApiEntity, Self::Error> {
+    async fn into_mastodon(self) -> Result<Account, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
 
         let id = self.id.to_simple().to_string();
@@ -102,11 +101,41 @@ impl IntoMastodon for DBActor {
 }
 
 #[async_trait]
-impl IntoMastodon for OAuthApplication {
-    type ApiEntity = App;
+impl IntoMastodon<Source> for DBActor {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Self::ApiEntity, Self::Error> {
+    async fn into_mastodon(self) -> Result<Source, Self::Error> {
+        let actor: Actor = serde_json::from_value(self.actor)?;
+
+        let source = Source {
+            privacy: "public".into(),
+            language: "en".into(),
+
+            note: actor.summary,
+
+            ..Source::default()
+        };
+
+        Ok(source)
+    }
+}
+
+#[async_trait]
+impl IntoMastodon<Status> for DBObject {
+    type Error = Error;
+
+    async fn into_mastodon(self) -> Result<Status, Self::Error> {
+        let activity_or_object: ActivityObject = serde_json::from_value(self.data)?;
+
+        activity_or_object.into_mastodon().await
+    }
+}
+
+#[async_trait]
+impl IntoMastodon<App> for OAuthApplication {
+    type Error = Error;
+
+    async fn into_mastodon(self) -> Result<App, Self::Error> {
         let id = self.id.to_simple().to_string();
         let client_id = self.client_id.to_simple().to_string();
         let website = if self.website.is_empty() {
@@ -130,11 +159,10 @@ impl IntoMastodon for OAuthApplication {
 }
 
 #[async_trait]
-impl IntoMastodon for Object {
-    type ApiEntity = Status;
+impl IntoMastodon<Status> for Object {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Self::ApiEntity, Self::Error> {
+    async fn into_mastodon(self) -> Result<Status, Self::Error> {
         let db_object = crate::database::object::select::by_url(self.id.as_str()).await?;
         let (_actor, db_actor) =
             crate::activitypub::fetcher::fetch_actor(self.attributed_to.as_str()).await?;

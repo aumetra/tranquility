@@ -42,7 +42,7 @@ fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> +
     warp::query::raw().or_else(|_| async { Ok::<_, Rejection>((String::new(),)) })
 }
 
-const ACTIVITY_COUNT_PER_PAGE: i64 = 10;
+const ACTIVITIES_PER_PAGE: i64 = 10;
 
 #[derive(Deserialize)]
 pub struct CollectionQuery {

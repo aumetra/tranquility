@@ -3,7 +3,7 @@ use {
     once_cell::sync::Lazy,
     serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
-    warp::{Filter, Rejection, Reply},
+    warp::{reject::MissingHeader, Filter, Rejection, Reply},
 };
 
 static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
@@ -14,6 +14,19 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
 pub fn form_urlencoded_json<T: DeserializeOwned + Send>(
 ) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
     warp::body::form().or(warp::body::json()).unify()
+}
+
+pub fn authorization_optional() -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Copy
+{
+    authorization_required()
+        .map(Some)
+        .or_else(|error: Rejection| async move {
+            if error.find::<MissingHeader>().is_some() {
+                Ok((None,))
+            } else {
+                Err(error)
+            }
+        })
 }
 
 pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejection> + Copy {

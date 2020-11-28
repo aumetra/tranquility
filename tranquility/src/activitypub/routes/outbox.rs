@@ -1,5 +1,5 @@
 use {
-    super::{CollectionQuery, ACTIVITY_COUNT_PER_PAGE},
+    super::{CollectionQuery, ACTIVITIES_PER_PAGE},
     crate::error::Error,
     tranquility_types::activitypub::{
         collection::Item, Activity, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
@@ -29,14 +29,10 @@ pub async fn outbox(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply,
     let user_db = crate::database::actor::select::by_id(user_id).await?;
     let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;
 
-    let next = format!(
-        "{}?offset={}",
-        user.outbox,
-        offset + ACTIVITY_COUNT_PER_PAGE
-    );
+    let next = format!("{}?offset={}", user.outbox, offset + ACTIVITIES_PER_PAGE);
 
-    let prev = if offset >= ACTIVITY_COUNT_PER_PAGE {
-        offset - ACTIVITY_COUNT_PER_PAGE
+    let prev = if offset >= ACTIVITIES_PER_PAGE {
+        offset - ACTIVITIES_PER_PAGE
     } else {
         0
     };
