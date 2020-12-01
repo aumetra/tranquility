@@ -55,7 +55,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         )
         .await?;
 
-        deliverer::deliver(accept_activity)?;
+        deliverer::deliver(accept_activity).await?;
     }
 
     Ok(StatusCode::CREATED)

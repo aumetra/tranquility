@@ -1,24 +1,27 @@
 use {
-    crate::error::Error,
+    crate::{database::model::Actor as DBActor, error::Error},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
         header::{HeaderName, HeaderValue, DATE},
         Client, Request,
     },
-    serde_json::Value,
     std::sync::Arc,
-    tranquility_types::activitypub::{Activity, PUBLIC_IDENTIFIER},
+    tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
 };
 
-async fn prepare_request(client: &Client, url: &str, activity: &Value) -> Result<Request, Error> {
+async fn prepare_request(
+    client: &Client,
+    url: &str,
+    author: Arc<Actor>,
+    author_db: Arc<DBActor>,
+    activity: &Activity,
+) -> Result<Request, Error> {
     let mut request = client
         .post(url)
         .header("Content-Type", "application/activity+json")
         .json(activity)
         .build()?;
-
-    let (remote_actor, remote_actor_db) = super::fetcher::fetch_actor(&url).await?;
 
     let date_header_value = HeaderValue::from_str(&chrono::Utc::now().to_rfc2822())?;
 
@@ -30,16 +33,16 @@ async fn prepare_request(client: &Client, url: &str, activity: &Value) -> Result
         .headers_mut()
         .insert(HeaderName::from_static("digest"), digest_header_value);
 
-    let key_id = remote_actor.public_key.id;
-    let private_key = remote_actor_db.private_key.unwrap();
-
     let (header_name, header_value) = {
         let request = request.try_clone().unwrap();
 
         tokio::task::spawn_blocking(move || {
+            let key_id = author.public_key.id.as_str();
+            let private_key = author_db.private_key.as_ref().unwrap();
+
             http_signatures::sign(
                 &request,
-                &key_id,
+                key_id,
                 &["(request-target)", "date", "digest"],
                 private_key.as_bytes(),
             )
@@ -53,41 +56,60 @@ async fn prepare_request(client: &Client, url: &str, activity: &Value) -> Result
     Ok(request)
 }
 
-pub fn deliver(activity: Activity) -> Result<(), Error> {
-    let activity_value = Arc::new(serde_json::to_value(&activity)?);
+pub async fn deliver(activity: Activity) -> Result<(), Error> {
+    let activity = Arc::new(activity);
 
-    let activity_id = Arc::new(activity.id);
     let recipient_list = activity
         .to
+        .clone()
         .into_iter()
-        .merge(activity.cc)
+        .merge(activity.cc.clone())
         .unique()
-        .filter(|url| url != PUBLIC_IDENTIFIER)
+        .filter(|url| *url != PUBLIC_IDENTIFIER)
         .collect_vec();
+
+    let (author, author_db) =
+        crate::activitypub::fetcher::fetch_actor(activity.actor.as_str()).await?;
+    let author = Arc::new(author);
+    let author_db = Arc::new(author_db);
 
     tokio::spawn(async move {
         let mut delivery_futures = FuturesUnordered::new();
 
         for url in recipient_list {
-            let activity_id = Arc::clone(&activity_id);
-            let activity_value = Arc::clone(&activity_value);
+            // Create a new atomic reference for the activity data
+            let activity = Arc::clone(&activity);
 
-            let join_handle = tokio::spawn(async move {
-                debug!("Delivering activity {} to actor {}...", activity_id, url);
+            // Create new atomic references for the author data
+            let author = Arc::clone(&author);
+            let author_db = Arc::clone(&author_db);
+
+            let outgoing_request = async move {
+                debug!("Delivering activity {} to actor {}...", activity.id, url);
 
                 let client = &crate::REQWEST_CLIENT;
-                let request = prepare_request(client, url.as_str(), &activity_value).await?;
+                let request =
+                    prepare_request(client, url.as_str(), author, author_db, &activity).await?;
 
                 client.execute(request).await.map_err(Error::from)
-            });
+            };
 
-            delivery_futures.push(join_handle);
+            delivery_futures.push(outgoing_request);
         }
 
         while let Some(delivery_result) = delivery_futures.next().await {
-            match delivery_result.unwrap() {
-                Ok(_) => (),
-                Err(err) => warn!("Couldn't deliver activity: {}", err),
+            match delivery_result {
+                Ok(response) if response.status().is_success() => (),
+                Ok(response) => {
+                    let response_status = response.status();
+                    let response_body = response.text().await.unwrap_or_default();
+
+                    warn!(
+                        "Delivery request wasn't successful\nStatus code: {}\nServer response: {}",
+                        response_status, response_body,
+                    )
+                }
+                Err(err) => warn!("Delivery request failed: {}", err),
             }
         }
     });
