@@ -4,9 +4,9 @@ use {
     itertools::Itertools,
     reqwest::{
         header::{HeaderName, HeaderValue, DATE},
-        Client, Request,
+        Client, Request, Response,
     },
-    std::sync::Arc,
+    std::{future::Future, sync::Arc},
     tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
 };
 
@@ -56,17 +56,60 @@ async fn prepare_request(
     Ok(request)
 }
 
+fn create_delivery_futures<'a>(
+    activity: &Arc<Activity>,
+    author: &Arc<Actor>,
+    author_db: &Arc<DBActor>,
+    recipient_list: Vec<&'a str>,
+) -> FuturesUnordered<impl Future<Output = Result<Response, Error>> + 'a> {
+    let delivery_futures = FuturesUnordered::new();
+
+    for url in recipient_list {
+        // Create a new atomic reference for the activity data
+        let activity = Arc::clone(activity);
+
+        // Create new atomic references for the author data
+        let author = Arc::clone(author);
+        let author_db = Arc::clone(author_db);
+
+        let outgoing_request = async move {
+            debug!("Delivering activity {} to actor {}...", activity.id, url);
+
+            let client = &crate::REQWEST_CLIENT;
+            let request = prepare_request(client, url, author, author_db, &activity).await?;
+
+            client.execute(request).await.map_err(Error::from)
+        };
+
+        delivery_futures.push(outgoing_request);
+    }
+
+    delivery_futures
+}
+
+async fn resolve_delivery_futures<F>(mut futures: FuturesUnordered<F>)
+where
+    F: Future<Output = Result<Response, Error>>,
+{
+    while let Some(delivery_result) = futures.next().await {
+        match delivery_result {
+            Ok(response) if response.status().is_success() => (),
+            Ok(response) => {
+                let response_status = response.status();
+                let response_body = response.text().await.unwrap_or_default();
+
+                warn!(
+                    "Delivery request wasn't successful\nStatus code: {}\nServer response: {}",
+                    response_status, response_body,
+                )
+            }
+            Err(err) => warn!("Delivery request failed: {}", err),
+        }
+    }
+}
+
 pub async fn deliver(activity: Activity) -> Result<(), Error> {
     let activity = Arc::new(activity);
-
-    let recipient_list = activity
-        .to
-        .clone()
-        .into_iter()
-        .merge(activity.cc.clone())
-        .unique()
-        .filter(|url| *url != PUBLIC_IDENTIFIER)
-        .collect_vec();
 
     let (author, author_db) =
         crate::activitypub::fetcher::fetch_actor(activity.actor.as_str()).await?;
@@ -74,44 +117,24 @@ pub async fn deliver(activity: Activity) -> Result<(), Error> {
     let author_db = Arc::new(author_db);
 
     tokio::spawn(async move {
-        let mut delivery_futures = FuturesUnordered::new();
-
-        for url in recipient_list {
-            // Create a new atomic reference for the activity data
-            let activity = Arc::clone(&activity);
-
-            // Create new atomic references for the author data
-            let author = Arc::clone(&author);
-            let author_db = Arc::clone(&author_db);
-
-            let outgoing_request = async move {
-                debug!("Delivering activity {} to actor {}...", activity.id, url);
-
-                let client = &crate::REQWEST_CLIENT;
-                let request =
-                    prepare_request(client, url.as_str(), author, author_db, &activity).await?;
-
-                client.execute(request).await.map_err(Error::from)
-            };
-
-            delivery_futures.push(outgoing_request);
-        }
-
-        while let Some(delivery_result) = delivery_futures.next().await {
-            match delivery_result {
-                Ok(response) if response.status().is_success() => (),
-                Ok(response) => {
-                    let response_status = response.status();
-                    let response_body = response.text().await.unwrap_or_default();
-
-                    warn!(
-                        "Delivery request wasn't successful\nStatus code: {}\nServer response: {}",
-                        response_status, response_body,
-                    )
+        // TODO: Resolve follow collections
+        let recipient_list = activity
+            .to
+            .iter()
+            .merge(activity.cc.iter())
+            .unique()
+            .filter_map(|url| {
+                if *url == PUBLIC_IDENTIFIER {
+                    None
+                } else {
+                    Some(url.as_str())
                 }
-                Err(err) => warn!("Delivery request failed: {}", err),
-            }
-        }
+            })
+            .collect_vec();
+
+        let delivery_futures =
+            create_delivery_futures(&activity, &author, &author_db, recipient_list);
+        resolve_delivery_futures(delivery_futures).await;
     });
 
     Ok(())

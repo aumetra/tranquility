@@ -83,6 +83,8 @@ pub async fn post(form: Form, query: Query) -> Result<impl Reply, Rejection> {
             authorization_code.code,
             query.state.unwrap_or_default()
         );
+
+        #[allow(clippy::map_err_ignore)]
         let redirect_uri: Uri = Uri::try_from(redirect_uri).map_err(|_| Error::InvalidRequest)?;
 
         Ok(Either::B(warp::redirect::temporary(redirect_uri)))

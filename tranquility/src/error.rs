@@ -103,6 +103,7 @@ fn map_error(error: &Error) -> Result<impl Reply, ()> {
 }
 
 pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
+    #[allow(clippy::map_err_ignore)]
     rejection
         .find::<Error>()
         .map_or(Err(()), map_error)

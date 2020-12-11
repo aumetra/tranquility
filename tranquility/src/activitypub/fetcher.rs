@@ -11,7 +11,7 @@ pub enum Entity {
     Object(Object),
 }
 
-impl Entity {
+/*impl Entity {
     pub fn into_activity(self) -> Option<Activity> {
         match self {
             Self::Activity(activity) => Some(activity),
@@ -32,7 +32,7 @@ impl Entity {
             _ => None,
         }
     }
-}
+}*/
 
 pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     debug!("Fetching remote actor...");

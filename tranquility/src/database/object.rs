@@ -79,7 +79,7 @@ pub mod select {
         uuid::Uuid,
     };
 
-    #[cached(result, time = 15)]
+    #[cached(result, size = 50, time = 15)]
     pub async fn by_id(id: Uuid) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get()?;
 
@@ -99,6 +99,7 @@ pub mod select {
 
     #[cached(
         result,
+        size = 50,
         time = 15,
         key = "String",
         convert = r#"{ format!("{}{}{}{}", r#type, object_url, limit, offset) }"#
@@ -135,6 +136,7 @@ pub mod select {
 
     #[cached(
         result,
+        size = 50,
         time = 15,
         key = "String",
         convert = r#"{ format!("{}{}{}{}", r#type, owner_id, limit, offset) }"#
@@ -169,7 +171,13 @@ pub mod select {
         Ok(objects)
     }
 
-    #[cached(result, time = 15, key = "String", convert = r#"{ url.to_owned() }"#)]
+    #[cached(
+        result,
+        size = 50,
+        time = 15,
+        key = "String",
+        convert = r#"{ url.to_owned() }"#
+    )]
     pub async fn by_url(url: &str) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get()?;
 
