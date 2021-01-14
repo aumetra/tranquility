@@ -1,6 +1,7 @@
 use {
     super::{CollectionQuery, ACTIVITIES_PER_PAGE},
     crate::{activitypub::FollowActivity, error::Error},
+    itertools::Itertools,
     tranquility_types::activitypub::{
         collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
     },
@@ -33,7 +34,7 @@ pub async fn following(user_id: Uuid, query: CollectionQuery) -> Result<impl Rep
         .into_iter()
         .map(|activity| activity.activity.object.as_url().unwrap().to_owned())
         .map(Item::from)
-        .collect::<Vec<Item>>();
+        .collect_vec();
 
     let user_db = crate::database::actor::select::by_id(user_id).await?;
     let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;

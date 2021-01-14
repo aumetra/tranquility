@@ -1,5 +1,5 @@
 use {
-    crate::{database::model::Actor as DBActor, error::Error},
+    crate::{cpu_intensive_work, database::model::Actor as DBActor, error::Error},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -36,7 +36,7 @@ async fn prepare_request(
     let (header_name, header_value) = {
         let request = request.try_clone().unwrap();
 
-        tokio::task::spawn_blocking(move || {
+        cpu_intensive_work!(move || {
             let key_id = author.public_key.id.as_str();
             let private_key = author_db.private_key.as_ref().unwrap();
 
@@ -118,6 +118,7 @@ pub async fn deliver(activity: Activity) -> Result<(), Error> {
 
     tokio::spawn(async move {
         // TODO: Resolve follow collections
+        // TODO: Resolve the recipient list (it contains the URL to their actors but not to their inboxes)
         let recipient_list = activity
             .to
             .iter()

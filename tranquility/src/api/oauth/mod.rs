@@ -1,5 +1,6 @@
 use {
     askama::Template,
+    tranquility_ratelimit::Configuration,
     warp::{Filter, Rejection, Reply},
 };
 
@@ -13,7 +14,7 @@ struct TokenTemplate {
     token: String,
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     let authorize = {
         let get = warp::get().and_then(authorize::get);
         let post = warp::post()
@@ -28,7 +29,12 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(warp::body::form())
         .and_then(token::token);
 
-    authorize.or(token)
+    let oauth_routes = authorize.or(token);
+
+    // Limit the OAuth routes to 50 requests per hour
+    // TODO: Make configurable
+    tranquility_ratelimit::ratelimit!(filter => oauth_routes, config => Configuration::default())
+        .unwrap()
 }
 
 pub mod authorize;

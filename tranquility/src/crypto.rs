@@ -1,8 +1,11 @@
 pub mod digest {
-    use {crate::error::Error, reqwest::header::HeaderValue};
+    use {
+        crate::{cpu_intensive_work, error::Error},
+        reqwest::header::HeaderValue,
+    };
 
     pub async fn http_header(data: Vec<u8>) -> Result<HeaderValue, Error> {
-        tokio::task::spawn_blocking(move || {
+        cpu_intensive_work!(move || {
             let sha_hash = openssl::sha::sha256(&data);
             let base64_encoded_hash = openssl::base64::encode_block(&sha_hash);
 
@@ -17,10 +20,13 @@ pub mod digest {
 }
 
 pub mod password {
-    use {crate::error::Error, argon2::Config};
+    use {
+        crate::{cpu_intensive_work, error::Error},
+        argon2::Config,
+    };
 
     pub async fn hash(password: String) -> Result<String, Error> {
-        tokio::task::spawn_blocking(move || {
+        cpu_intensive_work!(move || {
             let mut salt = [0; 32];
             openssl::rand::rand_bytes(&mut salt)?;
 
@@ -35,7 +41,7 @@ pub mod password {
     }
 
     pub async fn verify(password: String, hash: String) -> bool {
-        tokio::task::spawn_blocking(move || {
+        cpu_intensive_work!(move || {
             argon2::verify_encoded(hash.as_str(), password.as_bytes()).unwrap_or(false)
         })
         .await
@@ -45,14 +51,14 @@ pub mod password {
 
 pub mod rsa {
     use {
-        crate::error::Error,
+        crate::{cpu_intensive_work, error::Error},
         openssl::{pkey::Private, rsa::Rsa},
     };
 
     const KEY_SIZE: u32 = 2048;
 
     pub async fn generate() -> Result<Rsa<Private>, Error> {
-        tokio::task::spawn_blocking(|| Ok(Rsa::generate(KEY_SIZE)?))
+        cpu_intensive_work!(|| Ok(Rsa::generate(KEY_SIZE)?))
             .await
             .unwrap()
     }

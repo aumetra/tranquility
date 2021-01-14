@@ -10,7 +10,7 @@ pub mod source;
 pub mod status;
 pub mod tag;
 
-pub use account::Account;
+pub use account::{Account, FollowResponse};
 pub use app::App;
 pub use attachment::Attachment;
 pub use card::Card;

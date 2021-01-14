@@ -96,6 +96,58 @@
       "nullable": []
     }
   },
+  "11d3f3540d7d667af4c08036c7bc2c624bb5cc23619cbae6f05b04561421af39": {
+    "query": "\n                SELECT * FROM objects\n                WHERE data->>'type' = $1\n                AND owner_id = $2\n                AND data->>'object' = $3\n\n                ORDER BY created_at DESC\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "url",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "2db11cd7547b378a0424d5c2671a72ae9043dc07f46a90f84bb9eb2bfc2f2a19": {
     "query": "\n                SELECT * FROM actors\n                WHERE actor->>'id' = $1\n            ",
     "describe": {

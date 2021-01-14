@@ -14,7 +14,7 @@ pub struct Opts {
     verbose: i32,
 }
 
-pub fn run() {
+pub async fn run() {
     let options = Opts::parse();
 
     match options.verbose {
@@ -25,5 +25,5 @@ pub fn run() {
 
     tracing_subscriber::fmt::init();
 
-    crate::config::init_once_cell(options.config);
+    crate::config::init_once_cell(options.config).await;
 }

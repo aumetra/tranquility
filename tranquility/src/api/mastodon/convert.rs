@@ -3,6 +3,7 @@ use {
         activitypub::ActivityObject,
         database::model::{Actor as DBActor, OAuthApplication, Object as DBObject},
         error::Error,
+        format_uuid,
     },
     async_trait::async_trait,
     serde::Serialize,
@@ -60,7 +61,7 @@ impl IntoMastodon<Account> for DBActor {
     async fn into_mastodon(self) -> Result<Account, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
 
-        let id = self.id.to_simple().to_string();
+        let id = format_uuid!(self.id);
         let username = actor.username;
         let url = actor.id;
         let acct = if self.remote {
@@ -136,8 +137,8 @@ impl IntoMastodon<App> for OAuthApplication {
     type Error = Error;
 
     async fn into_mastodon(self) -> Result<App, Self::Error> {
-        let id = self.id.to_simple().to_string();
-        let client_id = self.client_id.to_simple().to_string();
+        let id = format_uuid!(self.id);
+        let client_id = format_uuid!(self.client_id);
         let website = if self.website.is_empty() {
             None
         } else {
@@ -167,7 +168,7 @@ impl IntoMastodon<Status> for Object {
         let (_actor, db_actor) =
             crate::activitypub::fetcher::fetch_actor(self.attributed_to.as_str()).await?;
 
-        let id = db_object.id.to_simple().to_string();
+        let id = format_uuid!(db_object.id);
         let application = super::DEFAULT_APPLICATION.clone();
         let account = db_actor.into_mastodon().await?;
 

@@ -28,10 +28,10 @@ Progress:
 - - - [x] Accept
 - - - [ ] Create
 - - - [ ] Delete
-- - - [ ] Follow
+- - - [x] Follow
 - - - [ ] Like
 - - - [ ] Reject
-- - - [ ] Undo
+- - - [x] Undo
 
 - [ ] Client API ((mostly) Mastodon API)
 - - [x] Authorization
@@ -41,8 +41,8 @@ Progress:
 - - - [ ] Block
 - - - [x] Create
 - - - [ ] Delete
-- - - [ ] Follow
-- - - [ ] Retrieve
+- - - [x] Follow
+- - - [x] Retrieve
 - - - [ ] Update
 - - [ ] Statuses
 - - - [ ] Delete

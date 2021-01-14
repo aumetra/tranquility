@@ -1,22 +1,25 @@
 use {
     super::activitypub_datetime,
+    crate::format_uuid,
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey},
+    uuid::Uuid,
 };
 
 pub fn activity<T: Into<ObjectField>>(
     r#type: &str,
-    id: &str,
     owner_url: &str,
     object: T,
     to: Vec<String>,
     cc: Vec<String>,
-) -> Activity {
+) -> (Uuid, Activity) {
     let config = crate::config::get();
 
     let prefix = format!("https://{}", config.domain);
-    let id = format!("{}/objects/{}", prefix, id);
 
-    Activity {
+    let uuid = Uuid::new_v4();
+    let id = format!("{}/objects/{}", prefix, format_uuid!(uuid));
+
+    let activity = Activity {
         id,
         r#type: r#type.into(),
 
@@ -29,7 +32,9 @@ pub fn activity<T: Into<ObjectField>>(
         cc,
 
         ..Activity::default()
-    }
+    };
+
+    (uuid, activity)
 }
 
 pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {

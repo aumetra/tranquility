@@ -21,9 +21,11 @@ static REQWEST_CLIENT: Lazy<Client> =
 
 #[tokio::main]
 async fn main() {
-    cli::run();
+    cli::run().await;
 
-    crate::database::init().await.unwrap();
+    crate::database::init()
+        .await
+        .expect("Database connection/migration failed");
     crate::daemon::start();
     crate::server::run().await;
 }

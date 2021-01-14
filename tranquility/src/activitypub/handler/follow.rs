@@ -4,7 +4,6 @@ use {
         error::Error,
     },
     tranquility_types::activitypub::{activity::ObjectField, Activity},
-    uuid::Uuid,
     warp::http::StatusCode,
 };
 
@@ -37,10 +36,8 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
 
     // Send out an accept activity if the followed actor is local
     if follow_activity.approved {
-        let accept_activity_id = Uuid::new_v4();
-        let accept_activity = activitypub::instantiate::activity(
+        let (_accept_activity_id, accept_activity) = activitypub::instantiate::activity(
             "Accept",
-            &accept_activity_id.to_hyphenated_ref().to_string(),
             followed_url,
             follow_activity.activity.id,
             vec![actor.id],

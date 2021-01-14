@@ -1,7 +1,10 @@
 use {
     once_cell::sync::OnceCell,
     serde::Deserialize,
-    std::{fs::File, io::BufReader},
+    tokio::{
+        fs::File,
+        io::{AsyncReadExt, BufReader},
+    },
 };
 
 static CONFIGURATION: OnceCell<Configuration> = OnceCell::new();
@@ -24,13 +27,18 @@ pub struct Configuration {
     pub tls: ConfigurationTls,
 }
 
-pub fn init_once_cell(config_path: String) {
-    let config_file = File::open(config_path).unwrap();
-    let config_file = BufReader::new(config_file);
+pub async fn init_once_cell(config_path: String) {
+    let config_file = File::open(config_path)
+        .await
+        .expect("Couldn't open configuration file");
+    let mut config_file = BufReader::new(config_file);
 
+    let mut data = Vec::new();
+    config_file.read_to_end(&mut data).await.unwrap();
     CONFIGURATION
-        .set(serde_json::from_reader(config_file).unwrap())
-        .ok();
+        .set(serde_json::from_slice(data.as_slice()).expect("Invalid JSON"))
+        .ok()
+        .expect("OnceCell already initialized");
 }
 
 pub fn get() -> &'static Configuration {

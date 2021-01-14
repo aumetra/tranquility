@@ -17,3 +17,28 @@ where
         }
     }
 }
+
+#[macro_export]
+macro_rules! cpu_intensive_work {
+    ($func:expr) => {{
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+
+        rayon::spawn(move || {
+            let result = $func();
+
+            if sender.send(result).is_err() {
+                tracing::warn!("Couldn't send result from threadpool");
+            }
+        });
+
+        receiver
+    }};
+}
+
+// Macro formatting UUIDs in a unified way
+#[macro_export]
+macro_rules! format_uuid {
+    ($uuid:expr) => {{
+        $uuid.to_simple_ref().to_string()
+    }};
+}

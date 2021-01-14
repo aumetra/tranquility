@@ -76,6 +76,7 @@ pub mod select {
     use {
         crate::{database::model::Object, error::Error},
         cached::proc_macro::cached,
+        sqlx::Error as SqlxError,
         uuid::Uuid,
     };
 
@@ -169,6 +170,44 @@ pub mod select {
         .await?;
 
         Ok(objects)
+    }
+
+    #[cached(
+        result,
+        size = 50,
+        time = 15,
+        key = "String",
+        convert = r#"{ format!("{}{}{}", r#type, owner_id, object_url) }"#
+    )]
+    pub async fn by_type_owner_and_object_url(
+        r#type: &str,
+        owner_id: &Uuid,
+        object_url: &str,
+    ) -> Result<Object, Error> {
+        let conn_pool = crate::database::connection::get()?;
+
+        let object_result = sqlx::query_as!(
+            Object,
+            r#"
+                SELECT * FROM objects
+                WHERE data->>'type' = $1
+                AND owner_id = $2
+                AND data->>'object' = $3
+
+                ORDER BY created_at DESC
+            "#,
+            r#type,
+            owner_id,
+            object_url,
+        )
+        .fetch_one(conn_pool)
+        .await;
+
+        match object_result {
+            Ok(obj) => Ok(obj),
+            Err(SqlxError::RowNotFound) => Err(Error::InvalidRequest),
+            Err(e) => Err(e.into()),
+        }
     }
 
     #[cached(

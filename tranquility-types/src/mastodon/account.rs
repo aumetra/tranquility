@@ -33,3 +33,23 @@ pub struct Account {
     pub emojis: Vec<super::Emoji>,
     pub fields: Vec<super::Field>,
 }
+
+#[derive(Default, Deserialize, Serialize)]
+pub struct FollowResponse {
+    pub id: String,
+
+    pub showing_reblogs: bool,
+    pub notifying: bool,
+    pub requested: bool,
+    pub endorsed: bool,
+
+    pub following: bool,
+    pub followed_by: bool,
+
+    pub blocking: bool,
+    pub blocked_by: bool,
+    pub domain_blocking: bool,
+
+    pub muting: bool,
+    pub muting_notifications: bool,
+}

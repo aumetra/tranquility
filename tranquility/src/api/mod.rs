@@ -1,6 +1,9 @@
-use warp::{Filter, Rejection, Reply};
+use {
+    tranquility_ratelimit::Configuration,
+    warp::{Filter, Rejection, Reply},
+};
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     let mastodon_api = mastodon::routes();
 
     let oauth = oauth::routes();
@@ -9,6 +12,12 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
         .and(warp::post())
         .and(warp::body::form())
         .and_then(register::register);
+
+    // Ratelimit the registration endpoint to 10 requests per hour
+    // TODO: Make configurable
+    let ratelimit_config = Configuration::new().burst_quota(10);
+    let register =
+        tranquility_ratelimit::ratelimit!(filter => register, config => ratelimit_config).unwrap();
 
     mastodon_api.or(oauth).or(register)
 }

@@ -1,6 +1,7 @@
 use {
     crate::{
         activitypub::{fetcher, handler},
+        cpu_intensive_work,
         error::Error,
     },
     http_signatures::HttpRequest,
@@ -26,7 +27,7 @@ pub async fn verify_request(
         .await
         .map_err(Error::from)?;
 
-    let valid = tokio::task::spawn_blocking::<_, Result<bool, Error>>(move || {
+    let valid = cpu_intensive_work!(move || {
         let public_key = remote_actor.public_key.public_key_pem.as_bytes();
         let query = if query.is_empty() {
             None
@@ -36,7 +37,7 @@ pub async fn verify_request(
 
         let request = HttpRequest::new(method.as_str(), path.as_str(), query, &headers);
 
-        Ok(http_signatures::verify(request, public_key)?)
+        Ok::<_, Error>(http_signatures::verify(request, public_key)?)
     })
     .await
     .unwrap()?;
