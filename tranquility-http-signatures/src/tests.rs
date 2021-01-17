@@ -81,7 +81,7 @@ fn verify_all_signature() {
     );
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 
-    let mut headers_authorization = headers.clone();
+    let mut headers_authorization = headers;
     headers_authorization.insert(
         HeaderName::from_static("authorization"),
         HeaderValue::from_static(ALL_AUTHORIZATION_HEADER_VALUE),
@@ -105,7 +105,7 @@ fn create_basic_signature() {
     let (header_name, header_value) = crate::sign(
         request,
         "Test",
-        &vec!["(request-target)", "host", "date"],
+        &["(request-target)", "host", "date"],
         RSA_PRIVATE_KEY.as_bytes(),
     )
     .unwrap();
@@ -138,7 +138,7 @@ fn verify_basic_signature() {
     );
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 
-    let mut headers_authorization = headers.clone();
+    let mut headers_authorization = headers;
     headers_authorization.insert(
         HeaderName::from_static("authorization"),
         HeaderValue::from_static(BASIC_AUTHORIZATION_HEADER_VALUE),
@@ -160,7 +160,7 @@ fn create_default_signature() {
     let request = HttpRequest::new("post", "/foo", Some("param=value&pet=dog"), &headers);
 
     let (header_name, header_value) =
-        crate::sign(request, "Test", &vec!["date"], RSA_PRIVATE_KEY.as_bytes()).unwrap();
+        crate::sign(request, "Test", &["date"], RSA_PRIVATE_KEY.as_bytes()).unwrap();
 
     assert_eq!(header_name, "signature");
     assert_eq!(header_value, SIGNATURE_HEADER_VALUE);
@@ -190,7 +190,7 @@ fn verify_default_signature() {
     );
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 
-    let mut headers_authorization = headers.clone();
+    let mut headers_authorization = headers;
     headers_authorization.insert(
         HeaderName::from_static("authorization"),
         HeaderValue::from_static(AUTHORIZATION_HEADER_VALUE),
