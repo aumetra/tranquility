@@ -1,0 +1,19 @@
+[package]
+name = "tranquility-http-signatures"
+version = "0.1.0"
+authors = ["Glitch <smallglitch@cryptolab.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = "0.13"
+http = "0.2"
+pem = "0.8"
+reqwest = { version = "0.10", default-features = false, optional = true }
+rsa = { git = "https://github.com/RustCrypto/RSA.git", rev = "a9c5797877a94fd48a1654bdb6b72717d71f5952" }
+sha2 = "0.9"
+thiserror = "1.0"
+
+[features]
+default = [ ]

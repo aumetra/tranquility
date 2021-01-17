@@ -1,12 +1,11 @@
 use {
     argon2::Error as Argon2Error,
     askama::Error as AskamaError,
-    http_signatures::Error as HttpSignaturesError,
-    openssl::error::ErrorStack as OpensslErrorStack,
     reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
+    rsa::errors::Error as RsaError,
     serde_json::Error as SerdeJsonError,
     sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
-    thiserror::Error as DeriveError,
+    tranquility_http_signatures::Error as HttpSignaturesError,
     url::ParseError as UrlParseError,
     uuid::Error as UuidError,
     validator::ValidationErrors,
@@ -17,7 +16,7 @@ use {
     },
 };
 
-#[derive(Debug, DeriveError)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("argon2 operation failed")]
     Argon2(#[from] Argon2Error),
@@ -31,7 +30,7 @@ pub enum Error {
     #[error("Remote content fetch failed")]
     Fetch,
 
-    #[error("HTTP signatures error")]
+    #[error("HTTP signature operation failed")]
     HttpSignatures(#[from] HttpSignaturesError),
 
     #[error("Invalid request")]
@@ -43,14 +42,14 @@ pub enum Error {
     #[error("Unauthorized")]
     Unauthorized,
 
-    #[error("OpenSSL operation failed")]
-    Openssl(#[from] OpensslErrorStack),
-
     #[error("reqwest operation failed")]
     Reqwest(#[from] ReqwestError),
 
     #[error("Invalid reqwest HeaderValue")]
     ReqwestInvalidHeaderValue(#[from] ReqwestInvalidHeaderValue),
+
+    #[error("RSA operation failed")]
+    Rsa(#[from] RsaError),
 
     #[error("Database operation failed")]
     Sqlx(#[from] SqlxError),

@@ -7,6 +7,7 @@ use {
         Client, Request, Response,
     },
     std::{future::Future, sync::Arc},
+    tranquility_http_signatures,
     tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
 };
 
@@ -40,7 +41,7 @@ async fn prepare_request(
             let key_id = author.public_key.id.as_str();
             let private_key = author_db.private_key.as_ref().unwrap();
 
-            http_signatures::sign(
+            tranquility_http_signatures::sign(
                 &request,
                 key_id,
                 &["(request-target)", "date", "digest"],

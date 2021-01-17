@@ -4,7 +4,7 @@ use {
         cpu_intensive_work,
         error::Error,
     },
-    http_signatures::HttpRequest,
+    tranquility_http_signatures::HttpRequest,
     tranquility_types::activitypub::Activity,
     warp::{
         http::{HeaderMap, Method},
@@ -37,7 +37,7 @@ pub async fn verify_request(
 
         let request = HttpRequest::new(method.as_str(), path.as_str(), query, &headers);
 
-        Ok::<_, Error>(http_signatures::verify(request, public_key)?)
+        Ok::<_, Error>(tranquility_http_signatures::verify(request, public_key)?)
     })
     .await
     .unwrap()?;
