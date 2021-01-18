@@ -1,42 +1,15 @@
 use {
     super::{authorization_optional, authorization_required, convert::IntoMastodon},
     crate::{
-        activitypub::interactions,
-        database::model::{Actor as DBActor, Object as DBObject},
-        error::Error,
-        format_uuid,
+        activitypub::interactions, database::model::Actor as DBActor, error::Error, format_uuid,
     },
-    itertools::Itertools,
     tranquility_types::{
-        activitypub::{Activity, Actor},
+        activitypub::Actor,
         mastodon::{Account, FollowResponse, Source},
     },
     uuid::Uuid,
     warp::{Filter, Rejection, Reply},
 };
-
-async fn activities_to_mastodon_account(activities: Vec<DBObject>) -> Result<Vec<Account>, Error> {
-    let account_urls = activities
-        .into_iter()
-        .filter_map(db_object_to_ap_object_url)
-        .collect_vec();
-
-    let mut accounts = Vec::<Account>::new();
-    for url in account_urls {
-        let account = crate::database::actor::select::by_url(url.as_str()).await?;
-        let account = account.into_mastodon().await?;
-
-        accounts.push(account);
-    }
-
-    Ok(accounts)
-}
-
-fn db_object_to_ap_object_url(object: DBObject) -> Option<String> {
-    let activity: Activity = serde_json::from_value(object.data).ok()?;
-
-    activity.object.as_url().map(ToOwned::to_owned)
-}
 
 async fn accounts(id: Uuid, authorized_db_actor: Option<DBActor>) -> Result<impl Reply, Rejection> {
     let db_actor = crate::database::actor::select::by_id(id).await?;
@@ -73,7 +46,7 @@ async fn follow(id: Uuid, authorized_db_actor: DBActor) -> Result<impl Reply, Re
 async fn following(id: Uuid) -> Result<impl Reply, Rejection> {
     let follow_activities =
         crate::database::object::select::by_type_and_owner("Follow", &id, 10, 0).await?;
-    let followed_accounts = activities_to_mastodon_account(follow_activities).await?;
+    let followed_accounts: Vec<Account> = follow_activities.into_mastodon().await?;
 
     Ok(warp::reply::json(&followed_accounts))
 }
@@ -85,7 +58,7 @@ async fn followers(id: Uuid) -> Result<impl Reply, Rejection> {
     let followed_activities =
         crate::database::object::select::by_type_and_object_url("Follow", actor.id.as_str(), 10, 0)
             .await?;
-    let follower_accounts = activities_to_mastodon_account(followed_activities).await?;
+    let follower_accounts: Vec<Account> = followed_activities.into_mastodon().await?;
 
     Ok(warp::reply::json(&follower_accounts))
 }

@@ -11,6 +11,15 @@ static CONFIGURATION: OnceCell<Configuration> = OnceCell::new();
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ConfigurationRatelimit {
+    pub active: bool,
+
+    pub authentication_quota: u32,
+    pub registration_quota: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ConfigurationTls {
     pub reverse_proxy: bool,
 
@@ -24,6 +33,8 @@ pub struct Configuration {
     pub port: u16,
     pub database_url: String,
     pub domain: String,
+
+    pub ratelimit: ConfigurationRatelimit,
     pub tls: ConfigurationTls,
 }
 

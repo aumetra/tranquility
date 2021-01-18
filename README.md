@@ -24,6 +24,7 @@ Progress:
 - - - [x] Like
 - - - [x] Reject
 - - - [x] Undo
+- - - [x] Update
 - - [ ] Activities (outgoing)
 - - - [x] Accept
 - - - [ ] Create
@@ -32,6 +33,7 @@ Progress:
 - - - [ ] Like
 - - - [ ] Reject
 - - - [x] Undo
+- - - [ ] Update
 
 - [ ] Client API ((mostly) Mastodon API)
 - - [x] Authorization

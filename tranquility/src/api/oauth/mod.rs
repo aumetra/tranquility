@@ -31,10 +31,12 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
 
     let oauth_routes = authorize.or(token);
 
-    // Limit the OAuth routes to 50 requests per hour
-    // TODO: Make configurable
-    tranquility_ratelimit::ratelimit!(filter => oauth_routes, config => Configuration::default())
-        .unwrap()
+    let config = crate::config::get();
+    let ratelimit_config = Configuration::new()
+        .active(config.ratelimit.active)
+        .burst_quota(config.ratelimit.authentication_quota);
+
+    tranquility_ratelimit::ratelimit!(filter => oauth_routes, config => ratelimit_config).unwrap()
 }
 
 pub mod authorize;

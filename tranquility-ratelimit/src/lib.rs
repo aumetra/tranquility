@@ -56,6 +56,7 @@ impl From<WaitUntil> for Rejection {
 ///
 /// This defaults to 50 requests per hour  
 pub struct Configuration {
+    active: bool,
     period: Duration,
     burst_quota: u32,
 }
@@ -64,6 +65,14 @@ impl Configuration {
     /// Alias for `RatelimitConfig::default()`  
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Set the ratelimiter active  
+    /// (only really useful for user controlled configuration)  
+    pub fn active(mut self, active: bool) -> Self {
+        self.active = active;
+
+        self
     }
 
     /// The quota resets every given duration  
@@ -84,6 +93,7 @@ impl Configuration {
 impl Default for Configuration {
     fn default() -> Self {
         Self {
+            active: true,
             // 50 request per hour per IP
             period: Duration::from_secs(3600),
             burst_quota: 50,
@@ -152,13 +162,20 @@ pub async fn recover_fn(rejection: Rejection) -> Result<impl Reply, Rejection> {
 pub fn ratelimit(
     config: Configuration,
 ) -> Result<impl Filter<Extract = (), Error = Rejection> + Clone, Error> {
+    let active = config.active;
     let rate_limiter = Arc::new(RateLimiter::keyed(config.try_into()?));
 
     let filter = warp::addr::remote()
         .and_then(move |ip_address| {
             let rate_limiter = Arc::clone(&rate_limiter);
 
-            check_ratelimit(rate_limiter, ip_address)
+            async move {
+                if active {
+                    check_ratelimit(rate_limiter, ip_address).await
+                } else {
+                    Ok(())
+                }
+            }
         })
         .untuple_one();
 

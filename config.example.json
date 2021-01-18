@@ -2,6 +2,11 @@
     "port": 8080,
     "databaseUrl": "postgres://localhost/tranquility",
     "domain": "tranquility.example.com",
+    "ratelimit": {
+        "active": true,
+        "authenticationQuota": 50,
+        "registrationQuota": 10
+    },
     "tls": {
         "reverseProxy": false,
         "certificate": "tranquility.crt",

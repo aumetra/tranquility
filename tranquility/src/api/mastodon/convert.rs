@@ -6,6 +6,7 @@ use {
         format_uuid,
     },
     async_trait::async_trait,
+    itertools::Itertools,
     serde::Serialize,
     tranquility_types::{
         activitypub::{Activity, Actor, Object},
@@ -129,6 +130,31 @@ impl IntoMastodon<Status> for DBObject {
         let activity_or_object: ActivityObject = serde_json::from_value(self.data)?;
 
         activity_or_object.into_mastodon().await
+    }
+}
+
+#[async_trait]
+impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
+    type Error = Error;
+
+    async fn into_mastodon(self) -> Result<Vec<Account>, Self::Error> {
+        let db_to_url = |object: DBObject| {
+            let activity: Activity = serde_json::from_value(object.data).ok()?;
+
+            activity.object.as_url().map(ToOwned::to_owned)
+        };
+
+        let account_urls = self.into_iter().filter_map(db_to_url).collect_vec();
+
+        let mut accounts = Vec::<Account>::new();
+        for url in account_urls {
+            let account = crate::database::actor::select::by_url(url.as_str()).await?;
+            let account = account.into_mastodon().await?;
+
+            accounts.push(account);
+        }
+
+        Ok(accounts)
     }
 }
 

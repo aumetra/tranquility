@@ -13,9 +13,11 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
         .and(warp::body::form())
         .and_then(register::register);
 
-    // Ratelimit the registration endpoint to 10 requests per hour
-    // TODO: Make configurable
-    let ratelimit_config = Configuration::new().burst_quota(10);
+    let config = crate::config::get();
+    let ratelimit_config = Configuration::new()
+        .active(config.ratelimit.active)
+        .burst_quota(10);
+
     let register =
         tranquility_ratelimit::ratelimit!(filter => register, config => ratelimit_config).unwrap();
 
