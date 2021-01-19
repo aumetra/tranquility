@@ -9,7 +9,7 @@ use {
     },
     pem::PemError,
     rsa::{errors::Error as RsaError, Hash, PaddingScheme, PublicKey, RSAPrivateKey, RSAPublicKey},
-    sha2::Digest,
+    sha2::{Digest, Sha256, Sha384, Sha512},
     std::collections::HashMap,
 };
 
@@ -18,7 +18,7 @@ const STANDARD_HASH: Hash = Hash::SHA2_256;
 trait HashExt {
     fn to_algorithm(self) -> String;
 
-    fn parse(signature_string: &HashMap<&str, &str>) -> Self;
+    fn from_signature_string(signature_string: &HashMap<&str, &str>) -> Self;
 
     fn calculate(self, data: &[u8]) -> Vec<u8>;
 }
@@ -35,7 +35,7 @@ impl HashExt for Hash {
         format!("rsa-{}", hash)
     }
 
-    fn parse(signature_string: &HashMap<&str, &str>) -> Self {
+    fn from_signature_string(signature_string: &HashMap<&str, &str>) -> Self {
         match signature_string.get("algorithm") {
             Some(val) => {
                 let message_digest_str = val.split('-').last().unwrap();
@@ -52,9 +52,10 @@ impl HashExt for Hash {
 
     fn calculate(self, data: &[u8]) -> Vec<u8> {
         match self {
-            Hash::SHA2_384 => sha2::Sha384::digest(data).to_vec(),
-            Hash::SHA2_512 => sha2::Sha512::digest(data).to_vec(),
-            _ => sha2::Sha256::digest(data).to_vec(),
+            Hash::SHA2_256 => Sha256::digest(data).to_vec(),
+            Hash::SHA2_384 => Sha384::digest(data).to_vec(),
+            Hash::SHA2_512 => Sha512::digest(data).to_vec(),
+            _ => unreachable!(),
         }
     }
 }
@@ -127,7 +128,7 @@ impl<'a> From<&'a reqwest::Request> for HttpRequest<'a> {
 
 enum SignaturePart<'a> {
     RequestTarget(&'a str, &'a str, Option<&'a str>),
-    Header(String, &'a HeaderValue),
+    Header(&'a str, &'a HeaderValue),
 }
 
 impl<'a> SignaturePart<'a> {
@@ -187,7 +188,7 @@ fn build_signature_string(signature_parts: Vec<SignaturePart>) -> Result<String,
 
 fn parse_signature_header<'a>(
     request: &HttpRequest<'a>,
-    signature_header: &HeaderValue,
+    signature_header: &'a HeaderValue,
 ) -> Result<(Vec<SignaturePart<'a>>, Hash, Vec<u8>), Error> {
     let signature_header = signature_header.to_str()?.trim_start_matches("Signature ");
 
@@ -225,7 +226,7 @@ fn parse_signature_header<'a>(
             header => {
                 let value = request.headers.get(header)?;
 
-                Some(SignaturePart::Header(header.to_owned(), value))
+                Some(SignaturePart::Header(header, value))
             }
         })
         .collect::<Vec<_>>();
@@ -238,10 +239,10 @@ fn parse_signature_header<'a>(
             .get("date")
             .ok_or(Error::MalformedSignatureHeader)?;
 
-        signature_parts.push(SignaturePart::Header("date".to_owned(), date_header));
+        signature_parts.push(SignaturePart::Header("date", date_header));
     }
 
-    let hash = Hash::parse(&parsed_signature_string);
+    let hash = Hash::from_signature_string(&parsed_signature_string);
 
     Ok((signature_parts, hash, decoded_signature))
 }
@@ -270,7 +271,7 @@ pub fn sign<'a, T: Into<HttpRequest<'a>>>(
             } else {
                 let value = &request.headers[*header_name];
 
-                SignaturePart::Header((*header_name).to_string(), value)
+                SignaturePart::Header(*header_name, value)
             }
         })
         .collect::<Vec<_>>();
@@ -278,7 +279,7 @@ pub fn sign<'a, T: Into<HttpRequest<'a>>>(
     let signature_string = build_signature_string(signature_parts)?;
     let signature_header = build_signature_header(
         key_id,
-        &header_names,
+        header_names,
         STANDARD_HASH,
         &private_key,
         &signature_string,

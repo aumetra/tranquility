@@ -1,32 +1,25 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>OAuth authorization</title>
-        <meta charset="utf-8">
-        <style type="text/css">
-            body {
-                text-align: center;
-                font-family: sans-serif;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>
-            OAuth authorization
-        </h1>
-        <form method="POST">
-            <label>
-                Username
-            </label>
-            <input type="text" name="username">
-            <br />
-            <label>
-                Password
-            </label>
-            <input type="password" name="password">
-            <p>
-                <button type="submit">Login</button>
-            </p>
-        </form>
-    </body>
-</html>
+{% extends "../base.html" %}
+
+{% block title %}
+    OAuth Authorize
+{% endblock %}
+
+{% block content %}
+    <h1>
+        OAuth Authorize
+    </h1>
+    <form method="POST">
+        <label>
+            Username
+        </label>
+        <input type="text" name="username">
+        <br />
+        <label>
+            Password
+        </label>
+        <input type="password" name="password">
+        <p>
+            <button type="submit">Login</button>
+        </p>
+    </form>
+{% endblock %}

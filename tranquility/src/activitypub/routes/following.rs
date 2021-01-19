@@ -19,16 +19,17 @@ pub async fn following(user_id: Uuid, query: CollectionQuery) -> Result<impl Rep
         offset = 0;
     }
 
-    let last_follow_activities = crate::database::object::select::by_type_and_owner(
-        "Follow",
-        &user_id,
-        ACTIVITIES_PER_PAGE,
-        offset,
-    )
-    .await?
-    .into_iter()
-    .map(|object| serde_json::from_value(object.data).map_err(Error::from))
-    .collect::<Result<Vec<FollowActivity>, Error>>()?;
+    let last_follow_activities: Vec<FollowActivity> =
+        crate::database::object::select::by_type_and_owner(
+            "Follow",
+            &user_id,
+            ACTIVITIES_PER_PAGE,
+            offset,
+        )
+        .await?
+        .into_iter()
+        .map(|object| serde_json::from_value(object.data).map_err(Error::from))
+        .try_collect()?;
 
     let last_followed = last_follow_activities
         .into_iter()

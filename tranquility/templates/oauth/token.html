@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>OAuth token</title>
-        <meta charset="utf-8">
-        <style type="text/css">
-            body {
-                text-align: center;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>
-            OAuth token
-        </h1>
-        Copy the code below into the application:
-        <br /><input type="text" size="40" value="{{ token }}" disabled>
-    </body>
-</html>
+{% extends "../base.html" %}
+
+{% block title %}
+    OAuth Token
+{% endblock %}
+
+{% block content %}
+    <h1>
+        OAuth Token
+    </h1>
+    Copy the code below into the application:
+    <br /><input type="text" size="40" value="{{ token }}" disabled>
+{% endblock %}

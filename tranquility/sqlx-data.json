@@ -124,11 +124,6 @@
           "ordinal": 4,
           "name": "updated_at",
           "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
-          "name": "url",
-          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -139,7 +134,6 @@
         ]
       },
       "nullable": [
-        false,
         false,
         false,
         false,
@@ -411,20 +405,6 @@
       ]
     }
   },
-  "4c9154bbe03a569f7d55990e9105138f9373b4f130a2357543f23ee1b4755324": {
-    "query": "\n            INSERT INTO objects \n            ( owner_id, data, url ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Jsonb",
-          "Text"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "53a810cc3387d1a46ad3002269cec5df30f710af3b11f1936df36641cf7e3d05": {
     "query": "\n                SELECT * FROM objects\n                WHERE data->>'type' = $1\n                AND data->>'object' = $2\n\n                ORDER BY created_at DESC\n                LIMIT $3\n                OFFSET $4\n            ",
     "describe": {
@@ -453,11 +433,6 @@
           "ordinal": 4,
           "name": "updated_at",
           "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
-          "name": "url",
-          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -469,7 +444,6 @@
         ]
       },
       "nullable": [
-        false,
         false,
         false,
         false,
@@ -569,56 +543,6 @@
         ]
       },
       "nullable": []
-    }
-  },
-  "acf71f09f70ac162e3db490d437fff9c59c01866bd885513052960c4047bafdb": {
-    "query": "\n                SELECT * FROM objects\n                WHERE url = $1\n            ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "owner_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 2,
-          "name": "data",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 3,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 4,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
-          "name": "url",
-          "type_info": "Text"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
     }
   },
   "b0d198bb0ec49b5d9b47f3451c0ecf5898091c63206b1bcb2249c702bb4eefc0": {
@@ -785,11 +709,6 @@
           "ordinal": 4,
           "name": "updated_at",
           "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
-          "name": "url",
-          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -802,6 +721,49 @@
       },
       "nullable": [
         false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "c3643358550d025db3108a5097105a925a6ac1ecff4da5ea971714ed5e237fc1": {
+    "query": "\n                SELECT * FROM objects\n                WHERE data->>'id' = $1\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
         false,
         false,
         false,
@@ -906,11 +868,6 @@
           "ordinal": 4,
           "name": "updated_at",
           "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
-          "name": "url",
-          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -919,7 +876,6 @@
         ]
       },
       "nullable": [
-        false,
         false,
         false,
         false,
@@ -939,6 +895,19 @@
           "Text",
           "Text",
           "Text",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "d0942efd38cbdc13547d437eea5d83d34bcf746ff4751919ec85b1e6279703fb": {
+    "query": "\n            INSERT INTO objects \n            ( owner_id, data ) \n            VALUES \n            ( $1, $2 )\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
           "Jsonb"
         ]
       },

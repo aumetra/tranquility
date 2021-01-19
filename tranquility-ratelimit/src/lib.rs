@@ -62,9 +62,14 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    /// Alias for `RatelimitConfig::default()`  
+    /// Create a new instance of `Configuration`
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            active: true,
+            // 50 request per hour per IP
+            period: Duration::from_secs(3600),
+            burst_quota: 50,
+        }
     }
 
     /// Set the ratelimiter active  
@@ -92,12 +97,7 @@ impl Configuration {
 
 impl Default for Configuration {
     fn default() -> Self {
-        Self {
-            active: true,
-            // 50 request per hour per IP
-            period: Duration::from_secs(3600),
-            burst_quota: 50,
-        }
+        Self::new()
     }
 }
 

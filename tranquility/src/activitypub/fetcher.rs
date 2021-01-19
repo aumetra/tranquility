@@ -50,7 +50,7 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         // Normalize the activity
         if let Some(object) = activity.object.as_object() {
             let object_value = serde_json::to_value(object)?;
-            crate::database::object::insert(actor_db.id, object.id.as_str(), object_value).await?;
+            crate::database::object::insert(actor_db.id, object_value).await?;
 
             activity.object = ObjectField::Url(object.id.to_owned());
         } else if activity.object.as_actor().is_some() {
@@ -58,7 +58,7 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         }
 
         let activity_value = serde_json::to_value(&activity)?;
-        crate::database::object::insert(actor_db.id, &activity.id, activity_value).await?;
+        crate::database::object::insert(actor_db.id, activity_value).await?;
 
         Ok(activity)
     } else {
@@ -108,7 +108,7 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
         let (_actor, actor_db) = fetch_actor(object.attributed_to.as_ref()).await?;
 
         let object_value = serde_json::to_value(&object)?;
-        crate::database::object::insert(actor_db.id, &object.id, object_value).await?;
+        crate::database::object::insert(actor_db.id, object_value).await?;
 
         Ok(object)
     } else {

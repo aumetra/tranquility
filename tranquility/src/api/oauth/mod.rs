@@ -1,8 +1,12 @@
 use {
     askama::Template,
+    once_cell::sync::Lazy,
     tranquility_ratelimit::Configuration,
     warp::{Filter, Rejection, Reply},
 };
+
+// This form has no fields. Rendering it every time is a waste
+static AUTHORIZE_FORM: Lazy<String> = Lazy::new(|| AuthorizeFormTemplate.render().unwrap());
 
 #[derive(Template)]
 #[template(path = "oauth/authorize.html")]

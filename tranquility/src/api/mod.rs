@@ -16,7 +16,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
     let config = crate::config::get();
     let ratelimit_config = Configuration::new()
         .active(config.ratelimit.active)
-        .burst_quota(10);
+        .burst_quota(config.ratelimit.registration_quota);
 
     let register =
         tranquility_ratelimit::ratelimit!(filter => register, config => ratelimit_config).unwrap();

@@ -139,17 +139,23 @@ impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
 
     async fn into_mastodon(self) -> Result<Vec<Account>, Self::Error> {
         let db_to_url = |object: DBObject| {
-            let activity: Activity = serde_json::from_value(object.data).ok()?;
+            let activity: Activity = match serde_json::from_value(object.data) {
+                Ok(activity) => activity,
+                Err(err) => {
+                    warn!("Couldn't deserialize activity: {}", err);
+                    return None;
+                }
+            };
 
             activity.object.as_url().map(ToOwned::to_owned)
         };
 
         let account_urls = self.into_iter().filter_map(db_to_url).collect_vec();
 
-        let mut accounts = Vec::<Account>::new();
+        let mut accounts = Vec::new();
         for url in account_urls {
             let account = crate::database::actor::select::by_url(url.as_str()).await?;
-            let account = account.into_mastodon().await?;
+            let account: Account = account.into_mastodon().await?;
 
             accounts.push(account);
         }

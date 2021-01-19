@@ -29,7 +29,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     };
     let activity = serde_json::to_value(&follow_activity)?;
 
-    crate::database::object::insert(actor_db.id, &follow_activity.activity.id, activity).await?;
+    crate::database::object::insert(actor_db.id, activity).await?;
 
     let followed_url = follow_activity.activity.object.as_url().unwrap();
     let followed_actor = crate::database::actor::select::by_url(followed_url).await?;
@@ -45,12 +45,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         );
         let accept_activity_value = serde_json::to_value(&accept_activity)?;
 
-        crate::database::object::insert(
-            followed_actor.id,
-            &accept_activity.id,
-            accept_activity_value,
-        )
-        .await?;
+        crate::database::object::insert(followed_actor.id, accept_activity_value).await?;
 
         deliverer::deliver(accept_activity).await?;
     }

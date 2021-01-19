@@ -1,6 +1,8 @@
-use super::{Attachment, Tag};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use {
+    super::{Attachment, Tag},
+    serde::{Deserialize, Serialize},
+    serde_json::Value,
+};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

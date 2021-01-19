@@ -1,5 +1,5 @@
 use {
-    super::{AuthorizeFormTemplate, TokenTemplate},
+    super::{TokenTemplate, AUTHORIZE_FORM},
     crate::{crypto::password, error::Error, util::Either},
     askama::Template,
     chrono::Duration,
@@ -28,9 +28,7 @@ pub struct Query {
 }
 
 pub async fn get() -> Result<impl Reply, Rejection> {
-    let page = AuthorizeFormTemplate.render().unwrap();
-
-    Ok(warp::reply::html(page))
+    Ok(warp::reply::html(AUTHORIZE_FORM.as_str()))
 }
 
 pub async fn post(form: Form, query: Query) -> Result<impl Reply, Rejection> {

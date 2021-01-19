@@ -12,7 +12,7 @@ async fn insert_object(activity: &Activity) -> Result<Object, Error> {
 
     let object_value = serde_json::to_value(&object)?;
 
-    crate::database::object::insert(owner_db.id, &object.id, object_value).await?;
+    crate::database::object::insert(owner_db.id, object_value).await?;
 
     Ok(object)
 }
@@ -41,7 +41,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
 
     let db_actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
     let activity_value = serde_json::to_value(&activity)?;
-    crate::database::object::insert(db_actor.id, &activity.id, activity_value).await?;
+    crate::database::object::insert(db_actor.id, activity_value).await?;
 
     Ok(StatusCode::CREATED)
 }

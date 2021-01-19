@@ -30,12 +30,7 @@ pub async fn follow(db_actor: DBActor, followed: &Actor) -> Result<(), Error> {
     );
     let follow_activity_value = serde_json::to_value(&follow_activity)?;
 
-    crate::database::object::insert(
-        db_actor.id,
-        follow_activity.id.as_str(),
-        follow_activity_value,
-    )
-    .await?;
+    crate::database::object::insert(db_actor.id, follow_activity_value).await?;
 
     crate::activitypub::deliverer::deliver(follow_activity).await?;
 
@@ -60,8 +55,7 @@ pub async fn undo(db_actor: DBActor, db_activity: DBObject) -> Result<(), Error>
         activity.cc,
     );
     let undo_activity_value = serde_json::to_value(&undo_activity)?;
-    crate::database::object::insert(db_actor.id, undo_activity.id.as_str(), undo_activity_value)
-        .await?;
+    crate::database::object::insert(db_actor.id, undo_activity_value).await?;
 
     crate::activitypub::deliverer::deliver(undo_activity).await?;
 
