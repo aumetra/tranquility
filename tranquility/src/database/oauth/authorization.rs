@@ -1,17 +1,20 @@
 use {
     crate::{database::model::OAuthAuthorization, error::Error},
     chrono::NaiveDateTime,
+    tokio_compat_02::FutureExt,
     uuid::Uuid,
 };
 
 pub mod delete {
-    use crate::error::Error;
+    use {crate::error::Error, tokio_compat_02::FutureExt};
 
     pub async fn expired() -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get()?;
+        let conn_pool = crate::database::connection::get().await?;
 
         sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
             .execute(conn_pool)
+            // SQLx isn't on Tokio 1.0 yet
+            .compat()
             .await?;
 
         Ok(())
@@ -19,10 +22,13 @@ pub mod delete {
 }
 
 pub mod select {
-    use crate::{database::model::OAuthAuthorization, error::Error};
+    use {
+        crate::{database::model::OAuthAuthorization, error::Error},
+        tokio_compat_02::FutureExt,
+    };
 
     pub async fn by_code(code: &str) -> Result<OAuthAuthorization, Error> {
-        let conn_pool = crate::database::connection::get()?;
+        let conn_pool = crate::database::connection::get().await?;
 
         let authorization = sqlx::query_as!(
             OAuthAuthorization,
@@ -33,6 +39,8 @@ pub mod select {
             code
         )
         .fetch_one(conn_pool)
+        // SQLx isn't on Tokio 1.0 yet
+        .compat()
         .await?;
 
         Ok(authorization)
@@ -45,7 +53,7 @@ pub async fn insert(
     code: String,
     valid_until: NaiveDateTime,
 ) -> Result<OAuthAuthorization, Error> {
-    let conn_pool = crate::database::connection::get()?;
+    let conn_pool = crate::database::connection::get().await?;
 
     let authorization = sqlx::query_as!(
         OAuthAuthorization,
@@ -62,6 +70,8 @@ pub async fn insert(
         valid_until
     )
     .fetch_one(conn_pool)
+    // SQLx isn't on Tokio 1.0 yet
+    .compat()
     .await?;
 
     Ok(authorization)

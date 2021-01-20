@@ -19,28 +19,34 @@ struct TokenTemplate {
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let authorize = {
-        let get = warp::get().and_then(authorize::get);
-        let post = warp::post()
-            .and(warp::body::form())
-            .and(warp::query())
-            .and_then(authorize::post);
-
-        warp::path!("oauth" / "authorize").and(get.or(post))
-    };
-    let token = warp::path!("oauth" / "token")
-        .and(warp::post())
-        .and(warp::body::form())
-        .and_then(token::token);
-
-    let oauth_routes = authorize.or(token);
-
     let config = crate::config::get();
     let ratelimit_config = Configuration::new()
         .active(config.ratelimit.active)
         .burst_quota(config.ratelimit.authentication_quota);
+    let ratelimit_filter = tranquility_ratelimit::ratelimit(ratelimit_config).unwrap();
 
-    tranquility_ratelimit::ratelimit!(filter => oauth_routes, config => ratelimit_config).unwrap()
+    let authorize = {
+        let get = warp::get().and_then(authorize::get);
+
+        let ratelimit_filter = ratelimit_filter.clone();
+        let post = warp::post()
+            .and(warp::body::form())
+            .and(warp::query())
+            .and_then(authorize::post);
+        // Ratelimit only the logic
+        let post = tranquility_ratelimit::custom_ratelimit!(filter => post, ratelimit_filter => ratelimit_filter);
+
+        warp::path!("oauth" / "authorize").and(get.or(post))
+    };
+    let token_path = warp::path!("oauth" / "token");
+
+    // Ratelimit only the logic
+    let token_logic = warp::post().and(warp::body::form()).and_then(token::token);
+    let token_logic = tranquility_ratelimit::custom_ratelimit!(filter => token_logic, ratelimit_filter => ratelimit_filter);
+
+    let token = token_path.and(token_logic);
+
+    authorize.or(token)
 }
 
 pub mod authorize;

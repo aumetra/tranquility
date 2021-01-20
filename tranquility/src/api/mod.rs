@@ -8,8 +8,8 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
 
     let oauth = oauth::routes();
 
-    let register = warp::path!("api" / "register")
-        .and(warp::post())
+    let register_path = warp::path!("api" / "register");
+    let register_logic = warp::post()
         .and(warp::body::form())
         .and_then(register::register);
 
@@ -18,8 +18,11 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
         .active(config.ratelimit.active)
         .burst_quota(config.ratelimit.registration_quota);
 
-    let register =
-        tranquility_ratelimit::ratelimit!(filter => register, config => ratelimit_config).unwrap();
+    // Ratelimit only the logic
+    let register_logic =
+        tranquility_ratelimit::ratelimit!(filter => register_logic, config => ratelimit_config)
+            .unwrap();
+    let register = register_path.and(register_logic);
 
     mastodon_api.or(oauth).or(register)
 }

@@ -46,12 +46,6 @@ struct WaitUntil(u64);
 
 impl Reject for WaitUntil {}
 
-impl From<WaitUntil> for Rejection {
-    fn from(wait_until: WaitUntil) -> Self {
-        warp::reject::custom(wait_until)
-    }
-}
-
 /// Ratelimit configuration  
 ///
 /// This defaults to 50 requests per hour  
@@ -189,6 +183,13 @@ pub fn ratelimit(
 macro_rules! ratelimit {
     (filter => $filter:ident, config => $config:expr) => {{
         $crate::ratelimit($config)
-            .map(move |filter| filter.and($filter).recover($crate::recover_fn))
+            .map(move |filter| $crate::custom_ratelimit!(filter => $filter, ratelimit_filter => filter))
+    }};
+}
+
+#[macro_export]
+macro_rules! custom_ratelimit {
+    (filter => $filter:ident, ratelimit_filter => $ratelimit_filter:ident) => {{
+        $ratelimit_filter.and($filter).recover($crate::recover_fn)
     }};
 }

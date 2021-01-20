@@ -81,12 +81,6 @@ pub enum Error {
 
 impl Reject for Error {}
 
-impl From<Error> for Rejection {
-    fn from(err: Error) -> Self {
-        warp::reject::custom(err)
-    }
-}
-
 fn map_error(error: &Error) -> Result<impl Reply, ()> {
     match error {
         Error::InvalidRequest => Ok(warp::reply::with_status(

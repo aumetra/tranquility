@@ -5,29 +5,39 @@
     clippy::similar_names
 )]
 
-use crate::error::Error;
+use {crate::error::Error, tokio_compat_02::FutureExt};
 
 pub mod connection {
-    use {crate::error::Error, once_cell::sync::OnceCell, sqlx::postgres::PgPool};
+    use {
+        crate::error::Error, once_cell::sync::OnceCell, sqlx::postgres::PgPool,
+        tokio_compat_02::FutureExt,
+    };
 
     static DATABASE_POOL: OnceCell<PgPool> = OnceCell::new();
 
-    pub fn get() -> Result<&'static PgPool, Error> {
-        if let Some(val) = DATABASE_POOL.get() {
-            Ok(val)
+    pub async fn get() -> Result<&'static PgPool, Error> {
+        let value = if let Some(val) = DATABASE_POOL.get() {
+            val
         } else {
             let config = crate::config::get();
-            let conn_pool = PgPool::connect_lazy(&config.database_url)?;
+            // SQLx isn't on Tokio 1.0 yet
+            let conn_pool = PgPool::connect(&config.database_url).compat().await?;
             DATABASE_POOL.set(conn_pool).unwrap();
 
-            get()
-        }
+            DATABASE_POOL.get().unwrap()
+        };
+
+        Ok(value)
     }
 }
 
 pub async fn init() -> Result<(), Error> {
-    let conn_pool = connection::get()?;
-    sqlx::migrate!("../migrations").run(conn_pool).await?;
+    let conn_pool = connection::get().await?;
+    sqlx::migrate!("../migrations")
+        .run(conn_pool)
+        // SQLx isn't on Tokio 1.0 yet
+        .compat()
+        .await?;
 
     Ok(())
 }
