@@ -64,12 +64,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 
     let inbox = warp::path!("users" / Uuid / "inbox")
         .and(warp::post())
-        .and(warp::method())
-        .and(warp::path::full())
-        .and(optional_raw_query())
-        .and(warp::header::headers_cloned())
-        .and(custom_json_type())
-        .and_then(inbox::verify_request)
+        .and(inbox::validate_request())
         .and_then(inbox::inbox);
 
     let objects = warp::path!("objects" / Uuid)

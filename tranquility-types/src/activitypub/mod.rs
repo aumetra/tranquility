@@ -10,21 +10,44 @@ pub fn context_field() -> Value {
     json!(["https://www.w3.org/ns/activitystreams"])
 }
 
+macro_rules! is_public_unlisted_traits {
+    ($($type:ty),*) => {
+        $(
+            impl IsPublic for $type {
+                fn is_public(&self) -> bool {
+                    self.to.contains(&PUBLIC_IDENTIFIER.to_string())
+                }
+            }
+
+            impl IsUnlisted for $type {
+                fn is_unlisted(&self) -> bool {
+                    self.cc.contains(&PUBLIC_IDENTIFIER.to_string())
+                }
+            }
+        )*
+    }
+}
+
+pub trait IsPublic {
+    fn is_public(&self) -> bool;
+}
+
+pub trait IsUnlisted {
+    fn is_unlisted(&self) -> bool;
+}
+
+is_public_unlisted_traits!(Activity, Object);
+
 pub trait IsPrivate {
     fn is_private(&self) -> bool;
 }
 
-impl IsPrivate for Activity {
+impl<T> IsPrivate for T
+where
+    T: IsPublic + IsUnlisted,
+{
     fn is_private(&self) -> bool {
-        !self.cc.contains(&PUBLIC_IDENTIFIER.to_string())
-            && !self.to.contains(&PUBLIC_IDENTIFIER.to_string())
-    }
-}
-
-impl IsPrivate for Object {
-    fn is_private(&self) -> bool {
-        !self.cc.contains(&PUBLIC_IDENTIFIER.to_string())
-            && !self.to.contains(&PUBLIC_IDENTIFIER.to_string())
+        !self.is_public() && !self.is_unlisted()
     }
 }
 

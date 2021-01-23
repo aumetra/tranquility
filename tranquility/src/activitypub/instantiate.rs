@@ -75,6 +75,8 @@ pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {
     }
 }
 
+// Keeping this for future use
+#[allow(dead_code)]
 pub fn object(
     id: &str,
     owner_url: &str,

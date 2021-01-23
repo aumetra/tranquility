@@ -31,13 +31,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         ObjectField::Actor(_) => return Err(Error::UnknownActivity),
     }
 
-    let object = fetcher::fetch_object(activity.object.as_url().unwrap()).await?;
-    // Are they actually publishing the object for themselves?
-    if activity.actor != object.attributed_to {
-        crate::database::object::delete::by_url(&object.id).await?;
-
-        return Err(Error::Unauthorized);
-    }
+    fetcher::fetch_object(activity.object.as_url().unwrap()).await?;
 
     let db_actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
     let activity_value = serde_json::to_value(&activity)?;

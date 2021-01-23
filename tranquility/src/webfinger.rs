@@ -8,6 +8,8 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
+// Keeping this for future use
+#[allow(dead_code)]
 pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DBActor), Error> {
     let resource = format!("acct:{}@{}", username, domain);
     let url = format!(

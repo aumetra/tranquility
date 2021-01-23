@@ -1,15 +1,17 @@
-use {std::time::Duration, tokio::time};
+use {
+    std::{future::Future, time::Duration},
+    tokio::time,
+};
 
 const DELETE_INTERVAL: Duration = Duration::from_secs(60);
 
-// Keeping it commented out for future use
-/*macro_rules! bulk_spawn {
-    ($futures:expr) => {{
-        for future in $futures {
-            tokio::spawn(future);
-        }
-    }}
-}*/
+// Keeping this for future use
+#[allow(dead_code)]
+fn bulk_spawn(futures: Vec<impl Future<Output = ()> + Send + Sync + 'static>) {
+    for future in futures {
+        tokio::spawn(future);
+    }
+}
 
 async fn delete_expired_authorization_codes() {
     let mut query_interval = time::interval(DELETE_INTERVAL);

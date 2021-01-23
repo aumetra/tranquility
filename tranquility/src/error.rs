@@ -24,9 +24,6 @@ pub enum Error {
     #[error("Template formatting failed")]
     Askama(#[from] AskamaError),
 
-    #[error("Username taken")]
-    DuplicateUsername,
-
     #[error("Remote content fetch failed")]
     Fetch,
 
@@ -66,9 +63,6 @@ pub enum Error {
     #[error("Unknown activity")]
     UnknownActivity,
 
-    #[error("Unknown key identifier")]
-    UnknownKeyIdentifier,
-
     #[error("URL couldn't be parsed")]
     UrlParse(#[from] UrlParseError),
 
@@ -81,24 +75,26 @@ pub enum Error {
 
 impl Reject for Error {}
 
-fn map_error(error: &Error) -> Result<impl Reply, ()> {
-    match error {
-        Error::InvalidRequest => Ok(warp::reply::with_status(
-            error.to_string(),
-            StatusCode::BAD_REQUEST,
-        )),
-        Error::Unauthorized => Ok(warp::reply::with_status(
-            error.to_string(),
-            StatusCode::UNAUTHORIZED,
-        )),
-        _ => Err(()),
-    }
-}
-
 pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
-    #[allow(clippy::map_err_ignore)]
-    rejection
-        .find::<Error>()
-        .map_or(Err(()), map_error)
-        .map_err(|_| rejection)
+    #[allow(clippy::option_if_let_else)]
+    if let Some(error) = rejection.find::<Error>() {
+        let error_text = error.to_string();
+
+        match error {
+            Error::InvalidRequest
+            | Error::UnknownActivity
+            | Error::MalformedUrl
+            | Error::Uuid(..) => Ok(warp::reply::with_status(
+                error_text,
+                StatusCode::BAD_REQUEST,
+            )),
+            Error::Unauthorized => Ok(warp::reply::with_status(
+                error_text,
+                StatusCode::UNAUTHORIZED,
+            )),
+            _ => Err(rejection),
+        }
+    } else {
+        Err(rejection)
+    }
 }

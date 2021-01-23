@@ -1,22 +1,55 @@
 use {
+    super::{custom_json_type, optional_raw_query},
     crate::{
-        activitypub::{fetcher, handler},
-        cpu_intensive_work,
+        activitypub::{
+            fetcher::{self, Entity},
+            handler,
+        },
+        crypto,
         error::Error,
     },
-    tranquility_http_signatures::HttpRequest,
-    tranquility_types::activitypub::Activity,
+    tranquility_types::activitypub::{activity::ObjectField, Activity},
     warp::{
         http::{HeaderMap, Method},
         path::FullPath,
-        Rejection, Reply,
+        Filter, Rejection, Reply,
     },
 };
 
-pub async fn verify_request(
-    // Do we even care about the user ID?
-    // Theoretically we could just use one shared inbox and get rid of the unique inboxes
-    _user_id: uuid::Uuid,
+pub fn validate_request() -> impl Filter<Extract = (Activity,), Error = Rejection> + Copy {
+    warp::method()
+        .and(warp::path::full())
+        .and(optional_raw_query())
+        .and(warp::header::headers_cloned())
+        .and(custom_json_type())
+        .and_then(verify_signature)
+        .and_then(verify_identity)
+}
+
+async fn verify_identity(activity: Activity) -> Result<Activity, Rejection> {
+    // It's fine if the objects or activities don't match in this case
+    if activity.r#type == "Announce" || activity.r#type == "Follow" {
+        return Ok(activity);
+    }
+
+    let identity_match = match activity.object {
+        ObjectField::Actor(ref actor) => actor.id == activity.actor,
+        ObjectField::Object(ref object) => object.attributed_to == activity.actor,
+        ObjectField::Url(ref url) => match fetcher::fetch_any(url).await? {
+            Entity::Activity(ref_activity) => ref_activity.actor == activity.actor,
+            Entity::Object(ref_object) => ref_object.attributed_to == activity.actor,
+            Entity::Actor(ref_actor) => ref_actor.id == activity.actor,
+        },
+    };
+
+    if identity_match {
+        Ok(activity)
+    } else {
+        Err(Error::Unauthorized.into())
+    }
+}
+
+async fn verify_signature(
     method: Method,
     path: FullPath,
     query: String,
@@ -27,29 +60,23 @@ pub async fn verify_request(
         .await
         .map_err(Error::from)?;
 
-    let valid = cpu_intensive_work!(move || {
-        let public_key = remote_actor.public_key.public_key_pem.as_bytes();
-        let query = if query.is_empty() {
-            None
-        } else {
-            Some(query.as_str())
-        };
+    let public_key = remote_actor.public_key.public_key_pem;
 
-        let request = HttpRequest::new(method.as_str(), path.as_str(), query, &headers);
+    let query = if query.is_empty() { None } else { Some(query) };
 
-        Ok::<_, Error>(tranquility_http_signatures::verify(request, public_key)?)
-    })
-    .await
-    .unwrap()?;
-
-    if valid {
+    if crypto::request::verify(method, path, query, headers, public_key).await? {
         Ok(activity)
     } else {
         Err(Error::Unauthorized.into())
     }
 }
 
-pub async fn inbox(activity: Activity) -> Result<impl Reply, Rejection> {
+pub async fn inbox(
+    // Do we even care about the user ID?
+    // Theoretically we could just use one shared inbox and get rid of the unique inboxes
+    _user_id: uuid::Uuid,
+    activity: Activity,
+) -> Result<impl Reply, Rejection> {
     let response = match activity.r#type.as_str() {
         "Accept" => handler::accept::handle(activity).await,
         "Create" => handler::create::handle(activity).await,

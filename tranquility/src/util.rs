@@ -1,4 +1,9 @@
-use warp::{reply::Response, Reply};
+use {
+    futures_util::FutureExt,
+    std::future::Future,
+    tokio::sync::oneshot,
+    warp::{reply::Response, Reply},
+};
 
 pub enum Either<A, B> {
     A(A),
@@ -18,21 +23,23 @@ where
     }
 }
 
-#[macro_export]
-macro_rules! cpu_intensive_work {
-    ($func:expr) => {{
-        let (sender, receiver) = tokio::sync::oneshot::channel();
+pub fn cpu_intensive_work<T>(
+    func: impl FnOnce() -> T + Send + 'static,
+) -> impl Future<Output = T> + Send + Sync + 'static
+where
+    T: Send + 'static,
+{
+    let (sender, receiver) = oneshot::channel();
 
-        rayon::spawn(move || {
-            let result = $func();
+    rayon::spawn(move || {
+        let result = func();
 
-            if sender.send(result).is_err() {
-                tracing::warn!("Couldn't send result from threadpool");
-            }
-        });
+        if sender.send(result).is_err() {
+            warn!("Couldn't send result from threadpool");
+        }
+    });
 
-        receiver
-    }};
+    receiver.map(Result::unwrap)
 }
 
 // Macro formatting UUIDs in a unified way

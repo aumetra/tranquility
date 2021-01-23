@@ -1,5 +1,8 @@
 use {
-    crate::{activitypub::fetcher, error::Error},
+    crate::{
+        activitypub::{self, fetcher},
+        error::Error,
+    },
     tranquility_types::activitypub::Activity,
     warp::http::StatusCode,
 };
@@ -11,13 +14,8 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         .object
         .as_mut_actor()
         .ok_or(Error::UnknownActivity)?;
-    // Is the sender actually who they say they are?
-    if actor.id != activity.actor {
-        return Err(Error::Unauthorized);
-    }
 
-    actor.name = ammonia::clean(&actor.name);
-    actor.summary = ammonia::clean(&actor.summary);
+    activitypub::clean_actor(actor);
 
     // Fetch the actor (just in case)
     fetcher::fetch_actor(actor.id.as_str()).await?;

@@ -1,5 +1,5 @@
 use {
-    crate::{cpu_intensive_work, database::model::Actor as DBActor, error::Error},
+    crate::{crypto, database::model::Actor as DBActor, error::Error},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -7,7 +7,6 @@ use {
         Client, Request, Response,
     },
     std::{future::Future, sync::Arc},
-    tranquility_http_signatures,
     tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
 };
 
@@ -36,20 +35,10 @@ async fn prepare_request(
 
     let (header_name, header_value) = {
         let request = request.try_clone().unwrap();
+        let key_id = author.public_key.id.clone();
+        let private_key = author_db.private_key.as_ref().unwrap().clone();
 
-        cpu_intensive_work!(move || {
-            let key_id = author.public_key.id.as_str();
-            let private_key = author_db.private_key.as_ref().unwrap();
-
-            tranquility_http_signatures::sign(
-                &request,
-                key_id,
-                &["(request-target)", "date", "digest"],
-                private_key.as_bytes(),
-            )
-        })
-        .await
-        .unwrap()?
+        crypto::request::sign(request, key_id, private_key).await?
     };
 
     request.headers_mut().insert(header_name, header_value);
@@ -62,7 +51,7 @@ fn create_delivery_futures<'a>(
     author: &Arc<Actor>,
     author_db: &Arc<DBActor>,
     recipient_list: Vec<&'a str>,
-) -> FuturesUnordered<impl Future<Output = Result<Response, Error>> + 'a> {
+) -> FuturesUnordered<impl Future<Output = Result<Response, Error>> + Send + 'a> {
     let delivery_futures = FuturesUnordered::new();
 
     for url in recipient_list {
@@ -88,10 +77,9 @@ fn create_delivery_futures<'a>(
     delivery_futures
 }
 
-async fn resolve_delivery_futures<F>(mut futures: FuturesUnordered<F>)
-where
-    F: Future<Output = Result<Response, Error>>,
-{
+async fn resolve_delivery_futures(
+    mut futures: FuturesUnordered<impl Future<Output = Result<Response, Error>> + Send>,
+) {
     while let Some(delivery_result) = futures.next().await {
         match delivery_result {
             Ok(response) if response.status().is_success() => (),

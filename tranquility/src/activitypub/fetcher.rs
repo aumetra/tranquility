@@ -5,13 +5,29 @@ use {
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object},
 };
 
+macro_rules! entity_from {
+    ($($type:ident),*) => {
+        $(
+            impl From<$type> for Entity {
+                fn from(value: $type) -> Self {
+                    Self::$type(value)
+                }
+            }
+        )*
+    }
+}
+
 pub enum Entity {
     Activity(Activity),
     Actor(Actor),
     Object(Object),
 }
 
-/*impl Entity {
+entity_from!(Activity, Actor, Object);
+
+// Keeping this for future use
+#[allow(dead_code)]
+impl Entity {
     pub fn into_activity(self) -> Option<Activity> {
         match self {
             Self::Activity(activity) => Some(activity),
@@ -32,7 +48,34 @@ pub enum Entity {
             _ => None,
         }
     }
-}*/
+}
+
+macro_rules! attempt_fetch {
+    ($func:ident, $url:ident) => {{
+        match $func($url).await {
+            Ok(val) => return Ok(val.into()),
+            Err(err) => debug!(
+                "Couldn't fetch {} with {}: {}",
+                $url,
+                stringify!($func),
+                err
+            ),
+        }
+    }};
+}
+
+pub async fn fetch_any(url: &str) -> Result<Entity, Error> {
+    // Create a custom closure around the `fetch_actor` function
+    // Otherwise the pattern in the macro won't match
+    let fetch_actor_fn =
+        |url| async move { fetch_actor(url).await.map(|(actor, _db_actor)| actor) };
+
+    attempt_fetch!(fetch_activity, url);
+    attempt_fetch!(fetch_actor_fn, url);
+    attempt_fetch!(fetch_object, url);
+
+    Err(Error::Fetch)
+}
 
 pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     debug!("Fetching remote actor...");
