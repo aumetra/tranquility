@@ -1,7 +1,7 @@
 use {clap::Clap, std::env};
 
 #[derive(Clap)]
-#[clap(version = crate::VERSION, author = env!("CARGO_PKG_AUTHORS"))]
+#[clap(version = crate::util::VERSION, author = env!("CARGO_PKG_AUTHORS"))]
 pub struct Opts {
     #[clap(long, default_value = "config.toml")]
     config: String,

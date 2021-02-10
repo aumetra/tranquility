@@ -65,7 +65,7 @@ fn create_delivery_futures<'a>(
         let outgoing_request = async move {
             debug!("Delivering activity {} to actor {}...", activity.id, url);
 
-            let client = &crate::REQWEST_CLIENT;
+            let client = &crate::util::REQWEST_CLIENT;
             let request = prepare_request(client, url, author, author_db, &activity).await?;
 
             client.execute(request).await.map_err(Error::from)

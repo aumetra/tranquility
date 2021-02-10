@@ -30,7 +30,7 @@ database-url = "postgres://localhost/tranquility"
 [tls]
 # Tranquility doesn't necessarily need a reverse proxy like NGINX for TLS support
 # If this option is set to "true", Tranquility will use the files set below
-# as the TLS certificate/key communicate via TLS over the previously specified port
+# as the TLS certificate/key to communicate via TLS over the previously specified port
 #
 # If you need a TLS certificate, get one for free from an authority like Let's Encrypt (https://letsencrypt.org)
 #

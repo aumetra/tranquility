@@ -39,6 +39,14 @@ uuid = { version = "0.8", features = [ "serde", "v4" ] }
 validator = { version = "0.12", features = [ "derive" ] }
 warp = { version = "0.3", features = [ "compression", "tls" ] }
 
+[dependencies.jemallocator]
+version = "0.3"
+optional = true
+
+[dependencies.mimalloc]
+version = "0.1"
+optional = true
+
 [dependencies.rsa]
 git = "https://github.com/RustCrypto/RSA.git"
 rev = "a9c5797877a94fd48a1654bdb6b72717d71f5952"
@@ -55,4 +63,14 @@ path = "../tranquility-types"
 
 [features]
 default = [ "mastodon-api" ]
+
 mastodon-api = [ "tranquility-types/mastodon" ]
+
+# Use a custom memory allocator
+# This can be more performant in some instances
+# (if Tranquility is running too slow, you can try out one of these)
+#
+# The two features are mutually exclusive 
+# If both are activated, both allocators are compiled in the binary but neither will be actually used
+allocator-jemalloc = [ "jemallocator" ]
+allocator-mimalloc = [ "mimalloc" ]

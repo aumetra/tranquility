@@ -4,20 +4,13 @@
 #[macro_use]
 extern crate tracing;
 
-use {once_cell::sync::Lazy, reqwest::Client, std::env};
+#[cfg(all(feature = "allocator-jemalloc", not(feature = "allocator-mimalloc")))]
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
-const VERSION: &str = concat!(
-    "v",
-    env!("CARGO_PKG_VERSION"),
-    "-",
-    env!("GIT_BRANCH"),
-    "-",
-    env!("GIT_COMMIT")
-);
-
-static REQWEST_CLIENT: Lazy<Client> =
-    Lazy::new(|| Client::builder().user_agent(USER_AGENT).build().unwrap());
+#[cfg(all(feature = "allocator-mimalloc", not(feature = "allocator-jemalloc")))]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {

@@ -17,7 +17,7 @@ pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DBActor
         domain, resource
     );
 
-    let client = &crate::REQWEST_CLIENT;
+    let client = &crate::util::REQWEST_CLIENT;
     let request = client
         .get(&url)
         .header("Accept", "application/jrd+json")

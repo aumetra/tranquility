@@ -162,7 +162,7 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
 }
 
 async fn fetch_entity<T: IntoUrl + Send>(url: T) -> Result<Entity, Error> {
-    let client = &crate::REQWEST_CLIENT;
+    let client = &crate::util::REQWEST_CLIENT;
     let request = client
         .get(url)
         .header(
