@@ -79,19 +79,28 @@ pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
     #[allow(clippy::option_if_let_else)]
     if let Some(error) = rejection.find::<Error>() {
         let error_text = error.to_string();
+        let error_response = error_text.clone().into_response();
 
         match error {
             Error::InvalidRequest
             | Error::UnknownActivity
             | Error::MalformedUrl
             | Error::Uuid(..) => Ok(warp::reply::with_status(
-                error_text,
+                error_response,
                 StatusCode::BAD_REQUEST,
             )),
             Error::Unauthorized => Ok(warp::reply::with_status(
-                error_text,
+                error_response,
                 StatusCode::UNAUTHORIZED,
             )),
+            Error::Argon2(..) | Error::Sqlx(..) | Error::SqlxMigration(..) | Error::Rsa(..) => {
+                error!("Internal error occurred: {}", error_text);
+
+                Ok(warp::reply::with_status(
+                    "".into_response(),
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                ))
+            }
             _ => Err(rejection),
         }
     } else {

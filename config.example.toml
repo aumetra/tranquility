@@ -1,0 +1,42 @@
+[instance]
+# Maximum limit of characters per post
+character-limit = 1024
+# If set to "true", the instance won't allow new users to sign up and always return a "403 Forbidden" status code
+# Useful for private/single user instances or instances with a large spam account problem
+closed-registrations = false
+# This is a very important value
+# Change this to your domain (eg. fedi.my-cool-domain.com) before you start Tranquility the first time
+# This value is used to create the URLs used in activities
+# If it is set to a wrong domain, federation will break/won't work! 
+# 
+# !! ActivityPub entities will not automatically update when this value changes !!
+# !! You'll either have to change every activity manually or start from scratch (the latter option is by far easier) !!
+domain = "tranquility.example.com"
+# Upload limit for profile/header pictures, attachments, etc. in kilobytes
+# Defaults to 2048 (2MB)
+upload-limit = 2048
+
+[ratelimit]
+# Activates ratelimiting for routes responsible for authentication and for the registration endpoint
+active = true
+# Those values are quotas per hour respectively
+authentication-quota = 50
+registration-quota = 10
+
+[server]
+port = 8080
+database-url = "postgres://localhost/tranquility"
+
+[tls]
+# Tranquility doesn't necessarily need a reverse proxy like NGINX for TLS support
+# If this option is set to "true", Tranquility will use the files set below
+# as the TLS certificate/key communicate via TLS over the previously specified port
+#
+# If you need a TLS certificate, get one for free from an authority like Let's Encrypt (https://letsencrypt.org)
+#
+# !! Setting this to "false" and running Tranquility without any kind of reverse proxy will probably not work !!
+# !! Please use a free certificate authority like the aforementioned Let's Encrypt !!
+serve-tls-directly = false
+
+certificate = "tranquility.crt"
+secret-key = "tranquility.key"

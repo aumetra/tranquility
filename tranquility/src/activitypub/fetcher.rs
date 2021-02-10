@@ -82,10 +82,10 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
 
     match crate::database::object::select::by_url(url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
-        Err(e) => {
-            debug!("{}", e);
-            debug!("Activity not found in database. Attempting remote fetch...");
-        }
+        Err(e) => debug!(
+            "{}\nActivity not found in database. Attempting remote fetch...",
+            e
+        ),
     }
 
     if let Entity::Activity(mut activity) = fetch_entity(url).await? {
@@ -116,10 +116,10 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
 
     match crate::database::actor::select::by_url(url).await {
         Ok(actor) => return Ok((serde_json::from_value(actor.actor.clone())?, actor)),
-        Err(e) => {
-            debug!("{}", e);
-            debug!("Actor not found in database. Attempting remote fetch...");
-        }
+        Err(e) => debug!(
+            "{}\nActor not found in database. Attempting remote fetch...",
+            e
+        ),
     }
 
     if let Entity::Actor(actor) = fetch_entity(url).await? {
@@ -139,10 +139,10 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
 
     match crate::database::object::select::by_url(url).await {
         Ok(object) => return Ok(serde_json::from_value(object.data)?),
-        Err(e) => {
-            debug!("{}", e);
-            debug!("Object not found in database. Attempting remote fetch...");
-        }
+        Err(e) => debug!(
+            "{}\nObject not found in database. Attempting remote fetch...",
+            e
+        ),
     }
 
     if let Entity::Object(mut object) = fetch_entity(url).await? {

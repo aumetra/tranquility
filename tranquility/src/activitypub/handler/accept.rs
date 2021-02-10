@@ -21,9 +21,7 @@ pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     follow_activity.approved = true;
 
     let follow_activity_value = serde_json::to_value(&follow_activity)?;
-    crate::database::object::update(follow_activity_db.id, follow_activity_value)
-        .await
-        .unwrap();
+    crate::database::object::update(follow_activity_db.id, follow_activity_value).await?;
 
     Ok(StatusCode::OK)
 }

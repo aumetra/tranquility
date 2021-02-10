@@ -1,4 +1,4 @@
-use {crate::error::Error, tokio_compat_02::FutureExt, tranquility_types::activitypub::Actor};
+use {crate::error::Error, tranquility_types::activitypub::Actor};
 
 pub async fn update(actor: &Actor) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get().await?;
@@ -15,8 +15,6 @@ pub async fn update(actor: &Actor) -> Result<(), Error> {
         actor.id
     )
     .execute(conn_pool)
-    // SQLx isn't on Tokio 1.0 yet
-    .compat()
     .await?;
 
     Ok(())
@@ -25,7 +23,6 @@ pub async fn update(actor: &Actor) -> Result<(), Error> {
 pub mod insert {
     use {
         crate::{database::model::Actor as DBActor, error::Error},
-        tokio_compat_02::FutureExt,
         tranquility_types::activitypub::Actor,
         uuid::Uuid,
     };
@@ -55,8 +52,6 @@ pub mod insert {
             actor_value
         )
         .execute(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(())
@@ -79,8 +74,6 @@ pub mod insert {
             actor
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(db_actor)
@@ -91,7 +84,6 @@ pub mod select {
     use {
         crate::{database::model::Actor, error::Error},
         cached::proc_macro::cached,
-        tokio_compat_02::FutureExt,
         uuid::Uuid,
     };
 
@@ -108,8 +100,6 @@ pub mod select {
             id
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(actor)
@@ -134,8 +124,6 @@ pub mod select {
             url
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(actor)
@@ -161,8 +149,6 @@ pub mod select {
             username
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(actor)

@@ -1,4 +1,5 @@
-#![warn(clippy::all, clippy::pedantic)]
+#![forbid(unsafe_code)]
+#![deny(clippy::all, clippy::pedantic)]
 #![allow(clippy::must_use_candidate)]
 
 use {

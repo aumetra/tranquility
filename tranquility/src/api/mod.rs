@@ -4,6 +4,7 @@ use {
 };
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    #[cfg(feature = "mastodon-api")]
     let mastodon_api = mastodon::routes();
 
     let oauth = oauth::routes();
@@ -24,9 +25,17 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
             .unwrap();
     let register = register_path.and(register_logic);
 
-    mastodon_api.or(oauth).or(register)
+    #[cfg(feature = "mastodon-api")]
+    {
+        mastodon_api.or(oauth).or(register)
+    }
+    #[cfg(not(feature = "mastodon-api"))]
+    {
+        oauth.or(register)
+    }
 }
 
+#[cfg(feature = "mastodon-api")]
 pub mod mastodon;
 pub mod oauth;
 pub mod register;

@@ -40,11 +40,14 @@ pub struct Query {
 
 pub async fn webfinger(query: Query) -> Result<impl Reply, Rejection> {
     let resource = query.resource;
-    let username = resource
-        .trim_start_matches("acct:")
-        .split('@')
-        .next()
-        .ok_or(Error::InvalidRequest)?;
+    let mut resource_tokens = resource.trim_start_matches("acct:").split('@');
+
+    let username = resource_tokens.next().ok_or(Error::InvalidRequest)?;
+
+    let config = crate::config::get();
+    if resource_tokens.next().ok_or(Error::InvalidRequest)? != config.instance.domain {
+        return Err(warp::reject::not_found());
+    }
 
     let actor_db = crate::database::actor::select::by_username_local(username).await?;
     let actor: Actor = serde_json::from_value(actor_db.actor).map_err(Error::from)?;

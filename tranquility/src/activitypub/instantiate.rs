@@ -14,7 +14,7 @@ pub fn activity<T: Into<ObjectField>>(
 ) -> (Uuid, Activity) {
     let config = crate::config::get();
 
-    let prefix = format!("https://{}", config.domain);
+    let prefix = format!("https://{}", config.instance.domain);
 
     let uuid = Uuid::new_v4();
     let id = format!("{}/objects/{}", prefix, format_uuid!(uuid));
@@ -40,7 +40,7 @@ pub fn activity<T: Into<ObjectField>>(
 pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {
     let config = crate::config::get();
 
-    let prefix = format!("https://{}", config.domain);
+    let prefix = format!("https://{}", config.instance.domain);
     let id = format!("{}/users/{}", prefix, user_id);
 
     let inbox = format!("{}/inbox", id);
@@ -86,7 +86,7 @@ pub fn object(
 ) -> Object {
     let config = crate::config::get();
 
-    let prefix = format!("https://{}", config.domain);
+    let prefix = format!("https://{}", config.instance.domain);
     let id = format!("{}/objects/{}", prefix, id);
 
     Object {

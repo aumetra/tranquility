@@ -5,7 +5,7 @@ use {
     serde::Deserialize,
     uuid::Uuid,
     validator::Validate,
-    warp::{http::StatusCode, Rejection, Reply},
+    warp::{http::StatusCode, reply::Response, Rejection, Reply},
 };
 
 static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[[:alnum:]\-_]+$"#).unwrap());
@@ -30,7 +30,12 @@ pub struct RegistrationForm {
     password: String,
 }
 
-pub async fn register(form: RegistrationForm) -> Result<impl Reply, Rejection> {
+pub async fn register(form: RegistrationForm) -> Result<Response, Rejection> {
+    let config = crate::config::get();
+    if config.instance.closed_registrations {
+        return Ok(StatusCode::FORBIDDEN.into_response());
+    }
+
     form.validate().map_err(Error::from)?;
 
     let user_id = Uuid::new_v4();
@@ -54,8 +59,5 @@ pub async fn register(form: RegistrationForm) -> Result<impl Reply, Rejection> {
     )
     .await?;
 
-    Ok(warp::reply::with_status(
-        "Account created",
-        StatusCode::CREATED,
-    ))
+    Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }

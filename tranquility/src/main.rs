@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![warn(clippy::all, clippy::pedantic)]
+#![deny(clippy::all, clippy::pedantic)]
 
 #[macro_use]
 extern crate tracing;

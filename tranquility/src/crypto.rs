@@ -41,12 +41,9 @@ pub mod password {
     pub async fn hash(password: String) -> Result<String, Error> {
         cpu_intensive_work(move || {
             let salt = crate::crypto::gen_secure_rand::<[u8; 32]>();
+            let config = Config::default();
 
-            Ok(argon2::hash_encoded(
-                password.as_bytes(),
-                &salt,
-                &Config::default(),
-            )?)
+            Ok(argon2::hash_encoded(password.as_bytes(), &salt, &config)?)
         })
         .await
     }
@@ -111,6 +108,8 @@ pub mod request {
     pub fn sign(
         request: Request,
         key_id: String,
+        // The public key is provided in the PEM format
+        // That's why the function takes a `String`
         private_key: String,
     ) -> impl Future<Output = Result<(HeaderName, HeaderValue), Error>> + Send {
         cpu_intensive_work(move || {

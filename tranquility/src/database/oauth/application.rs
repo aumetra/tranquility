@@ -1,6 +1,5 @@
 use {
     crate::{database::model::OAuthApplication, error::Error},
-    tokio_compat_02::FutureExt,
     uuid::Uuid,
 };
 
@@ -31,8 +30,6 @@ pub async fn insert(
         website,
     )
     .fetch_one(conn_pool)
-    // SQLx isn't on Tokio 1.0 yet
-    .compat()
     .await?;
 
     Ok(client)
@@ -41,7 +38,6 @@ pub async fn insert(
 pub mod select {
     use {
         crate::{database::model::OAuthApplication, error::Error},
-        tokio_compat_02::FutureExt,
         uuid::Uuid,
     };
 
@@ -57,8 +53,6 @@ pub mod select {
             client_id,
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(application)

@@ -1,4 +1,4 @@
-use {crate::error::Error, serde_json::Value, tokio_compat_02::FutureExt, uuid::Uuid};
+use {crate::error::Error, serde_json::Value, uuid::Uuid};
 
 pub async fn insert(owner_id: Uuid, object: Value) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get().await?;
@@ -14,15 +14,13 @@ pub async fn insert(owner_id: Uuid, object: Value) -> Result<(), Error> {
         object,
     )
     .execute(conn_pool)
-    // SQLx isn't on Tokio 1.0 yet
-    .compat()
     .await?;
 
     Ok(())
 }
 
 pub mod delete {
-    use {crate::error::Error, tokio_compat_02::FutureExt, uuid::Uuid};
+    use {crate::error::Error, uuid::Uuid};
 
     pub async fn by_id(id: Uuid) -> Result<(), Error> {
         let conn_pool = crate::database::connection::get().await?;
@@ -35,8 +33,6 @@ pub mod delete {
             id
         )
         .execute(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(())
@@ -53,8 +49,6 @@ pub mod delete {
             url
         )
         .execute(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(())
@@ -71,8 +65,6 @@ pub mod delete {
             url
         )
         .execute(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(())
@@ -84,7 +76,6 @@ pub mod select {
         crate::{database::model::Object, error::Error},
         cached::proc_macro::cached,
         sqlx::Error as SqlxError,
-        tokio_compat_02::FutureExt,
         uuid::Uuid,
     };
 
@@ -101,8 +92,6 @@ pub mod select {
             id
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(object)
@@ -140,8 +129,6 @@ pub mod select {
             offset
         )
         .fetch_all(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(objects)
@@ -179,8 +166,6 @@ pub mod select {
             offset
         )
         .fetch_all(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(objects)
@@ -215,8 +200,6 @@ pub mod select {
             object_url,
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await;
 
         match object_result {
@@ -245,8 +228,6 @@ pub mod select {
             url
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(object)
@@ -266,8 +247,6 @@ pub async fn update(id: Uuid, object: Value) -> Result<(), Error> {
         id,
     )
     .execute(conn_pool)
-    // SQLx isn't on Tokio 1.0 yet
-    .compat()
     .await?;
 
     Ok(())

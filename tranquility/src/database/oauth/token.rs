@@ -1,7 +1,6 @@
 use {
     crate::{database::model::OAuthToken, error::Error},
     chrono::NaiveDateTime,
-    tokio_compat_02::FutureExt,
     uuid::Uuid,
 };
 
@@ -30,18 +29,13 @@ pub async fn insert(
         valid_until,
     )
     .fetch_one(conn_pool)
-    // SQLx isn't on Tokio 1.0 yet
-    .compat()
     .await?;
 
     Ok(token)
 }
 
 pub mod select {
-    use {
-        crate::{database::model::OAuthToken, error::Error},
-        tokio_compat_02::FutureExt,
-    };
+    use crate::{database::model::OAuthToken, error::Error};
 
     pub async fn by_token(token: &str) -> Result<OAuthToken, Error> {
         let conn_pool = crate::database::connection::get().await?;
@@ -55,8 +49,6 @@ pub mod select {
             token
         )
         .fetch_one(conn_pool)
-        // SQLx isn't on Tokio 1.0 yet
-        .compat()
         .await?;
 
         Ok(token)

@@ -1,12 +1,12 @@
 use {
     super::TokenTemplate,
-    crate::{crypto::password, error::Error, util::Either},
+    crate::{crypto::password, error::Error},
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
     serde::{Deserialize, Serialize},
     uuid::Uuid,
-    warp::{Rejection, Reply},
+    warp::{reply::Response, Rejection, Reply},
 };
 
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
@@ -50,7 +50,7 @@ async fn code_grant(
     client_secret: String,
     redirect_uri: String,
     code: String,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
     let client = crate::database::oauth::application::select::by_client_id(&client_id).await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
@@ -79,7 +79,7 @@ async fn code_grant(
         .render()
         .map_err(Error::from)?;
 
-        Ok(Either::A(warp::reply::html(page)))
+        Ok(warp::reply::html(page).into_response())
     } else {
         let response = AccessTokenResponse {
             access_token: access_token.access_token,
@@ -87,7 +87,7 @@ async fn code_grant(
             ..AccessTokenResponse::default()
         };
 
-        Ok(Either::B(warp::reply::json(&response)))
+        Ok(warp::reply::json(&response).into_response())
     }
 }
 
@@ -119,20 +119,19 @@ async fn password_grant(username: String, password: String) -> Result<impl Reply
     Ok(warp::reply::json(&response))
 }
 
-pub async fn token(form: Form) -> Result<impl Reply, Rejection> {
+pub async fn token(form: Form) -> Result<Response, Rejection> {
     let response = match form.grant_type.as_str() {
-        "authorization_code" => Either::A(
-            code_grant(
-                form.client_id.unwrap(),
-                form.client_secret.unwrap(),
-                form.redirect_uri.unwrap(),
-                form.code.unwrap(),
-            )
-            .await?,
-        ),
-        "password" => {
-            Either::B(password_grant(form.username.unwrap(), form.password.unwrap()).await?)
-        }
+        "authorization_code" => code_grant(
+            form.client_id.unwrap(),
+            form.client_secret.unwrap(),
+            form.redirect_uri.unwrap(),
+            form.code.unwrap(),
+        )
+        .await?
+        .into_response(),
+        "password" => password_grant(form.username.unwrap(), form.password.unwrap())
+            .await?
+            .into_response(),
         _ => return Err(Error::InvalidRequest.into()),
     };
 

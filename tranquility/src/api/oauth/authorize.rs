@@ -1,13 +1,13 @@
 use {
     super::{TokenTemplate, AUTHORIZE_FORM},
-    crate::{crypto::password, error::Error, util::Either},
+    crate::{crypto::password, error::Error},
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
     serde::Deserialize,
     std::convert::TryFrom,
     uuid::Uuid,
-    warp::{http::Uri, Rejection, Reply},
+    warp::{http::Uri, reply::Response, Rejection, Reply},
 };
 
 static AUTHORIZATION_CODE_VALIDITY: Lazy<Duration> = Lazy::new(|| Duration::minutes(5));
@@ -31,7 +31,7 @@ pub async fn get() -> Result<impl Reply, Rejection> {
     Ok(warp::reply::html(AUTHORIZE_FORM.as_str()))
 }
 
-pub async fn post(form: Form, query: Query) -> Result<impl Reply, Rejection> {
+pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
     let actor = crate::database::actor::select::by_username_local(&form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
@@ -73,7 +73,7 @@ pub async fn post(form: Form, query: Query) -> Result<impl Reply, Rejection> {
         .render()
         .map_err(Error::from)?;
 
-        Ok(Either::A(warp::reply::html(page)))
+        Ok(warp::reply::html(page).into_response())
     } else {
         let redirect_uri = format!(
             "{}?code={}&state={}",
@@ -85,6 +85,6 @@ pub async fn post(form: Form, query: Query) -> Result<impl Reply, Rejection> {
         #[allow(clippy::map_err_ignore)]
         let redirect_uri: Uri = Uri::try_from(redirect_uri).map_err(|_| Error::InvalidRequest)?;
 
-        Ok(Either::B(warp::redirect::temporary(redirect_uri)))
+        Ok(warp::redirect::temporary(redirect_uri).into_response())
     }
 }
