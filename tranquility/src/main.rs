@@ -4,11 +4,11 @@
 #[macro_use]
 extern crate tracing;
 
-#[cfg(all(feature = "allocator-jemalloc", not(feature = "allocator-mimalloc")))]
+#[cfg(all(feature = "jemallocator", not(feature = "mimalloc")))]
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-#[cfg(all(feature = "allocator-mimalloc", not(feature = "allocator-jemalloc")))]
+#[cfg(all(feature = "mimalloc", not(feature = "jemallocator")))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 

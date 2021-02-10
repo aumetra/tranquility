@@ -28,7 +28,7 @@ rust-argon2 = "0.8"
 serde = { version = "1", default-features = false, features = [ "derive" ] }
 serde_json = "1"
 sha2 = "0.9"
-sqlx = { version = "0.5", default-features = false, features = [ "chrono", "json", "macros", "migrate", "offline", "postgres", "runtime-tokio-rustls", "uuid" ] }
+sqlx = { version = "0.5", features = [ "chrono", "json", "offline", "postgres", "runtime-tokio-rustls", "uuid" ] }
 thiserror = "1"
 tokio = { version = "1", features = [ "full", "tracing" ] }
 toml = "0.5"
@@ -65,12 +65,3 @@ path = "../tranquility-types"
 default = [ "mastodon-api" ]
 
 mastodon-api = [ "tranquility-types/mastodon" ]
-
-# Use a custom memory allocator
-# This can be more performant in some instances
-# (if Tranquility is running too slow, you can try out one of these)
-#
-# The two features are mutually exclusive 
-# If both are activated, both allocators are compiled in the binary but neither will be actually used
-allocator-jemalloc = [ "jemallocator" ]
-allocator-mimalloc = [ "mimalloc" ]

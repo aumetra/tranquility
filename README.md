@@ -3,7 +3,17 @@
 Tranquility is a small ActivityPub server written in Rust  
 Federation should work with most other implementations (once it actually, you know, federates)  
 
-Progress:
+## Custom memory allocators
+
+Tranquility currently supports two custom memory allocators  
+
+* `jemallocator`: Use `jemalloc` as the memory allocator
+* `mimalloc`: Use `mimalloc` as the memory allocator
+
+The two features are mutually exclusive  
+If both are activated, both allocators are compiled in the binary but neither will be actually used  
+
+## Progress
 
 - [ ] Federation
 - - [x] Webfinger server
