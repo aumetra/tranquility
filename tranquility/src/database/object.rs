@@ -1,15 +1,16 @@
 use {crate::error::Error, serde_json::Value, uuid::Uuid};
 
-pub async fn insert(owner_id: Uuid, object: Value) -> Result<(), Error> {
+pub async fn insert(id: Uuid, owner_id: Uuid, object: Value) -> Result<(), Error> {
     let conn_pool = crate::database::connection::get().await?;
 
     sqlx::query!(
         r#"
             INSERT INTO objects 
-            ( owner_id, data ) 
+            ( id, owner_id, data ) 
             VALUES 
-            ( $1, $2 )
+            ( $1, $2, $3 )
         "#,
+        id,
         owner_id,
         object,
     )
@@ -45,22 +46,6 @@ pub mod delete {
             r#"
                 DELETE FROM objects
                 WHERE data->>'id' = $1
-            "#,
-            url
-        )
-        .execute(conn_pool)
-        .await?;
-
-        Ok(())
-    }
-
-    pub async fn by_object_url(url: &str) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get().await?;
-
-        sqlx::query!(
-            r#"
-                DELETE FROM objects
-                WHERE data->'object'->>'id' = $1
             "#,
             url
         )

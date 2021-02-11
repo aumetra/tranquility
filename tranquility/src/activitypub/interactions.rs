@@ -1,12 +1,12 @@
 use {
     crate::{
-        database::model::{Actor as DBActor, Object as DBObject},
+        database::model::{Actor as DbActor, Object as DBObject},
         error::Error,
     },
     tranquility_types::activitypub::{Activity, Actor},
 };
 
-pub async fn follow(db_actor: DBActor, followed: &Actor) -> Result<(), Error> {
+pub async fn follow(db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
     let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
     // Check if there's already a follow activity
@@ -21,7 +21,7 @@ pub async fn follow(db_actor: DBActor, followed: &Actor) -> Result<(), Error> {
         return Ok(());
     }
 
-    let (_follow_activity_id, follow_activity) = crate::activitypub::instantiate::activity(
+    let (follow_activity_id, follow_activity) = crate::activitypub::instantiate::activity(
         "Follow",
         actor.id.as_str(),
         followed.id.clone(),
@@ -30,14 +30,14 @@ pub async fn follow(db_actor: DBActor, followed: &Actor) -> Result<(), Error> {
     );
     let follow_activity_value = serde_json::to_value(&follow_activity)?;
 
-    crate::database::object::insert(db_actor.id, follow_activity_value).await?;
+    crate::database::object::insert(follow_activity_id, db_actor.id, follow_activity_value).await?;
 
     crate::activitypub::deliverer::deliver(follow_activity).await?;
 
     Ok(())
 }
 
-pub async fn undo(db_actor: DBActor, db_activity: DBObject) -> Result<(), Error> {
+pub async fn undo(db_actor: DbActor, db_activity: DBObject) -> Result<(), Error> {
     // Tried to delete someone else's activity
     if db_activity.owner_id != db_actor.id {
         return Err(Error::Unauthorized);
@@ -47,7 +47,7 @@ pub async fn undo(db_actor: DBActor, db_activity: DBObject) -> Result<(), Error>
     let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
     // Send the undo activity to everyone who received the original activity
-    let (_undo_activity_id, undo_activity) = crate::activitypub::instantiate::activity(
+    let (undo_activity_id, undo_activity) = crate::activitypub::instantiate::activity(
         "Undo",
         actor.id.as_str(),
         activity.id,
@@ -55,14 +55,14 @@ pub async fn undo(db_actor: DBActor, db_activity: DBObject) -> Result<(), Error>
         activity.cc,
     );
     let undo_activity_value = serde_json::to_value(&undo_activity)?;
-    crate::database::object::insert(db_actor.id, undo_activity_value).await?;
+    crate::database::object::insert(undo_activity_id, db_actor.id, undo_activity_value).await?;
 
     crate::activitypub::deliverer::deliver(undo_activity).await?;
 
     Ok(())
 }
 
-pub async fn unfollow(db_actor: DBActor, followed_db_actor: DBActor) -> Result<(), Error> {
+pub async fn unfollow(db_actor: DbActor, followed_db_actor: DbActor) -> Result<(), Error> {
     let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
 
     let follow_activity = crate::database::object::select::by_type_owner_and_object_url(

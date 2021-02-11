@@ -12,6 +12,7 @@ use {
     warp::{
         http::StatusCode,
         reject::{Reject, Rejection},
+        reply::Response,
         Reply,
     },
 };
@@ -75,7 +76,7 @@ pub enum Error {
 
 impl Reject for Error {}
 
-pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
+pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
     #[allow(clippy::option_if_let_else)]
     if let Some(error) = rejection.find::<Error>() {
         let error_text = error.to_string();
@@ -88,18 +89,17 @@ pub async fn recover(rejection: Rejection) -> Result<impl Reply, Rejection> {
             | Error::Uuid(..) => Ok(warp::reply::with_status(
                 error_response,
                 StatusCode::BAD_REQUEST,
-            )),
+            )
+            .into_response()),
             Error::Unauthorized => Ok(warp::reply::with_status(
                 error_response,
                 StatusCode::UNAUTHORIZED,
-            )),
+            )
+            .into_response()),
             Error::Argon2(..) | Error::Sqlx(..) | Error::SqlxMigration(..) | Error::Rsa(..) => {
                 error!("Internal error occurred: {}", error_text);
 
-                Ok(warp::reply::with_status(
-                    "".into_response(),
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                ))
+                Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response())
             }
             _ => Err(rejection),
         }

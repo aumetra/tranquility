@@ -75,24 +75,27 @@ pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {
     }
 }
 
-// Keeping this for future use
-#[allow(dead_code)]
 pub fn object(
-    id: &str,
     owner_url: &str,
+    summary: &str,
     content: &str,
+    sensitive: bool,
     to: Vec<String>,
     cc: Vec<String>,
-) -> Object {
+) -> (Uuid, Object) {
     let config = crate::config::get();
 
     let prefix = format!("https://{}", config.instance.domain);
-    let id = format!("{}/objects/{}", prefix, id);
 
-    Object {
+    let uuid = Uuid::new_v4();
+    let id = format!("{}/objects/{}", prefix, format_uuid!(uuid));
+
+    let object = Object {
         id,
 
+        summary: summary.into(),
         content: content.into(),
+        sensitive,
         published: activitypub_datetime(),
 
         attributed_to: owner_url.into(),
@@ -101,5 +104,7 @@ pub fn object(
         cc,
 
         ..Object::default()
-    }
+    };
+
+    (uuid, object)
 }

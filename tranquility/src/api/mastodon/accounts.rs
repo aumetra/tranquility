@@ -1,7 +1,7 @@
 use {
     super::{authorization_optional, authorization_required, convert::IntoMastodon},
     crate::{
-        activitypub::interactions, database::model::Actor as DBActor, error::Error, format_uuid,
+        activitypub::interactions, database::model::Actor as DbActor, error::Error, format_uuid,
     },
     tranquility_types::{
         activitypub::Actor,
@@ -11,7 +11,7 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
-async fn accounts(id: Uuid, authorized_db_actor: Option<DBActor>) -> Result<impl Reply, Rejection> {
+async fn accounts(id: Uuid, authorized_db_actor: Option<DbActor>) -> Result<impl Reply, Rejection> {
     let db_actor = crate::database::actor::select::by_id(id).await?;
     let mut mastodon_account: Account = db_actor.into_mastodon().await?;
 
@@ -27,7 +27,7 @@ async fn accounts(id: Uuid, authorized_db_actor: Option<DBActor>) -> Result<impl
     Ok(warp::reply::json(&mastodon_account))
 }
 
-async fn follow(id: Uuid, authorized_db_actor: DBActor) -> Result<impl Reply, Rejection> {
+async fn follow(id: Uuid, authorized_db_actor: DbActor) -> Result<impl Reply, Rejection> {
     let followed_db_actor = crate::database::actor::select::by_id(id).await?;
     let followed_actor: Actor =
         serde_json::from_value(followed_db_actor.actor).map_err(Error::from)?;
@@ -64,10 +64,10 @@ async fn followers(id: Uuid) -> Result<impl Reply, Rejection> {
 }
 
 // TODO: Implement `/api/v1/accounts/:id/statuses` endpoint
-/*async fn statuses(id: Uuid, authorized_db_actor: Option<DBActor>) -> Result<impl Reply, Rejection> {
+/*async fn statuses(id: Uuid, authorized_db_actor: Option<DbActor>) -> Result<impl Reply, Rejection> {
 }*/
 
-async fn unfollow(id: Uuid, authorized_db_actor: DBActor) -> Result<impl Reply, Rejection> {
+async fn unfollow(id: Uuid, authorized_db_actor: DbActor) -> Result<impl Reply, Rejection> {
     // Fetch the follow activity
     let followed_db_actor = crate::database::actor::select::by_id(id).await?;
     let followed_actor_id = format_uuid!(followed_db_actor.id);
@@ -82,7 +82,7 @@ async fn unfollow(id: Uuid, authorized_db_actor: DBActor) -> Result<impl Reply, 
     Ok(warp::reply::json(&unfollow_response))
 }
 
-async fn verify_credentials(db_actor: DBActor) -> Result<impl Reply, Rejection> {
+async fn verify_credentials(db_actor: DbActor) -> Result<impl Reply, Rejection> {
     let mut mastodon_account: Account = db_actor.into_mastodon_cloned().await?;
     let mastodon_account_source: Source = db_actor.into_mastodon().await?;
 
@@ -92,35 +92,35 @@ async fn verify_credentials(db_actor: DBActor) -> Result<impl Reply, Rejection> 
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
-    let accounts = warp::path!("api" / "v1" / "accounts" / Uuid)
+    let accounts = warp::path!("accounts" / Uuid)
         .and(warp::get())
         .and(authorization_optional())
         .and_then(accounts);
 
-    let follow = warp::path!("api" / "v1" / "accounts" / Uuid / "follow")
+    let follow = warp::path!("accounts" / Uuid / "follow")
         .and(warp::post())
         .and(authorization_required())
         .and_then(follow);
 
-    let following = warp::path!("api" / "v1" / "accounts" / Uuid / "following")
+    let following = warp::path!("accounts" / Uuid / "following")
         .and(warp::get())
         .and_then(following);
 
-    let followers = warp::path!("api" / "v1" / "accounts" / Uuid / "followers")
+    let followers = warp::path!("accounts" / Uuid / "followers")
         .and(warp::get())
         .and_then(followers);
 
-    /*let statuses = warp::path!("api" / "v1" / "accounts" / Uuid / "statuses")
+    /*let statuses = warp::path!("accounts" / Uuid / "statuses")
     .and(warp::get())
     .and(authorization_optional())
     .and_then(statuses);*/
 
-    let unfollow = warp::path!("api" / "v1" / "accounts" / Uuid / "unfollow")
+    let unfollow = warp::path!("accounts" / Uuid / "unfollow")
         .and(warp::post())
         .and(authorization_required())
         .and_then(unfollow);
 
-    let verify_credentials = warp::path!("api" / "v1" / "accounts" / "verify_credentials")
+    let verify_credentials = warp::path!("accounts" / "verify_credentials")
         .and(warp::get())
         .and(authorization_required())
         .and_then(verify_credentials);

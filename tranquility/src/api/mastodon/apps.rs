@@ -1,8 +1,8 @@
 use {
-    super::convert::IntoMastodon,
+    super::{convert::IntoMastodon, urlencoded_or_json},
     serde::Deserialize,
     uuid::Uuid,
-    warp::{Rejection, Reply},
+    warp::{Filter, Rejection, Reply},
 };
 
 fn default_scopes() -> String {
@@ -19,7 +19,7 @@ pub struct RegisterForm {
     website: String,
 }
 
-pub async fn create(form: RegisterForm) -> Result<impl Reply, Rejection> {
+async fn create(form: RegisterForm) -> Result<impl Reply, Rejection> {
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate()?;
 
@@ -35,4 +35,11 @@ pub async fn create(form: RegisterForm) -> Result<impl Reply, Rejection> {
     let mastodon_application = application.into_mastodon().await?;
 
     Ok(warp::reply::json(&mastodon_application))
+}
+
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+    warp::path!("apps")
+        .and(warp::post())
+        .and(urlencoded_or_json())
+        .and_then(create)
 }

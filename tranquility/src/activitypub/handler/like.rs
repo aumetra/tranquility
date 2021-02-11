@@ -1,6 +1,7 @@
 use {
     crate::{activitypub::fetcher, error::Error},
     tranquility_types::activitypub::Activity,
+    uuid::Uuid,
     warp::http::StatusCode,
 };
 
@@ -14,7 +15,7 @@ pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     let actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
 
     let activity_value = serde_json::to_value(&activity)?;
-    crate::database::object::insert(actor.id, activity_value).await?;
+    crate::database::object::insert(Uuid::new_v4(), actor.id, activity_value).await?;
 
     Ok(StatusCode::CREATED)
 }

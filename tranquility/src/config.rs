@@ -17,6 +17,8 @@ pub struct ConfigurationInstance {
 
     pub character_limit: usize,
     pub upload_limit: usize,
+
+    pub moderators: Vec<String>,
 }
 
 #[derive(Deserialize)]

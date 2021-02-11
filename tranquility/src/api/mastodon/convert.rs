@@ -1,7 +1,6 @@
 use {
     crate::{
-        activitypub::ActivityObject,
-        database::model::{Actor as DBActor, OAuthApplication, Object as DBObject},
+        database::model::{Actor as DbActor, OAuthApplication, Object as DBObject},
         error::Error,
         format_uuid,
     },
@@ -31,32 +30,7 @@ where
 }
 
 #[async_trait]
-impl IntoMastodon<Status> for Activity {
-    type Error = Error;
-
-    async fn into_mastodon(self) -> Result<Status, Self::Error> {
-        let object =
-            crate::activitypub::fetcher::fetch_object(self.object.as_url().unwrap()).await?;
-
-        object.into_mastodon().await
-    }
-}
-
-#[async_trait]
-impl IntoMastodon<Status> for ActivityObject {
-    type Error = Error;
-
-    async fn into_mastodon(self) -> Result<Status, Self::Error> {
-        match self {
-            ActivityObject::Activity(activity) => activity.into_mastodon(),
-            ActivityObject::Object(object) => object.into_mastodon(),
-        }
-        .await
-    }
-}
-
-#[async_trait]
-impl IntoMastodon<Account> for DBActor {
+impl IntoMastodon<Account> for DbActor {
     type Error = Error;
 
     async fn into_mastodon(self) -> Result<Account, Self::Error> {
@@ -103,7 +77,7 @@ impl IntoMastodon<Account> for DBActor {
 }
 
 #[async_trait]
-impl IntoMastodon<Source> for DBActor {
+impl IntoMastodon<Source> for DbActor {
     type Error = Error;
 
     async fn into_mastodon(self) -> Result<Source, Self::Error> {
@@ -127,7 +101,7 @@ impl IntoMastodon<Status> for DBObject {
     type Error = Error;
 
     async fn into_mastodon(self) -> Result<Status, Self::Error> {
-        let activity_or_object: ActivityObject = serde_json::from_value(self.data)?;
+        let activity_or_object: Object = serde_json::from_value(self.data)?;
 
         activity_or_object.into_mastodon().await
     }

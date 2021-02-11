@@ -521,6 +521,20 @@
       ]
     }
   },
+  "781fb9d81eef14d5cef48f53eb36d662989047aad2ce68fd446659d56731f93b": {
+    "query": "\n            INSERT INTO objects \n            ( id, owner_id, data ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "816ea34615b11311477a7fd33e7f34336892453189c756d1edcde49547d527e5": {
     "query": "\n                DELETE FROM objects\n                WHERE id = $1\n            ",
     "describe": {
@@ -901,19 +915,6 @@
       "nullable": []
     }
   },
-  "d0942efd38cbdc13547d437eea5d83d34bcf746ff4751919ec85b1e6279703fb": {
-    "query": "\n            INSERT INTO objects \n            ( owner_id, data ) \n            VALUES \n            ( $1, $2 )\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Jsonb"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "e63b5931efd1a85178617cfb31222e9d81718e0d7c51f186298a8691ae5f0aa9": {
     "query": "\n                SELECT * FROM oauth_tokens\n                WHERE access_token = $1\n            ",
     "describe": {
@@ -974,18 +975,6 @@
         false,
         false
       ]
-    }
-  },
-  "eb054640e844b636c95f2f4c4669a54447413f44ac6b95ce75a4a89d15b6e055": {
-    "query": "\n                DELETE FROM objects\n                WHERE data->'object'->>'id' = $1\n            ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": []
     }
   }
 }

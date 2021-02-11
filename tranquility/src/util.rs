@@ -16,6 +16,7 @@ pub const VERSION: &str = concat!(
 pub static REQWEST_CLIENT: Lazy<Client> =
     Lazy::new(|| Client::builder().user_agent(USER_AGENT).build().unwrap());
 
+/// Run CPU intensive work (RSA key generation, password hashing, etc.) via this function
 pub fn cpu_intensive_work<T>(
     func: impl FnOnce() -> T + Send + 'static,
 ) -> impl Future<Output = T> + Send + Sync + 'static
@@ -35,7 +36,7 @@ where
     receiver.map(Result::unwrap)
 }
 
-// Macro formatting UUIDs in a unified way
+/// Format UUIDs in a unified way
 #[macro_export]
 macro_rules! format_uuid {
     ($uuid:expr) => {{

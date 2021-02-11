@@ -7,6 +7,8 @@ Federation should work with most other implementations (once it actually, you kn
 
 Tranquility currently supports two custom memory allocators  
 
+Use them by compiling the server with one of the following feature flags:
+
 * `jemallocator`: Use `jemalloc` as the memory allocator
 * `mimalloc`: Use `mimalloc` as the memory allocator
 

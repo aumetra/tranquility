@@ -19,7 +19,6 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     let object = activity.object.as_object().unwrap();
 
     crate::database::object::delete::by_url(object.id.as_ref()).await?;
-    crate::database::object::delete::by_object_url(object.id.as_ref()).await?;
 
     Ok(StatusCode::CREATED)
 }

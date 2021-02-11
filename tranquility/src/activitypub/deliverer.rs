@@ -1,5 +1,5 @@
 use {
-    crate::{crypto, database::model::Actor as DBActor, error::Error},
+    crate::{crypto, database::model::Actor as DbActor, error::Error},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -14,7 +14,7 @@ async fn prepare_request(
     client: &Client,
     url: &str,
     author: Arc<Actor>,
-    author_db: Arc<DBActor>,
+    author_db: Arc<DbActor>,
     activity: &Activity,
 ) -> Result<Request, Error> {
     let mut request = client
@@ -49,7 +49,7 @@ async fn prepare_request(
 fn create_delivery_futures<'a>(
     activity: &Arc<Activity>,
     author: &Arc<Actor>,
-    author_db: &Arc<DBActor>,
+    author_db: &Arc<DbActor>,
     recipient_list: Vec<&'a str>,
 ) -> FuturesUnordered<impl Future<Output = Result<Response, Error>> + Send + 'a> {
     let delivery_futures = FuturesUnordered::new();

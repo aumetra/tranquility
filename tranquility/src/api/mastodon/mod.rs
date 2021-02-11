@@ -11,7 +11,7 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
     ..App::default()
 });
 
-pub fn form_urlencoded_json<T: DeserializeOwned + Send>(
+pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
 ) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
     warp::body::form().or(warp::body::json()).unify()
 }
@@ -53,16 +53,18 @@ pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejec
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+    let v1_prefix = warp::path!("api" / "v1" / ..);
+
     let accounts = accounts::routes();
+    let apps = apps::routes();
+    let statuses = statuses::routes();
 
-    let apps = warp::path!("api" / "v1" / "apps")
-        .and(warp::post())
-        .and(form_urlencoded_json())
-        .and_then(apps::create);
+    let v1_routes = accounts.or(apps).or(statuses);
 
-    accounts.or(apps)
+    v1_prefix.and(v1_routes)
 }
 
 pub mod accounts;
 pub mod apps;
 pub mod convert;
+pub mod statuses;

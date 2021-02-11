@@ -33,7 +33,7 @@ fn activitypub_datetime() -> String {
 
 pub fn clean_actor(actor: &mut Actor) {
     actor.name = ammonia::clean(actor.name.as_str());
-    actor.summary = ammonia::clean(actor.name.as_str());
+    actor.summary = ammonia::clean(actor.summary.as_str());
 }
 
 pub fn clean_object(object: &mut Object) {

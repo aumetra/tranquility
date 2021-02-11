@@ -1,5 +1,5 @@
 use {
-    crate::{database::model::Actor as DBActor, error::Error},
+    crate::{database::model::Actor as DbActor, error::Error},
     serde::Deserialize,
     tranquility_types::{
         activitypub::Actor,
@@ -10,7 +10,7 @@ use {
 
 // Keeping this for future use
 #[allow(dead_code)]
-pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DBActor), Error> {
+pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DbActor), Error> {
     let resource = format!("acct:{}@{}", username, domain);
     let url = format!(
         "https://{}/.well-known/webfinger?resource={}",

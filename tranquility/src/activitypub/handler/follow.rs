@@ -4,6 +4,7 @@ use {
         error::Error,
     },
     tranquility_types::activitypub::{activity::ObjectField, Activity},
+    uuid::Uuid,
     warp::http::StatusCode,
 };
 
@@ -29,14 +30,14 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     };
     let activity = serde_json::to_value(&follow_activity)?;
 
-    crate::database::object::insert(actor_db.id, activity).await?;
+    crate::database::object::insert(Uuid::new_v4(), actor_db.id, activity).await?;
 
     let followed_url = follow_activity.activity.object.as_url().unwrap();
     let followed_actor = crate::database::actor::select::by_url(followed_url).await?;
 
     // Send out an accept activity if the followed actor is local
     if follow_activity.approved {
-        let (_accept_activity_id, accept_activity) = activitypub::instantiate::activity(
+        let (accept_activity_id, accept_activity) = activitypub::instantiate::activity(
             "Accept",
             followed_url,
             follow_activity.activity.id,
@@ -45,7 +46,12 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         );
         let accept_activity_value = serde_json::to_value(&accept_activity)?;
 
-        crate::database::object::insert(followed_actor.id, accept_activity_value).await?;
+        crate::database::object::insert(
+            accept_activity_id,
+            followed_actor.id,
+            accept_activity_value,
+        )
+        .await?;
 
         deliverer::deliver(accept_activity).await?;
     }

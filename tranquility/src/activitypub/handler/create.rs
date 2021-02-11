@@ -1,6 +1,7 @@
 use {
     crate::{activitypub::fetcher, error::Error},
     tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
+    uuid::Uuid,
     warp::http::StatusCode,
 };
 
@@ -12,13 +13,13 @@ async fn insert_object(activity: &Activity) -> Result<Object, Error> {
 
     let object_value = serde_json::to_value(&object)?;
 
-    crate::database::object::insert(owner_db.id, object_value).await?;
+    crate::database::object::insert(Uuid::new_v4(), owner_db.id, object_value).await?;
 
     Ok(object)
 }
 
 pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
-    // Normalize the activity
+    // Save the object in the database
     match activity.object {
         ObjectField::Object(_) => {
             let object = insert_object(&activity).await?;
@@ -30,12 +31,6 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
         }
         ObjectField::Actor(_) => return Err(Error::UnknownActivity),
     }
-
-    fetcher::fetch_object(activity.object.as_url().unwrap()).await?;
-
-    let db_actor = crate::database::actor::select::by_url(activity.actor.as_ref()).await?;
-    let activity_value = serde_json::to_value(&activity)?;
-    crate::database::object::insert(db_actor.id, activity_value).await?;
 
     Ok(StatusCode::CREATED)
 }

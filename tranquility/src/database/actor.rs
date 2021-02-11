@@ -22,7 +22,7 @@ pub async fn update(actor: &Actor) -> Result<(), Error> {
 
 pub mod insert {
     use {
-        crate::{database::model::Actor as DBActor, error::Error},
+        crate::{database::model::Actor as DbActor, error::Error},
         tranquility_types::activitypub::Actor,
         uuid::Uuid,
     };
@@ -57,12 +57,12 @@ pub mod insert {
         Ok(())
     }
 
-    pub async fn remote(username: &str, actor: &Actor) -> Result<DBActor, Error> {
+    pub async fn remote(username: &str, actor: &Actor) -> Result<DbActor, Error> {
         let conn_pool = crate::database::connection::get().await?;
 
         let actor = serde_json::to_value(actor)?;
         let db_actor = sqlx::query_as!(
-            DBActor,
+            DbActor,
             r#"
                 INSERT INTO actors
                 ( username, actor, remote )

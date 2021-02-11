@@ -1,8 +1,9 @@
 use {
-    crate::{database::model::Actor as DBActor, error::Error},
+    crate::{database::model::Actor as DbActor, error::Error},
     reqwest::IntoUrl,
     serde_json::Value,
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object},
+    uuid::Uuid,
 };
 
 macro_rules! entity_from {
@@ -93,7 +94,7 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         // Normalize the activity
         if let Some(object) = activity.object.as_object() {
             let object_value = serde_json::to_value(object)?;
-            crate::database::object::insert(actor_db.id, object_value).await?;
+            crate::database::object::insert(Uuid::new_v4(), actor_db.id, object_value).await?;
 
             activity.object = ObjectField::Url(object.id.to_owned());
         } else if activity.object.as_actor().is_some() {
@@ -101,7 +102,7 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
         }
 
         let activity_value = serde_json::to_value(&activity)?;
-        crate::database::object::insert(actor_db.id, activity_value).await?;
+        crate::database::object::insert(Uuid::new_v4(), actor_db.id, activity_value).await?;
 
         Ok(activity)
     } else {
@@ -111,7 +112,7 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     }
 }
 
-pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
+pub async fn fetch_actor(url: &str) -> Result<(Actor, DbActor), Error> {
     debug!("Fetching remote actor...");
 
     match crate::database::actor::select::by_url(url).await {
@@ -122,7 +123,9 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DBActor), Error> {
         ),
     }
 
-    if let Entity::Actor(actor) = fetch_entity(url).await? {
+    if let Entity::Actor(mut actor) = fetch_entity(url).await? {
+        crate::activitypub::clean_actor(&mut actor);
+
         let db_actor =
             crate::database::actor::insert::remote(actor.username.as_ref(), &actor).await?;
 
@@ -151,7 +154,7 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
         let (_actor, actor_db) = fetch_actor(object.attributed_to.as_ref()).await?;
 
         let object_value = serde_json::to_value(&object)?;
-        crate::database::object::insert(actor_db.id, object_value).await?;
+        crate::database::object::insert(Uuid::new_v4(), actor_db.id, object_value).await?;
 
         Ok(object)
     } else {
