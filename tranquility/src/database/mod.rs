@@ -36,6 +36,7 @@ pub async fn init() -> Result<(), Error> {
 }
 
 pub mod actor;
+pub mod inbox_urls;
 pub mod model;
 pub mod oauth;
 pub mod object;

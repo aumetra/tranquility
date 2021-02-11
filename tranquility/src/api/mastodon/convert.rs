@@ -16,17 +16,13 @@ use {
 };
 
 #[async_trait]
-pub trait IntoMastodon<ApiEntity>: Clone + Send + Sync
+pub trait IntoMastodon<ApiEntity>: Send + Sync
 where
     ApiEntity: Serialize + 'static,
 {
     type Error: Into<Rejection>;
 
     async fn into_mastodon(self) -> Result<ApiEntity, Self::Error>;
-
-    async fn into_mastodon_cloned(&self) -> Result<ApiEntity, Self::Error> {
-        self.clone().into_mastodon().await
-    }
 }
 
 #[async_trait]

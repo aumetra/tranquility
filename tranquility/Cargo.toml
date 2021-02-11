@@ -11,6 +11,7 @@ build = "build.rs"
 [dependencies]
 ammonia = "3"
 askama = "0.10"
+async-recursion = "0.3"
 async-trait = "0.1"
 base64 = "0.13"
 cached = "0.23"
@@ -39,7 +40,8 @@ uuid = { version = "0.8", features = [ "serde", "v4" ] }
 validator = { version = "0.12", features = [ "derive" ] }
 warp = { version = "0.3", features = [ "compression", "tls" ] }
 
-[dependencies.jemallocator]
+[dependencies.jemalloc]
+package = "jemallocator"
 version = "0.3"
 optional = true
 
@@ -60,6 +62,7 @@ path = "../tranquility-ratelimit"
 
 [dependencies.tranquility-types]
 path = "../tranquility-types"
+features = [ "activitypub", "webfinger" ]
 
 [features]
 default = [ "mastodon-api" ]

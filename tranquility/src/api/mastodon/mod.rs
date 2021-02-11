@@ -13,32 +13,32 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
 
 pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
 ) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
-    warp::body::form().or(warp::body::json()).unify()
+    let urlencoded_filter = warp::body::form();
+    let json_filter = warp::body::json();
+
+    urlencoded_filter.or(json_filter).unify()
 }
 
 pub fn authorization_optional() -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Copy
 {
-    authorization_required()
-        .map(Some)
-        .or_else(|error: Rejection| async move {
-            if error.find::<MissingHeader>().is_some() {
-                Ok((None,))
-            } else {
-                Err(error)
-            }
-        })
+    let or_none_fn = |error: Rejection| async move {
+        if error.find::<MissingHeader>().is_some() {
+            Ok((None,))
+        } else {
+            Err(error)
+        }
+    };
+
+    authorization_required().map(Some).or_else(or_none_fn)
 }
 
 pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejection> + Copy {
-    warp::header("authorization").and_then(|authorization_header: String| async move {
+    let authorization_closure = |authorization_header: String| async move {
         let token = {
             let mut split_header = authorization_header.split_whitespace();
-            if split_header
-                .next()
-                .ok_or(Error::Unauthorized)?
-                .to_lowercase()
-                != "bearer"
-            {
+
+            let bearer_part = split_header.next().ok_or(Error::Unauthorized)?;
+            if bearer_part.to_lowercase() != "bearer" {
                 return Err::<_, Rejection>(Error::Unauthorized.into());
             }
 
@@ -49,7 +49,9 @@ pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejec
         let actor = crate::database::actor::select::by_id(access_token.actor_id).await?;
 
         Ok(actor)
-    })
+    };
+
+    warp::header("authorization").and_then(authorization_closure)
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {

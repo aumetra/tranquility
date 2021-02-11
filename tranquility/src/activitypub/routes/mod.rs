@@ -9,33 +9,33 @@ use {
 // of, for example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
 // Because that can change for every implementation I'll just use ".contains()" on the header value
 fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy {
+    let header_requirements_fn = |accept_header_value: String| async move {
+        if accept_header_value.contains("application/activity+json")
+            || accept_header_value.contains("application/ld+json")
+        {
+            Ok(())
+        } else {
+            Err(Rejection::from(Error::InvalidRequest))
+        }
+    };
+
     warp::header("accept")
-        .and_then(|accept_header_value: String| async move {
-            if accept_header_value.contains("application/activity+json")
-                || accept_header_value.contains("application/ld+json")
-            {
-                Ok(())
-            } else {
-                Err(Rejection::from(Error::InvalidRequest))
-            }
-        })
+        .and_then(header_requirements_fn)
         .untuple_one()
 }
 
 // The standard "warp::body::json()" filter only decodes content from requests
 // that have the header "Content-Type: application/json" but the inbox
 // requests have the types of either "application/ld+json" or "application/activity+json"
-fn custom_json_type<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
+fn custom_json_parser<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
 {
-    struct Json;
+    let custom_json_parser_fn = |body: Bytes| async move {
+        let value = serde_json::from_slice(&body).map_err(Error::from)?;
 
-    impl Json {
-        pub fn decode<T: DeserializeOwned>(body: &Bytes) -> Result<T, Error> {
-            serde_json::from_slice(body).map_err(Error::from)
-        }
-    }
+        Ok::<T, Rejection>(value)
+    };
 
-    warp::body::bytes().and_then(|body| async move { Ok::<T, Rejection>(Json::decode(&body)?) })
+    warp::body::bytes().and_then(custom_json_parser_fn)
 }
 
 fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {

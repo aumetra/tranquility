@@ -83,7 +83,7 @@ async fn unfollow(id: Uuid, authorized_db_actor: DbActor) -> Result<impl Reply, 
 }
 
 async fn verify_credentials(db_actor: DbActor) -> Result<impl Reply, Rejection> {
-    let mut mastodon_account: Account = db_actor.into_mastodon_cloned().await?;
+    let mut mastodon_account: Account = db_actor.clone().into_mastodon().await?;
     let mastodon_account_source: Source = db_actor.into_mastodon().await?;
 
     mastodon_account.source = Some(mastodon_account_source);

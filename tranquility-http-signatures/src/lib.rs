@@ -17,15 +17,13 @@ use {
 const STANDARD_HASH: Hash = Hash::SHA2_256;
 
 trait HashExt {
-    fn to_algorithm(self) -> String;
-
+    fn to_algorithm(&self) -> String;
     fn from_signature_string(signature_string: &HashMap<&str, &str>) -> Self;
-
     fn calculate(self, data: &[u8]) -> Vec<u8>;
 }
 
 impl HashExt for Hash {
-    fn to_algorithm(self) -> String {
+    fn to_algorithm(&self) -> String {
         let hash = match self {
             Hash::SHA2_256 => "sha256",
             Hash::SHA2_384 => "sha384",

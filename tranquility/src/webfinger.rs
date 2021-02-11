@@ -5,7 +5,7 @@ use {
         activitypub::Actor,
         webfinger::{Link, Resource},
     },
-    warp::{Filter, Rejection, Reply},
+    warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
 };
 
 // Keeping this for future use
@@ -38,7 +38,7 @@ pub struct Query {
     resource: String,
 }
 
-pub async fn webfinger(query: Query) -> Result<impl Reply, Rejection> {
+pub async fn webfinger(query: Query) -> Result<Response, Rejection> {
     let resource = query.resource;
     let mut resource_tokens = resource.trim_start_matches("acct:").split('@');
 
@@ -46,7 +46,7 @@ pub async fn webfinger(query: Query) -> Result<impl Reply, Rejection> {
 
     let config = crate::config::get();
     if resource_tokens.next().ok_or(Error::InvalidRequest)? != config.instance.domain {
-        return Err(warp::reject::not_found());
+        return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
     let actor_db = crate::database::actor::select::by_username_local(username).await?;
@@ -71,7 +71,8 @@ pub async fn webfinger(query: Query) -> Result<impl Reply, Rejection> {
         warp::reply::json(&resource),
         "Content-Type",
         "application/jrd+json",
-    ))
+    )
+    .into_response())
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {

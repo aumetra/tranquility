@@ -1,5 +1,5 @@
 use {
-    super::{custom_json_type, optional_raw_query},
+    super::{custom_json_parser, optional_raw_query},
     crate::{
         activitypub::{
             fetcher::{self, Entity},
@@ -8,6 +8,7 @@ use {
         crypto,
         error::Error,
     },
+    core::ops::Not,
     tranquility_types::activitypub::{activity::ObjectField, Activity},
     warp::{
         http::{HeaderMap, Method},
@@ -21,7 +22,7 @@ pub fn validate_request() -> impl Filter<Extract = (Activity,), Error = Rejectio
         .and(warp::path::full())
         .and(optional_raw_query())
         .and(warp::header::headers_cloned())
-        .and(custom_json_type())
+        .and(custom_json_parser())
         .and_then(verify_signature)
         .and_then(verify_identity)
 }
@@ -62,7 +63,7 @@ async fn verify_signature(
 
     let public_key = remote_actor.public_key.public_key_pem;
 
-    let query = if query.is_empty() { None } else { Some(query) };
+    let query = query.is_empty().not().then(|| query);
 
     if crypto::request::verify(method, path, query, headers, public_key).await? {
         Ok(activity)
