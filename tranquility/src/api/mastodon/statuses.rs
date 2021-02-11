@@ -1,5 +1,5 @@
 use {
-    super::{authorization_required, urlencoded_or_json},
+    super::{authorization_required, convert::IntoMastodon, urlencoded_or_json},
     crate::{database::model::Actor as DbActor, error::Error},
     serde::Deserialize,
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
@@ -46,13 +46,14 @@ async fn create(author_db: DbActor, form: CreateForm) -> Result<Response, Reject
         "Create",
         author.id.as_str(),
         object.clone(),
-        object.to,
-        object.cc,
+        object.to.clone(),
+        object.cc.clone(),
     );
 
     crate::activitypub::deliverer::deliver(create_activity).await?;
 
-    Ok("".into_response())
+    let mastodon_status = object.into_mastodon().await?;
+    Ok(warp::reply::json(&mastodon_status).into_response())
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
