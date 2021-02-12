@@ -49,7 +49,7 @@ async fn prepare_request(
         .json(activity)
         .build()?;
 
-    let date_header_value = HeaderValue::from_str(&chrono::Utc::now().to_rfc2822())?;
+    let date_header_value = HeaderValue::from_str(chrono::Utc::now().to_rfc2822().as_str())?;
 
     let activity_bytes = serde_json::to_vec(activity)?;
     let digest_header_value = crate::crypto::digest::http_header(activity_bytes).await?;
@@ -93,7 +93,7 @@ fn construct_deliver_future(
 
 #[async_recursion]
 async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<String>, Error> {
-    // Check if the current URL is the user's follow collection
+    // Check if the current URL is the user's follower collection
     if delivery_data.author.followers == url {
         // Get the ActivityPub IDs of all the followers
         let follower_urls =
@@ -112,6 +112,7 @@ async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<St
             inbox_urls.push(urls);
         }
 
+        // Flatten the vector of vectors of strings to a vector of strings
         let inbox_urls = inbox_urls.into_iter().flatten().collect();
 
         return Ok(inbox_urls);
@@ -131,6 +132,8 @@ async fn get_recipient_list<'a>(delivery_data: &'a DeliveryData) -> Result<Vec<S
         Some(resolve_url(delivery_data, url.to_string()))
     };
 
+    // Merge the to and cc arrays, deduplicate them, remove the public identifier
+    // and construct futures that resolve the URLs
     let recipient_futures = delivery_data
         .activity
         .to
@@ -140,6 +143,7 @@ async fn get_recipient_list<'a>(delivery_data: &'a DeliveryData) -> Result<Vec<S
         .filter_map(filter_map_fn)
         .collect_vec();
 
+    // Await all the futures one after another
     let mut recipient_list = Vec::new();
     for future in recipient_futures {
         match future.await {
@@ -148,6 +152,7 @@ async fn get_recipient_list<'a>(delivery_data: &'a DeliveryData) -> Result<Vec<S
         }
     }
 
+    // Flatten the vector of vectors of strings to a vector of strings
     let recipient_list = recipient_list.into_iter().flatten().collect();
 
     Ok(recipient_list)
@@ -165,6 +170,7 @@ pub async fn deliver(activity: Activity) -> Result<(), Error> {
             }
         };
 
+        // Deliver the activity to the recipients concurrently
         let mut deliver_futures = recipient_list
             .into_iter()
             .map(|url| construct_deliver_future(&delivery_data, url))

@@ -12,17 +12,50 @@ use {
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
 #[derive(Deserialize)]
+struct FormPasswordGrant {
+    username: String,
+    password: String,
+}
+
+#[derive(Deserialize)]
+struct FormCodeGrant {
+    client_id: Uuid,
+    client_secret: String,
+    redirect_uri: String,
+    // scope: Option<String>,
+    code: String,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+#[non_exhaustive]
+enum FormData {
+    CodeGrant(FormCodeGrant),
+    PasswordGrant(FormPasswordGrant),
+}
+
+#[derive(Deserialize)]
 pub struct Form {
     grant_type: String,
 
-    client_id: Option<Uuid>,
-    client_secret: Option<String>,
-    redirect_uri: Option<String>,
-    // scope: Option<String>,
-    code: Option<String>,
+    #[serde(flatten)]
+    data: FormData,
+}
 
-    username: Option<String>,
-    password: Option<String>,
+impl FormData {
+    pub fn code_grant(self) -> Result<FormCodeGrant, Rejection> {
+        match self {
+            Self::CodeGrant(form) => Ok(form),
+            _ => Err(Error::InvalidRequest.into()),
+        }
+    }
+
+    pub fn password_grant(self) -> Result<FormPasswordGrant, Rejection> {
+        match self {
+            Self::PasswordGrant(form) => Ok(form),
+            _ => Err(Error::InvalidRequest.into()),
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -46,10 +79,13 @@ impl Default for AccessTokenResponse {
 }
 
 async fn code_grant(
-    client_id: Uuid,
-    client_secret: String,
-    redirect_uri: String,
-    code: String,
+    FormCodeGrant {
+        client_id,
+        client_secret,
+        redirect_uri,
+        code,
+        ..
+    }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
     let client = crate::database::oauth::application::select::by_client_id(&client_id).await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
@@ -91,7 +127,11 @@ async fn code_grant(
     }
 }
 
-async fn password_grant(username: String, password: String) -> Result<impl Reply, Rejection> {
+async fn password_grant(
+    FormPasswordGrant {
+        username, password, ..
+    }: FormPasswordGrant,
+) -> Result<impl Reply, Rejection> {
     let actor = crate::database::actor::select::by_username_local(username.as_str()).await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
@@ -121,17 +161,14 @@ async fn password_grant(username: String, password: String) -> Result<impl Reply
 
 pub async fn token(form: Form) -> Result<Response, Rejection> {
     let response = match form.grant_type.as_str() {
-        "authorization_code" => code_grant(
-            form.client_id.unwrap(),
-            form.client_secret.unwrap(),
-            form.redirect_uri.unwrap(),
-            form.code.unwrap(),
-        )
-        .await?
-        .into_response(),
-        "password" => password_grant(form.username.unwrap(), form.password.unwrap())
-            .await?
-            .into_response(),
+        "authorization_code" => {
+            let form_data = form.data.code_grant()?;
+            code_grant(form_data).await?.into_response()
+        }
+        "password" => {
+            let form_data = form.data.password_grant()?;
+            password_grant(form_data).await?.into_response()
+        }
         _ => return Err(Error::InvalidRequest.into()),
     };
 

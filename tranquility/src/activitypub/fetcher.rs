@@ -6,6 +6,8 @@ use {
     uuid::Uuid,
 };
 
+// `Entity` is special, all its options have the same name as the structs they can hold
+// This macro generates code that implements the `From` trait for those types
 macro_rules! entity_from {
     ($($type:ident),*) => {
         $(
@@ -51,6 +53,10 @@ impl Entity {
     }
 }
 
+// This macro generates code that attempts to fetch the resource via
+// the given function from the URL
+// If the fetch succeeds, the function returns with the success value
+// If it doesn't, the error gets logged and the function continues
 macro_rules! attempt_fetch {
     ($func:ident, $url:ident) => {{
         match $func($url).await {
@@ -92,8 +98,10 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     if let Entity::Activity(mut activity) = fetch_entity(url).await? {
         let (_actor, actor_db) = fetch_actor(activity.actor.as_ref()).await?;
         // Normalize the activity
-        if let Some(object) = activity.object.as_object() {
-            let object_value = serde_json::to_value(object)?;
+        if let Some(object) = activity.object.as_mut_object() {
+            crate::activitypub::clean_object(object);
+
+            let object_value = serde_json::to_value(&object)?;
             crate::database::object::insert(Uuid::new_v4(), actor_db.id, object_value).await?;
 
             activity.object = ObjectField::Url(object.id.to_owned());
