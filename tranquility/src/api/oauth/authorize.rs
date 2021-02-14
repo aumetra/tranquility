@@ -24,7 +24,8 @@ pub struct Query {
     client_id: Uuid,
     redirect_uri: String,
     // scope: Option<String>,
-    state: Option<String>,
+    #[serde(default)]
+    state: String,
 }
 
 pub async fn get() -> Result<impl Reply, Rejection> {
@@ -79,7 +80,7 @@ pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
             "{}?code={}&state={}",
             query.redirect_uri,
             authorization_code.code,
-            query.state.unwrap_or_default()
+            query.state,
         );
 
         #[allow(clippy::map_err_ignore)]
