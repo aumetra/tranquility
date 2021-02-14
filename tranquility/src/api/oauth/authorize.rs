@@ -78,9 +78,7 @@ pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
     } else {
         let redirect_uri = format!(
             "{}?code={}&state={}",
-            query.redirect_uri,
-            authorization_code.code,
-            query.state,
+            query.redirect_uri, authorization_code.code, query.state,
         );
 
         #[allow(clippy::map_err_ignore)]
