@@ -2,6 +2,9 @@ on: [push, pull_request]
 
 name: Checks
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   # Check if building on Raspberry Pi architectures work
   build_linux_arm7:
