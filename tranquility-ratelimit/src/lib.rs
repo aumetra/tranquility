@@ -6,14 +6,15 @@
 //!
 //! Example:
 //! ```rust
-//! use {tranquility_ratelimit::Configuration, warp::Filter};
+//! use {tranquility_ratelimit::{Configuration, ratelimit}, warp::Filter};
 //!
-//! let filter = warp::any().map(|| "Hello (ratelimited) world!");
 //! // This filter can only be accessed 100 times per hour per IP address
-//! let wrapper = tranquility_ratelimit::ratelimit!(Configuration::new()).unwrap();
-//! let filter = filter.with(wrapper);
+//! let filter =
+//!     warp::any()
+//!         .map(|| "Hello (ratelimited) world!")
+//!         .with(ratelimit!(from_config: Configuration::new()).unwrap());
 //!
-//! warp::serve(assembled_filter).run(([127, 0, 0, 1], 8080))/* .await */;
+//! warp::serve(filter).run(([127, 0, 0, 1], 8080))/* .await */;
 //! ```
 //!
 
