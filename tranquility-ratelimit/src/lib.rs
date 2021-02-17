@@ -10,7 +10,8 @@
 //!
 //! let filter = warp::any().map(|| "Hello (ratelimited) world!");
 //! // This filter can only be accessed 100 times per hour per IP address
-//! let assembled_filter = tranquility_ratelimit::ratelimit!(filter => filter, config => Configuration::new()).unwrap();
+//! let wrapper = tranquility_ratelimit::ratelimit!(Configuration::new()).unwrap();
+//! let filter = filter.with(wrapper);
 //!
 //! warp::serve(assembled_filter).run(([127, 0, 0, 1], 8080))/* .await */;
 //! ```
@@ -50,6 +51,8 @@ impl Reject for WaitUntil {}
 /// Ratelimit configuration  
 ///
 /// This defaults to 50 requests per hour  
+///
+#[derive(Clone, Copy)]
 pub struct Configuration {
     active: bool,
     period: Duration,
@@ -126,17 +129,8 @@ async fn check_ratelimit(
 /// This is required because we throw a rejection to skip the execution of any filters after the ratelimiter  
 /// (I currently don't know any other way to achieve this with warp)
 ///
-/// Example:
-/// ```rust
-/// use {tranquility_ratelimit::Configuration, warp::Filter};
-///
-/// let ratelimit = tranquility_ratelimit::ratelimit(Configuration::default()).unwrap();
-/// let filter = warp::any().map(|| "Hello world!");
-///
-/// let assembled_filter = ratelimit.and(filter).recover(tranquility_ratelimit::recover_fn);
-/// ```
-///
-pub async fn recover_fn(rejection: Rejection) -> Result<impl Reply, Rejection> {
+#[doc(hidden)]
+pub async fn __recover_fn(rejection: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(wait_until) = rejection.find::<WaitUntil>() {
         let wait_until = wait_until.0;
 
@@ -177,20 +171,35 @@ pub fn ratelimit(
     Ok(filter)
 }
 
-/// Convenience macro  
+/// Use this on with `.with`
+/// Like: `warp::any().with(ratelimit!(Config::default())?)`
 ///
-/// This macro assembles a ratelimited filter complete with config and recover function  
 #[macro_export]
 macro_rules! ratelimit {
-    (filter => $filter:ident, config => $config:expr) => {{
+    (from_config: $config:expr) => {{
+        $crate::ratelimit!(fn_from_config: $config).map($crate::warp::wrap_fn)
+    }};
+
+    (fn_from_config: $config:expr) => {{
         $crate::ratelimit($config)
-            .map(move |filter| $crate::custom_ratelimit!(filter => $filter, ratelimit_filter => filter))
+            .map(|ratelimit_filter| $crate::ratelimit!(fn_from_filter: ratelimit_filter))
+    }};
+
+    (fn_from_filter: $ratelimit_filter:expr) => {{
+        let ratelimit_filter = $ratelimit_filter;
+
+        move |filter| {
+            ratelimit_filter
+                .clone()
+                .and(filter)
+                .recover($crate::__recover_fn)
+        }
+    }};
+
+    (from_filter: $ratelimit_filter:expr) => {{
+        warp::wrap_fn($crate::ratelimit!(fn_from_filter: $ratelimit_filter))
     }};
 }
 
-#[macro_export]
-macro_rules! custom_ratelimit {
-    (filter => $filter:ident, ratelimit_filter => $ratelimit_filter:ident) => {{
-        $ratelimit_filter.and($filter).recover($crate::recover_fn)
-    }};
-}
+#[doc(hidden)]
+pub use warp;

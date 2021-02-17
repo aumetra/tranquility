@@ -1,5 +1,3 @@
-#![allow(clippy::needless_lifetimes)]
-
 use {
     crate::{crypto, database::model::Actor as DbActor, error::Error},
     async_recursion::async_recursion,
@@ -123,15 +121,7 @@ async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<St
     Ok(vec![actor.inbox])
 }
 
-async fn get_recipient_list<'a>(delivery_data: &'a DeliveryData) -> Result<Vec<String>, Error> {
-    let filter_map_fn = |url: &'a String| {
-        if *url == PUBLIC_IDENTIFIER {
-            return None;
-        }
-
-        Some(resolve_url(delivery_data, url.to_string()))
-    };
-
+async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>, Error> {
     // Merge the to and cc arrays, deduplicate them, remove the public identifier
     // and construct futures that resolve the URLs
     let recipient_futures = delivery_data
@@ -140,7 +130,9 @@ async fn get_recipient_list<'a>(delivery_data: &'a DeliveryData) -> Result<Vec<S
         .iter()
         .merge(delivery_data.activity.cc.iter())
         .unique()
-        .filter_map(filter_map_fn)
+        .filter_map(|url| {
+            (*url != PUBLIC_IDENTIFIER).then(|| resolve_url(delivery_data, url.to_string()))
+        })
         .collect_vec();
 
     // Await all the futures one after another

@@ -1,7 +1,7 @@
 use {
     askama::Template,
     once_cell::sync::Lazy,
-    tranquility_ratelimit::Configuration,
+    tranquility_ratelimit::{ratelimit, Configuration},
     warp::{Filter, Rejection, Reply},
 };
 
@@ -23,26 +23,28 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
     let ratelimit_config = Configuration::new()
         .active(config.ratelimit.active)
         .burst_quota(config.ratelimit.authentication_quota);
-    let ratelimit_filter = tranquility_ratelimit::ratelimit(ratelimit_config).unwrap();
+    let ratelimit_filter =
+        ratelimit(ratelimit_config).expect("Couldn't construct a ratelimit filter");
 
     let authorize = {
         let get = warp::get().and_then(authorize::get);
 
-        let ratelimit_filter = ratelimit_filter.clone();
+        // Ratelimit only the logic
         let post = warp::post()
             .and(warp::body::form())
             .and(warp::query())
-            .and_then(authorize::post);
-        // Ratelimit only the logic
-        let post = tranquility_ratelimit::custom_ratelimit!(filter => post, ratelimit_filter => ratelimit_filter);
+            .and_then(authorize::post)
+            .with(ratelimit!(from_filter: ratelimit_filter.clone()));
 
         warp::path!("oauth" / "authorize").and(get.or(post))
     };
     let token_path = warp::path!("oauth" / "token");
 
     // Ratelimit only the logic
-    let token_logic = warp::post().and(warp::body::form()).and_then(token::token);
-    let token_logic = tranquility_ratelimit::custom_ratelimit!(filter => token_logic, ratelimit_filter => ratelimit_filter);
+    let token_logic = warp::post()
+        .and(warp::body::form())
+        .and_then(token::token)
+        .with(ratelimit!(from_filter: ratelimit_filter));
 
     let token = token_path.and(token_logic);
 

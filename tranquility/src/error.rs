@@ -77,30 +77,27 @@ pub enum Error {
 impl Reject for Error {}
 
 pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
-    #[allow(clippy::option_if_let_else)]
     if let Some(error) = rejection.find::<Error>() {
         let error_text = error.to_string();
-        let error_response = error_text.clone().into_response();
 
         match error {
             Error::InvalidRequest
             | Error::UnknownActivity
             | Error::MalformedUrl
-            | Error::Uuid(..) => Ok(warp::reply::with_status(
-                error_response,
-                StatusCode::BAD_REQUEST,
-            )
-            .into_response()),
-            Error::Unauthorized => Ok(warp::reply::with_status(
-                error_response,
-                StatusCode::UNAUTHORIZED,
-            )
-            .into_response()),
+            | Error::Uuid(..) => {
+                Ok(warp::reply::with_status(error_text, StatusCode::BAD_REQUEST).into_response())
+            }
+
+            Error::Unauthorized => {
+                Ok(warp::reply::with_status(error_text, StatusCode::UNAUTHORIZED).into_response())
+            }
+
             Error::Argon2(..) | Error::Sqlx(..) | Error::SqlxMigration(..) | Error::Rsa(..) => {
                 error!("Internal error occurred: {}", error_text);
 
                 Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response())
             }
+
             _ => Err(rejection),
         }
     } else {

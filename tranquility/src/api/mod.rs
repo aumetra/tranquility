@@ -1,5 +1,5 @@
 use {
-    tranquility_ratelimit::Configuration,
+    tranquility_ratelimit::{ratelimit, Configuration},
     warp::{Filter, Rejection, Reply},
 };
 
@@ -10,9 +10,6 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
     let oauth = oauth::routes();
 
     let register_path = warp::path!("api" / "register");
-    let register_logic = warp::post()
-        .and(warp::body::form())
-        .and_then(register::register);
 
     let config = crate::config::get();
     let ratelimit_config = Configuration::new()
@@ -20,9 +17,13 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
         .burst_quota(config.ratelimit.registration_quota);
 
     // Ratelimit only the logic
-    let register_logic =
-        tranquility_ratelimit::ratelimit!(filter => register_logic, config => ratelimit_config)
-            .unwrap();
+    let ratelimit_wrapper =
+        ratelimit!(from_config: ratelimit_config).expect("Couldn't construct ratelimit wrapper");
+    let register_logic = warp::post()
+        .and(warp::body::form())
+        .and_then(register::register)
+        .with(ratelimit_wrapper);
+
     let register = register_path.and(register_logic);
 
     #[cfg(feature = "mastodon-api")]
