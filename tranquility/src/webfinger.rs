@@ -1,5 +1,8 @@
 use {
-    crate::{database::model::Actor as DbActor, error::Error},
+    crate::{
+        consts::cors::GENERAL_ALLOWED_METHODS, database::model::Actor as DbActor, error::Error,
+        util::construct_cors,
+    },
     serde::Deserialize,
     tranquility_types::{
         activitypub::Actor,
@@ -78,7 +81,7 @@ pub async fn webfinger(query: Query) -> Result<Response, Rejection> {
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     // Enable CORS for the ".well-known" routes
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-    let cors = warp::cors().allow_any_origin().build();
+    let cors = construct_cors(GENERAL_ALLOWED_METHODS);
 
     warp::path!(".well-known" / "webfinger")
         .and(warp::query())

@@ -1,6 +1,6 @@
 use {
-    super::{CollectionQuery, ACTIVITIES_PER_PAGE},
-    crate::error::Error,
+    super::CollectionQuery,
+    crate::{consts::activitypub::ACTIVITIES_PER_PAGE, error::Error},
     itertools::Itertools,
     tranquility_types::activitypub::{
         collection::Item, Activity, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,

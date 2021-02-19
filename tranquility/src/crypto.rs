@@ -58,12 +58,10 @@ pub mod password {
 
 pub mod rsa {
     use {
-        crate::{error::Error, util::cpu_intensive_work},
+        crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_work},
         rand::rngs::OsRng,
         rsa::{PrivateKeyPemEncoding, PublicKeyPemEncoding, RSAPrivateKey},
     };
-
-    const KEY_SIZE: usize = 2048;
 
     pub async fn generate() -> Result<RSAPrivateKey, Error> {
         cpu_intensive_work(|| Ok(RSAPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
@@ -78,9 +76,7 @@ pub mod rsa {
 }
 
 pub mod token {
-    use crate::error::Error;
-
-    const TOKEN_LENGTH: usize = 40;
+    use crate::{consts::crypto::TOKEN_LENGTH, error::Error};
 
     pub fn generate() -> Result<String, Error> {
         // Two characters are needed to encode one byte as hex

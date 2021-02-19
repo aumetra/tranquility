@@ -1,5 +1,8 @@
 use {
-    crate::{database::model::Actor, error::Error},
+    crate::{
+        consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error,
+        util::construct_cors,
+    },
     once_cell::sync::Lazy,
     serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
@@ -57,7 +60,8 @@ pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejec
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     // Enable CORS for all API endpoints
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-    let cors = warp::cors().allow_any_origin().build();
+    let cors = construct_cors(API_ALLOWED_METHODS);
+
     let v1_prefix = warp::path!("api" / "v1" / ..);
 
     let accounts = accounts::routes();

@@ -1,4 +1,5 @@
 use {
+    crate::{consts::cors::OAUTH_TOKEN_ALLOWED_METHODS, util::construct_cors},
     askama::Template,
     once_cell::sync::Lazy,
     tranquility_ratelimit::{ratelimit, Configuration},
@@ -18,30 +19,33 @@ struct TokenTemplate {
     token: String,
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::get();
-    let ratelimit_config = Configuration::new()
-        .active(config.ratelimit.active)
-        .burst_quota(config.ratelimit.authentication_quota);
-    let ratelimit_filter =
-        ratelimit(ratelimit_config).expect("Couldn't construct a ratelimit filter");
+fn authorize_route<F>(
+    ratelimit_filter: F,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone
+where
+    F: Filter<Extract = (), Error = Rejection> + Clone + Send + Sync + 'static,
+{
+    let get = warp::get().and_then(authorize::get);
 
-    let authorize = {
-        let get = warp::get().and_then(authorize::get);
+    // Ratelimit only the logic
+    let post = warp::post()
+        .and(warp::body::form())
+        .and(warp::query())
+        .and_then(authorize::post)
+        .with(ratelimit!(from_filter: ratelimit_filter));
 
-        // Ratelimit only the logic
-        let post = warp::post()
-            .and(warp::body::form())
-            .and(warp::query())
-            .and_then(authorize::post)
-            .with(ratelimit!(from_filter: ratelimit_filter.clone()));
+    warp::path!("oauth" / "authorize").and(get.or(post))
+}
 
-        warp::path!("oauth" / "authorize").and(get.or(post))
-    };
-
+fn token_route<F>(
+    ratelimit_filter: F,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone
+where
+    F: Filter<Extract = (), Error = Rejection> + Clone + Send + Sync + 'static,
+{
     // Enable CORS for the token endpoint
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-    let cors = warp::cors().allow_any_origin().build();
+    let cors = construct_cors(OAUTH_TOKEN_ALLOWED_METHODS);
     let token_path = warp::path!("oauth" / "token");
 
     // Ratelimit only the logic
@@ -50,7 +54,20 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
         .and_then(token::token)
         .with(ratelimit!(from_filter: ratelimit_filter));
 
-    let token = token_path.and(token_logic).with(cors);
+    token_path.and(token_logic).with(cors)
+}
+
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let config = crate::config::get();
+
+    let ratelimit_config = Configuration::new()
+        .active(config.ratelimit.active)
+        .burst_quota(config.ratelimit.authentication_quota);
+    let ratelimit_filter =
+        ratelimit(ratelimit_config).expect("Couldn't construct a ratelimit filter");
+
+    let authorize = authorize_route(ratelimit_filter.clone());
+    let token = token_route(ratelimit_filter);
 
     authorize.or(token)
 }

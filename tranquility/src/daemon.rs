@@ -1,9 +1,4 @@
-use {
-    std::{future::Future, time::Duration},
-    tokio::time,
-};
-
-const DELETE_INTERVAL: Duration = Duration::from_secs(60);
+use {crate::consts::daemon::DELETE_INTERVAL, std::future::Future, tokio::time};
 
 // Keeping this for future use
 #[allow(dead_code)]

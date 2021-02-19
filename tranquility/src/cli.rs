@@ -1,7 +1,7 @@
-use {std::env, structopt::StructOpt};
+use {crate::consts::VERSION, std::env, structopt::StructOpt};
 
 #[derive(StructOpt)]
-#[structopt(author = env!("CARGO_PKG_AUTHORS"), version = crate::util::VERSION)]
+#[structopt(author = env!("CARGO_PKG_AUTHORS"), version = VERSION)]
 pub struct Opts {
     #[structopt(default_value = "config.toml", long)]
     config: String,

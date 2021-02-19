@@ -1,27 +1,23 @@
 use {
-    futures_util::FutureExt, once_cell::sync::Lazy, reqwest::Client, std::future::Future,
-    tokio::sync::oneshot,
+    crate::consts::USER_AGENT, futures_util::FutureExt, once_cell::sync::Lazy, reqwest::Client,
+    std::future::Future, tokio::sync::oneshot, warp::cors::Cors,
 };
-
-pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
-pub const VERSION: &str = concat!(
-    "v",
-    env!("CARGO_PKG_VERSION"),
-    "-",
-    env!("GIT_BRANCH"),
-    "-",
-    env!("GIT_COMMIT")
-);
 
 pub static REQWEST_CLIENT: Lazy<Client> =
     Lazy::new(|| Client::builder().user_agent(USER_AGENT).build().unwrap());
 
-/// Run CPU intensive work (RSA key generation, password hashing, etc.) via this function
-pub fn cpu_intensive_work<T>(
-    func: impl FnOnce() -> T + Send + 'static,
-) -> impl Future<Output = T> + Send + Sync + 'static
+pub fn construct_cors(allowed_methods: &[&str]) -> Cors {
+    warp::cors()
+        .allow_any_origin()
+        .allow_methods(allowed_methods.iter().copied())
+        .build()
+}
+
+/// Run any CPU intensive work (RSA key generation, password hashing, etc.) via this function
+pub fn cpu_intensive_work<F, T>(func: F) -> impl Future<Output = T> + Send + Sync + 'static
 where
     T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
 {
     let (sender, receiver) = oneshot::channel();
 

@@ -27,6 +27,7 @@ mod activitypub;
 mod api;
 mod cli;
 mod config;
+mod consts;
 mod crypto;
 mod daemon;
 mod database;
