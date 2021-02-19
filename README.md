@@ -21,8 +21,8 @@ Use them by compiling the server with one of the following feature flags:
 - `jemalloc`: Use `jemalloc` as the memory allocator
 - `mimalloc`: Use `mimalloc` as the memory allocator
 
-The two features are mutually exclusive  
-If both are activated, both allocators are compiled in the binary but neither will be actually used  
+These features are mutually exclusive  
+If more than one is activated, all selected allocators are compiled in the binary but neither will be actually used  
 
 ## Progress
 

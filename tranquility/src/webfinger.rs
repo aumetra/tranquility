@@ -75,8 +75,13 @@ pub async fn webfinger(query: Query) -> Result<Response, Rejection> {
     .into_response())
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    // Enable CORS for the ".well-known" routes
+    // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
+    let cors = warp::cors().allow_any_origin().build();
+
     warp::path!(".well-known" / "webfinger")
         .and(warp::query())
         .and_then(webfinger)
+        .with(cors)
 }

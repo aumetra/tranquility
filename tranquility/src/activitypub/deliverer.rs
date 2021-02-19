@@ -121,8 +121,8 @@ async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>,
 
     // Await all the futures one after another
     let mut recipient_list = Vec::new();
-    for future in recipient_futures {
-        match future.await {
+    for recipient_future in recipient_futures {
+        match recipient_future.await {
             Ok(url) => recipient_list.push(url),
             Err(err) => warn!("Recipient couldn't be resolved: {}", err),
         }

@@ -54,7 +54,10 @@ pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejec
     warp::header("authorization").and_then(authorization_closure)
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    // Enable CORS for all API endpoints
+    // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
+    let cors = warp::cors().allow_any_origin().build();
     let v1_prefix = warp::path!("api" / "v1" / ..);
 
     let accounts = accounts::routes();
@@ -63,7 +66,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 
     let v1_routes = accounts.or(apps).or(statuses);
 
-    v1_prefix.and(v1_routes)
+    v1_prefix.and(v1_routes).with(cors)
 }
 
 pub mod accounts;

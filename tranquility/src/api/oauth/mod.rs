@@ -38,6 +38,10 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
 
         warp::path!("oauth" / "authorize").and(get.or(post))
     };
+
+    // Enable CORS for the token endpoint
+    // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
+    let cors = warp::cors().allow_any_origin().build();
     let token_path = warp::path!("oauth" / "token");
 
     // Ratelimit only the logic
@@ -46,7 +50,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
         .and_then(token::token)
         .with(ratelimit!(from_filter: ratelimit_filter));
 
-    let token = token_path.and(token_logic);
+    let token = token_path.and(token_logic).with(cors);
 
     authorize.or(token)
 }
