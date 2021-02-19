@@ -6,17 +6,13 @@ edition = "2018"
 license = "MIT"
 build = "build.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 ammonia = "3"
 askama = "0.10"
-async-recursion = "0.3"
 async-trait = "0.1"
 base64 = "0.13"
 cached = "0.23"
 chrono = "0.4"
-clap = "3.0.0-beta.2"
 futures-util = "0.3"
 hex = "0.4"
 itertools = "0.10"
@@ -30,6 +26,7 @@ serde = { version = "1", default-features = false, features = [ "derive" ] }
 serde_json = "1"
 sha2 = "0.9"
 sqlx = { version = "0.5", features = [ "chrono", "json", "offline", "postgres", "runtime-tokio-rustls", "uuid" ] }
+structopt = "0.3"
 thiserror = "1"
 tokio = { version = "1", features = [ "full", "tracing" ] }
 toml = "0.5"

@@ -1,6 +1,5 @@
 use {
     crate::{crypto, database::model::Actor as DbActor, error::Error},
-    async_recursion::async_recursion,
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -29,6 +28,25 @@ impl DeliveryData {
         };
 
         Ok(Arc::new(delivery_data))
+    }
+}
+
+fn construct_deliver_future(
+    delivery_data: &Arc<DeliveryData>,
+    url: String,
+) -> impl Future<Output = Result<Response, Error>> + Send {
+    let delivery_data = Arc::clone(delivery_data);
+
+    async move {
+        debug!(
+            "Delivering activity {} to actor {}...",
+            delivery_data.activity.id, url
+        );
+
+        let client = &crate::util::REQWEST_CLIENT;
+        let request = prepare_request(client, url.as_str(), delivery_data).await?;
+
+        client.execute(request).await.map_err(Error::from)
     }
 }
 
@@ -70,55 +88,21 @@ async fn prepare_request(
     Ok(request)
 }
 
-fn construct_deliver_future(
-    delivery_data: &Arc<DeliveryData>,
-    url: String,
-) -> impl Future<Output = Result<Response, Error>> + Send {
-    let delivery_data = Arc::clone(delivery_data);
-
-    async move {
-        debug!(
-            "Delivering activity {} to actor {}...",
-            delivery_data.activity.id, url
-        );
-
-        let client = &crate::util::REQWEST_CLIENT;
-        let request = prepare_request(client, url.as_str(), delivery_data).await?;
-
-        client.execute(request).await.map_err(Error::from)
-    }
-}
-
-#[async_recursion]
 async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<String>, Error> {
     // Check if the current URL is the user's follower collection
     if delivery_data.author.followers == url {
-        // Get the ActivityPub IDs of all the followers
-        let follower_urls =
-            crate::database::inbox_urls::select(delivery_data.author.id.as_str()).await?;
+        // Get the inbox URLs of all the followers
+        let inbox_urls =
+            crate::database::inbox_urls::resolve_followers(delivery_data.author.id.as_str())
+                .await?;
 
-        // Create futures for resolving their ID to the inbox URL
-        let inbox_url_futures = follower_urls
-            .into_iter()
-            .map(|url| resolve_url(delivery_data, url));
+        Ok(inbox_urls)
+    } else {
+        // Get the inbox URL of the requested user
+        let inbox_url = crate::database::inbox_urls::resolve_one(url.as_str()).await?;
 
-        // Await all the futures one after another
-        let mut inbox_urls = Vec::new();
-        for inbox_url_future in inbox_url_futures {
-            let urls = inbox_url_future.await?;
-
-            inbox_urls.push(urls);
-        }
-
-        // Flatten the vector of vectors of strings to a vector of strings
-        let inbox_urls = inbox_urls.into_iter().flatten().collect();
-
-        return Ok(inbox_urls);
+        Ok(vec![inbox_url])
     }
-
-    let (actor, _actor_db) = crate::activitypub::fetcher::fetch_actor(url.as_str()).await?;
-
-    Ok(vec![actor.inbox])
 }
 
 async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>, Error> {

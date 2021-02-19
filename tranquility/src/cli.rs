@@ -1,21 +1,22 @@
-use {clap::Clap, std::env};
+use {std::env, structopt::StructOpt};
 
-#[derive(Clap)]
-#[clap(version = crate::util::VERSION, author = env!("CARGO_PKG_AUTHORS"))]
+#[derive(StructOpt)]
+#[structopt(author = env!("CARGO_PKG_AUTHORS"), version = crate::util::VERSION)]
 pub struct Opts {
-    #[clap(long, default_value = "config.toml")]
+    #[structopt(default_value = "config.toml", long)]
     config: String,
-    #[clap(
-        short,
-        long,
+
+    #[structopt(
         about = "Sets the verbosity of the tracing output",
-        parse(from_occurrences)
+        long,
+        parse(from_occurrences),
+        short
     )]
     verbose: i32,
 }
 
 pub async fn run() {
-    let options = Opts::parse();
+    let options = Opts::from_args();
 
     match options.verbose {
         0 => env::set_var("RUST_LOG", "info"),

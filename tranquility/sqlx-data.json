@@ -405,6 +405,26 @@
       ]
     }
   },
+  "4df57280c9909f13cb2e23566b5c19bf1ea4bdb899967ce72af04841734c4377": {
+    "query": "\n            SELECT actors.actor->>'inbox' as \"inbox_url!\" \n            FROM actors, objects\n            WHERE objects.data->>'type' = 'Follow'\n            AND objects.data->>'object' = $1\n            AND objects.data->>'object' = actors.actor->>'id'\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "inbox_url!",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "53a810cc3387d1a46ad3002269cec5df30f710af3b11f1936df36641cf7e3d05": {
     "query": "\n                SELECT * FROM objects\n                WHERE data->>'type' = $1\n                AND data->>'object' = $2\n\n                ORDER BY created_at DESC\n                LIMIT $3\n                OFFSET $4\n            ",
     "describe": {
@@ -460,6 +480,26 @@
         "Left": []
       },
       "nullable": []
+    }
+  },
+  "5ea51510dbc108f45a7f009f2f87625ba32c433eb027df34ddd304e706dce61d": {
+    "query": "\n            SELECT actor->>'inbox' as \"inbox_url!\" \n            FROM actors\n            WHERE actor->>'id' = $1\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "inbox_url!",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
     }
   },
   "708ecddc1fbbfc4019348593cacbe917cbdb91d800dc855af80ae4e74607f673": {
