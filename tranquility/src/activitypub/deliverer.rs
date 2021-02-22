@@ -55,9 +55,12 @@ async fn prepare_request(
     url: &str,
     delivery_data: Arc<DeliveryData>,
 ) -> Result<Request, Error> {
-    let activity = &delivery_data.activity;
-    let author = &delivery_data.author;
-    let author_db = &delivery_data.author_db;
+    let DeliveryData {
+        ref activity,
+        ref author,
+        ref author_db,
+        ..
+    } = *delivery_data;
 
     let mut request = client
         .post(url)

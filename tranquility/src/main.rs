@@ -4,11 +4,11 @@
 #[macro_use]
 extern crate tracing;
 
-#[cfg(all(feature = "jemalloc", not(feature = "mimalloc")))]
+#[cfg(all(feature = "jemalloc", not(feature = "mimalloc"), not(test)))]
 #[global_allocator]
 static GLOBAL: jemalloc::Jemalloc = jemalloc::Jemalloc;
 
-#[cfg(all(feature = "mimalloc", not(feature = "jemalloc")))]
+#[cfg(all(feature = "mimalloc", not(feature = "jemalloc"), not(test)))]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
@@ -16,11 +16,11 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 async fn main() {
     cli::run().await;
 
-    crate::database::init()
+    database::init()
         .await
         .expect("Database connection/migration failed");
-    crate::daemon::start();
-    crate::server::run().await;
+    daemon::start();
+    server::run().await;
 }
 
 mod activitypub;

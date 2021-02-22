@@ -1,4 +1,4 @@
-use {crate::consts::VERSION, std::env, structopt::StructOpt};
+use {crate::consts::VERSION, structopt::StructOpt, tracing_subscriber::filter::LevelFilter};
 
 #[derive(StructOpt)]
 #[structopt(author = env!("CARGO_PKG_AUTHORS"), version = VERSION)]
@@ -18,13 +18,12 @@ pub struct Opts {
 pub async fn run() {
     let options = Opts::from_args();
 
-    match options.verbose {
-        0 => env::set_var("RUST_LOG", "info"),
-        1 => env::set_var("RUST_LOG", "debug"),
-        _ => env::set_var("RUST_LOG", "trace"),
-    }
-
-    tracing_subscriber::fmt::init();
+    let level = match options.verbose {
+        0 => LevelFilter::INFO,
+        1 => LevelFilter::DEBUG,
+        _ => LevelFilter::TRACE,
+    };
+    tracing_subscriber::fmt().with_max_level(level).init();
 
     crate::config::init_once_cell(options.config).await;
 }
