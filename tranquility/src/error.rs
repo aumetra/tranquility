@@ -88,6 +88,13 @@ pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
                 Ok(warp::reply::with_status(error_text, StatusCode::BAD_REQUEST).into_response())
             }
 
+            // Add special case to send the previously defined error messages
+            Error::Validation(err) => Ok(warp::reply::with_status(
+                err.to_string(),
+                StatusCode::BAD_REQUEST,
+            )
+            .into_response()),
+
             Error::Unauthorized => {
                 Ok(warp::reply::with_status(error_text, StatusCode::UNAUTHORIZED).into_response())
             }

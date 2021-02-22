@@ -9,7 +9,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
 
     let oauth = oauth::routes();
 
-    let register_path = warp::path!("api" / "register");
+    let register_path = warp::path!("api" / "tranquility" / "v1" / "register");
 
     let config = crate::config::get();
     let ratelimit_config = Configuration::new()
