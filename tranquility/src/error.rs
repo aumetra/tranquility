@@ -89,11 +89,13 @@ pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
             }
 
             // Add special case to send the previously defined error messages
-            Error::Validation(err) => Ok(warp::reply::with_status(
-                err.to_string(),
-                StatusCode::BAD_REQUEST,
-            )
-            .into_response()),
+            Error::Validation(err) => {
+                let response_payload = serde_json::to_string(err).map_err(Error::from)?;
+                let response = warp::reply::with_status(response_payload, StatusCode::BAD_REQUEST)
+                    .into_response();
+
+                Ok(response)
+            }
 
             Error::Unauthorized => {
                 Ok(warp::reply::with_status(error_text, StatusCode::UNAUTHORIZED).into_response())
