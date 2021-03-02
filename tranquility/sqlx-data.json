@@ -83,6 +83,52 @@
       "nullable": []
     }
   },
+  "0b65b47aadbb3375bf04a73e311cc456040dc3351c1b9ab4aee67acff702cc35": {
+    "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND owner_id = $1\n            AND created_at < $2\n            LIMIT $3\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Timestamp",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "0db67a3667c10583d3a68255e2b205c948ba9ac5a0ee143ba9f4629ace7cf3fc": {
     "query": "\n            UPDATE objects\n            SET data = $1\n            WHERE id = $2\n        ",
     "describe": {
@@ -561,6 +607,26 @@
       ]
     }
   },
+  "73ecdf4e9ca43bdc42f5ab8e3d8325f739c0f4b040d1ac464d0baa0b7cc02151": {
+    "query": "\n            SELECT created_at as \"timestamp!\" FROM objects\n            WHERE id = $1\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "timestamp!",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "781fb9d81eef14d5cef48f53eb36d662989047aad2ce68fd446659d56731f93b": {
     "query": "\n            INSERT INTO objects \n            ( id, owner_id, data ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
     "describe": {
@@ -727,6 +793,52 @@
         false,
         false,
         false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "c214daf068ba18665781d7d67a3f5536d3c71a63c980b26f8411a444d4f31eeb": {
+    "query": "\n            SELECT * FROM objects\n            WHERE owner_id = $1\n            AND data->>'type' = 'Create'\n            AND created_at < $2\n            LIMIT $3\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Timestamp",
+          "Int8"
+        ]
+      },
+      "nullable": [
         false,
         false,
         false,
@@ -1011,6 +1123,52 @@
         false,
         false,
         true,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "ed88d14fd85a8951a723b720ffe17911588e7f0166f3b1ede1ecbe11e4e1757a": {
+    "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND data->>'object' = (\n                SELECT actor->>'id' FROM actors\n                WHERE id = $1\n            )\n            AND created_at < $2\n            LIMIT $3\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Timestamp",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
         false,
         false,
         false

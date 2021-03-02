@@ -6,17 +6,15 @@ use {
     uuid::Uuid,
 };
 
-// `Entity` is special, all its options have the same name as the structs they can hold
-// This macro generates code that implements the `From` trait for those types
-macro_rules! entity_from {
-    ($($type:ident),*) => {
+macro_rules! impl_from {
+    ($enum:ty; $($type:ident),+) => {
         $(
-            impl From<$type> for Entity {
+            impl From<$type> for $enum {
                 fn from(value: $type) -> Self {
                     Self::$type(value)
                 }
             }
-        )*
+        )+
     }
 }
 
@@ -26,7 +24,7 @@ pub enum Entity {
     Object(Object),
 }
 
-entity_from!(Activity, Actor, Object);
+impl_from!(Entity; Activity, Actor, Object);
 
 // Keeping this for future use
 #[allow(dead_code)]
@@ -53,20 +51,14 @@ impl Entity {
     }
 }
 
-// This macro generates code that attempts to fetch the resource via
-// the given function from the URL
+// This macro generates code that attempts to fetch the resource via the given function from the URL
 // If the fetch succeeds, the function returns with the success value
 // If it doesn't, the error gets logged and the function continues
 macro_rules! attempt_fetch {
     ($func:ident, $url:ident) => {{
         match $func($url).await {
             Ok(val) => return Ok(val.into()),
-            Err(err) => debug!(
-                "Couldn't fetch {} with {}: {}",
-                $url,
-                stringify!($func),
-                err
-            ),
+            Err(err) => debug!(url = $url, error = ?err, "Couldn't fetch entity"),
         }
     }};
 }
@@ -90,8 +82,9 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     match crate::database::object::select::by_url(url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => debug!(
-            "{}\nActivity not found in database. Attempting remote fetch...",
-            e
+            url,
+            error = ?e,
+            "Activity not found in database. Attempting remote fetch..."
         ),
     }
 
@@ -114,20 +107,21 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
 
         Ok(activity)
     } else {
-        debug!("Remote server returned content we can't interpret");
+        debug!(url, "Remote server returned content we can't interpret");
 
         Err(Error::Fetch)
     }
 }
 
 pub async fn fetch_actor(url: &str) -> Result<(Actor, DbActor), Error> {
-    debug!("Fetching remote actor...");
+    debug!(url, "Fetching remote actor...");
 
     match crate::database::actor::select::by_url(url).await {
         Ok(actor) => return Ok((serde_json::from_value(actor.actor.clone())?, actor)),
         Err(e) => debug!(
-            "{}\nActor not found in database. Attempting remote fetch...",
-            e
+            url,
+            error = ?e,
+            "Actor not found in database. Attempting remote fetch..."
         ),
     }
 
@@ -139,20 +133,21 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DbActor), Error> {
 
         Ok((actor, db_actor))
     } else {
-        debug!("Remote server returned content we can't interpret");
+        debug!(url, "Remote server returned content we can't interpret");
 
         Err(Error::Fetch)
     }
 }
 
 pub async fn fetch_object(url: &str) -> Result<Object, Error> {
-    debug!("Fetching remote object...");
+    debug!(url, "Fetching remote object...");
 
     match crate::database::object::select::by_url(url).await {
         Ok(object) => return Ok(serde_json::from_value(object.data)?),
         Err(e) => debug!(
-            "{}\nObject not found in database. Attempting remote fetch...",
-            e
+            url,
+            error = ?e,
+            "Object not found in database. Attempting remote fetch..."
         ),
     }
 
@@ -166,7 +161,7 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
 
         Ok(object)
     } else {
-        debug!("Remote server returned content we can't interpret");
+        debug!(url, "Remote server returned content we can't interpret");
 
         Err(Error::Fetch)
     }

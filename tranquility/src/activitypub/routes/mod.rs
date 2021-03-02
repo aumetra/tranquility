@@ -5,9 +5,9 @@ use {
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
 };
 
-// I wish I could use "warp::header::exact()" or something like it but the "Accept" header
-// of, for example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
-// Because that can change for every implementation I'll just use ".contains()" on the header value
+// I wish I could use "warp::header::exact()" or something like it but the "Accept" header.
+// But the value can change for every implementation, for example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
+// So I'll just use ".contains()" on the header value
 fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy {
     let header_requirements_fn = |accept_header_value: String| async move {
         if accept_header_value.contains("application/activity+json")
@@ -44,7 +44,7 @@ fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> +
 
 #[derive(Deserialize)]
 pub struct CollectionQuery {
-    offset: Option<u64>,
+    last_id: Option<Uuid>,
 }
 
 pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {

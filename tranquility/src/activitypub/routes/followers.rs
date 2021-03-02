@@ -1,6 +1,9 @@
 use {
     super::CollectionQuery,
-    crate::{activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE, error::Error},
+    crate::{
+        activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE, error::Error,
+        format_uuid,
+    },
     itertools::Itertools,
     tranquility_types::activitypub::{
         collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
@@ -10,46 +13,27 @@ use {
 };
 
 pub async fn followers(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply, Rejection> {
-    #[allow(clippy::cast_possible_wrap)]
-    let mut offset = query.offset.unwrap_or_default() as i64;
+    let latest_follow_activities =
+        crate::database::follow::followers(user_id, query.last_id, ACTIVITIES_PER_PAGE).await?;
+    let last_id = latest_follow_activities
+        .last()
+        .map(|activity| format_uuid!(activity.id))
+        .unwrap_or_default();
 
-    // Set the offset to 0 in case someone decides to pass
-    // a number that wraps the signed 64bit integer
-    if offset < 0 {
-        offset = 0;
-    }
-
-    let actor_db = crate::database::actor::select::by_id(user_id).await?;
-    let actor: Actor = serde_json::from_value(actor_db.actor).map_err(Error::from)?;
-    let last_follow_activities: Vec<FollowActivity> =
-        crate::database::object::select::by_type_and_object_url(
-            "Follow",
-            &actor.id,
-            ACTIVITIES_PER_PAGE,
-            offset,
-        )
-        .await?
+    let latest_followers = latest_follow_activities
         .into_iter()
-        .map(|object| serde_json::from_value(object.data).map_err(Error::from))
-        .try_collect()?;
+        .filter_map(|activity| {
+            let follow_activity: FollowActivity = serde_json::from_value(activity.data).ok()?;
+            let follower_id = follow_activity.activity.id;
 
-    let last_followed = last_follow_activities
-        .into_iter()
-        .map(|activity| activity.activity.actor)
-        .map(Item::from)
+            Some(Item::Url(follower_id))
+        })
         .collect_vec();
 
     let user_db = crate::database::actor::select::by_id(user_id).await?;
     let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;
 
-    let next = format!("{}?offset={}", user.followers, offset + ACTIVITIES_PER_PAGE);
-
-    let prev = if offset >= ACTIVITIES_PER_PAGE {
-        offset - ACTIVITIES_PER_PAGE
-    } else {
-        0
-    };
-    let prev = format!("{}?offset={}", user.followers, prev);
+    let next = format!("{}?last_id={}", user.followers, last_id);
 
     let followers_collection = Collection {
         r#type: OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE.into(),
@@ -57,10 +41,9 @@ pub async fn followers(user_id: Uuid, query: CollectionQuery) -> Result<impl Rep
         id: user.followers.clone(),
         part_of: user.followers,
 
-        prev,
         next,
 
-        ordered_items: last_followed,
+        ordered_items: latest_followers,
         ..Collection::default()
     };
 

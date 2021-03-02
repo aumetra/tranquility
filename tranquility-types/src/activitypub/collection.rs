@@ -18,8 +18,6 @@ pub struct Collection {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub part_of: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
-    pub prev: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub next: String,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -56,7 +54,6 @@ impl Default for Collection {
             first: None,
 
             part_of: String::default(),
-            prev: String::default(),
             next: String::default(),
 
             ordered_items: Vec::default(),
