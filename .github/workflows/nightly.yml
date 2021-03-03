@@ -1,0 +1,73 @@
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  build:
+    name: Build release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tranquility-linux
+          path: target/release/tranquility
+          retention-days: 1
+    
+  build_arm7:
+    name: Build (Linux ARMv7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: armv7-unknown-linux-gnueabihf
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target armv7-unknown-linux-gnueabihf
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tranquility-linux-armv7
+          path: target/release/tranquility
+          retention-days: 1
+
+  publish:
+    needs: [build, build_armv7]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dev-drprasad/delete-tag-and-release@v0.1.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          delete_release: true
+          tag_name: nightly
+      
+      - uses: actions/download-artifact@v2
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: tranquility*
+          tag: nightly
+          overwrite: true
+          file_glob: true
