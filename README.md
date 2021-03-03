@@ -1,6 +1,6 @@
-# Tranquility
+# Tranquility [![Checks](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml/badge.svg)](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml)
 
-Tranquility is a small ActivityPub server written in Rust  
+Small ActivityPub server written in Rust
 
 ### **Disclaimer**
 
@@ -37,8 +37,9 @@ If more than one is activated, all selected allocators are compiled in the binar
         - [x] Outbox
         - [x] Following collection
         - [x] Followers collection
-    - [x] Activities (incoming)
+    - [ ] Activities (incoming)
         - [x] Accept
+        - [ ] Announce
         - [x] Create
         - [x] Delete
         - [x] Follow
@@ -48,6 +49,7 @@ If more than one is activated, all selected allocators are compiled in the binar
         - [x] Update
     - [ ] Activities (outgoing)
         - [x] Accept
+        - [ ] Announce
         - [ ] Create
         - [ ] Delete
         - [x] Follow
