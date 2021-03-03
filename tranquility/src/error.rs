@@ -102,7 +102,7 @@ pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
             }
 
             Error::Argon2(..) | Error::Sqlx(..) | Error::SqlxMigration(..) | Error::Rsa(..) => {
-                error!("Internal error occurred: {}", error_text);
+                error!(?error, "Internal error occurred");
 
                 Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response())
             }

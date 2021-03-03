@@ -1,6 +1,8 @@
 use {
     serde::{Deserialize, Serialize},
-    tranquility_types::activitypub::{Activity, Actor, IsPrivate, Object, DATE_TIME_FORMAT},
+    tranquility_types::activitypub::{
+        Activity, Actor, IsPrivate, IsUnlisted, Object, DATE_TIME_FORMAT,
+    },
 };
 
 #[derive(Clone, Deserialize)]
@@ -15,6 +17,15 @@ impl IsPrivate for ActivityObject {
         match self {
             ActivityObject::Activity(activity) => activity.is_private(),
             ActivityObject::Object(object) => object.is_private(),
+        }
+    }
+}
+
+impl IsUnlisted for ActivityObject {
+    fn is_unlisted(&self) -> bool {
+        match self {
+            ActivityObject::Activity(activity) => activity.is_unlisted(),
+            ActivityObject::Object(object) => object.is_unlisted(),
         }
     }
 }

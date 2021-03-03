@@ -13,13 +13,13 @@ where
 
 pub mod digest {
     use {
-        crate::{error::Error, util::cpu_intensive_work},
+        crate::{error::Error, util::cpu_intensive_task},
         reqwest::header::HeaderValue,
         sha2::{Digest, Sha256},
     };
 
     pub async fn http_header(data: Vec<u8>) -> Result<HeaderValue, Error> {
-        cpu_intensive_work(move || {
+        cpu_intensive_task(move || {
             let sha_hash = Sha256::digest(&data);
             let base64_encoded_hash = base64::encode(&sha_hash);
 
@@ -34,12 +34,12 @@ pub mod digest {
 
 pub mod password {
     use {
-        crate::{error::Error, util::cpu_intensive_work},
+        crate::{error::Error, util::cpu_intensive_task},
         argon2::Config,
     };
 
     pub async fn hash(password: String) -> Result<String, Error> {
-        cpu_intensive_work(move || {
+        cpu_intensive_task(move || {
             let salt = crate::crypto::gen_secure_rand::<[u8; 32]>();
             let config = Config::default();
 
@@ -49,7 +49,7 @@ pub mod password {
     }
 
     pub async fn verify(password: String, hash: String) -> bool {
-        cpu_intensive_work(move || {
+        cpu_intensive_task(move || {
             argon2::verify_encoded(hash.as_str(), password.as_bytes()).unwrap_or(false)
         })
         .await
@@ -58,13 +58,13 @@ pub mod password {
 
 pub mod rsa {
     use {
-        crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_work},
+        crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_task},
         rand::rngs::OsRng,
         rsa::{PrivateKeyPemEncoding, PublicKeyPemEncoding, RSAPrivateKey},
     };
 
     pub async fn generate() -> Result<RSAPrivateKey, Error> {
-        cpu_intensive_work(|| Ok(RSAPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
+        cpu_intensive_task(|| Ok(RSAPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
     }
 
     pub fn to_pem(rsa_key: &RSAPrivateKey) -> Result<(String, String), Error> {
@@ -88,7 +88,7 @@ pub mod token {
 
 pub mod request {
     use {
-        crate::{error::Error, util::cpu_intensive_work},
+        crate::{error::Error, util::cpu_intensive_task},
         reqwest::Request,
         std::future::Future,
         tranquility_http_signatures::HttpRequest,
@@ -108,7 +108,7 @@ pub mod request {
         // That's why the function takes a `String`
         private_key: String,
     ) -> impl Future<Output = Result<(HeaderName, HeaderValue), Error>> + Send {
-        cpu_intensive_work(move || {
+        cpu_intensive_task(move || {
             let request = &request;
             let key_id = key_id.as_str();
             let private_key = private_key.as_bytes();
@@ -132,7 +132,7 @@ pub mod request {
         // That's why the function takes a `String`
         public_key: String,
     ) -> impl Future<Output = Result<bool, Error>> + Send {
-        cpu_intensive_work(move || {
+        cpu_intensive_task(move || {
             let method = method.as_str();
             let path = path.as_str();
             let query = query.as_deref();

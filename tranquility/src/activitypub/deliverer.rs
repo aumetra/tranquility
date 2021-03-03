@@ -31,6 +31,10 @@ impl DeliveryData {
     }
 }
 
+#[instrument(
+    fields(activity_id = delivery_data.activity.id.as_str()),
+    skip(delivery_data),
+)]
 fn construct_deliver_future(
     delivery_data: &Arc<DeliveryData>,
     url: String,
@@ -38,10 +42,7 @@ fn construct_deliver_future(
     let delivery_data = Arc::clone(delivery_data);
 
     async move {
-        debug!(
-            "Delivering activity {} to actor {}...",
-            delivery_data.activity.id, url
-        );
+        debug!("Delivering activity...",);
 
         let client = &crate::util::REQWEST_CLIENT;
         let request = prepare_request(client, url.as_str(), delivery_data).await?;
@@ -50,6 +51,7 @@ fn construct_deliver_future(
     }
 }
 
+#[instrument(skip(client, delivery_data))]
 async fn prepare_request(
     client: &Client,
     url: &str,

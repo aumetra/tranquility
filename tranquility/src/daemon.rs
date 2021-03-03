@@ -14,7 +14,7 @@ async fn delete_expired_authorization_codes() {
     loop {
         match crate::database::oauth::authorization::delete::expired().await {
             Ok(_) => (),
-            Err(err) => warn!("Couldn't delete expired tokens: {}", err),
+            Err(err) => warn!(error = ?err, "Couldn't delete expired tokens"),
         }
 
         query_interval.tick().await;

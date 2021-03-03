@@ -1,6 +1,5 @@
 use {
     crate::error::Error,
-    cached::proc_macro::cached,
     futures_util::stream::{StreamExt, TryStreamExt},
 };
 
@@ -16,13 +15,6 @@ impl Into<String> for InboxUrl {
     }
 }
 
-#[cached(
-    result,
-    size = 50,
-    time = 15,
-    key = "String",
-    convert = r#"{ followed_url.to_owned() }"#
-)]
 pub async fn resolve_followers(followed_url: &str) -> Result<Vec<String>, Error> {
     let conn_pool = crate::database::connection::get().await?;
 
@@ -45,13 +37,6 @@ pub async fn resolve_followers(followed_url: &str) -> Result<Vec<String>, Error>
     Ok(inbox_urls)
 }
 
-#[cached(
-    result,
-    size = 50,
-    time = 15,
-    key = "String",
-    convert = r#"{ url.to_owned() }"#
-)]
 pub async fn resolve_one(url: &str) -> Result<String, Error> {
     let conn_pool = crate::database::connection::get().await?;
 

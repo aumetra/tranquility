@@ -2,6 +2,7 @@ use {
     crate::{database::model::Actor as DbActor, error::Error},
     reqwest::IntoUrl,
     serde_json::Value,
+    std::fmt::Debug,
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object},
     uuid::Uuid,
 };
@@ -58,11 +59,12 @@ macro_rules! attempt_fetch {
     ($func:ident, $url:ident) => {{
         match $func($url).await {
             Ok(val) => return Ok(val.into()),
-            Err(err) => debug!(url = $url, error = ?err, "Couldn't fetch entity"),
+            Err(err) => debug!(error = ?err, "Couldn't fetch entity"),
         }
     }};
 }
 
+#[instrument]
 pub async fn fetch_any(url: &str) -> Result<Entity, Error> {
     // Create a custom closure around the `fetch_actor` function
     // Otherwise the pattern in the macro won't match
@@ -76,13 +78,13 @@ pub async fn fetch_any(url: &str) -> Result<Entity, Error> {
     Err(Error::Fetch)
 }
 
+#[instrument]
 pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     debug!("Fetching remote actor...");
 
     match crate::database::object::select::by_url(url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => debug!(
-            url,
             error = ?e,
             "Activity not found in database. Attempting remote fetch..."
         ),
@@ -107,19 +109,19 @@ pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
 
         Ok(activity)
     } else {
-        debug!(url, "Remote server returned content we can't interpret");
+        debug!("Remote server returned content we can't interpret");
 
         Err(Error::Fetch)
     }
 }
 
+#[instrument]
 pub async fn fetch_actor(url: &str) -> Result<(Actor, DbActor), Error> {
-    debug!(url, "Fetching remote actor...");
+    debug!("Fetching remote actor...");
 
     match crate::database::actor::select::by_url(url).await {
         Ok(actor) => return Ok((serde_json::from_value(actor.actor.clone())?, actor)),
         Err(e) => debug!(
-            url,
             error = ?e,
             "Actor not found in database. Attempting remote fetch..."
         ),
@@ -133,19 +135,19 @@ pub async fn fetch_actor(url: &str) -> Result<(Actor, DbActor), Error> {
 
         Ok((actor, db_actor))
     } else {
-        debug!(url, "Remote server returned content we can't interpret");
+        debug!("Remote server returned content we can't interpret");
 
         Err(Error::Fetch)
     }
 }
 
+#[instrument]
 pub async fn fetch_object(url: &str) -> Result<Object, Error> {
-    debug!(url, "Fetching remote object...");
+    debug!("Fetching remote object...");
 
     match crate::database::object::select::by_url(url).await {
         Ok(object) => return Ok(serde_json::from_value(object.data)?),
         Err(e) => debug!(
-            url,
             error = ?e,
             "Object not found in database. Attempting remote fetch..."
         ),
@@ -161,13 +163,14 @@ pub async fn fetch_object(url: &str) -> Result<Object, Error> {
 
         Ok(object)
     } else {
-        debug!(url, "Remote server returned content we can't interpret");
+        debug!("Remote server returned content we can't interpret");
 
         Err(Error::Fetch)
     }
 }
 
-async fn fetch_entity<T: IntoUrl + Send>(url: T) -> Result<Entity, Error> {
+#[instrument]
+async fn fetch_entity<T: Debug + IntoUrl + Send>(url: T) -> Result<Entity, Error> {
     let client = &crate::util::REQWEST_CLIENT;
     let request = client
         .get(url)

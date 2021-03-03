@@ -59,12 +59,10 @@ pub mod delete {
 pub mod select {
     use {
         crate::{database::model::Object, error::Error},
-        cached::proc_macro::cached,
         sqlx::Error as SqlxError,
         uuid::Uuid,
     };
 
-    #[cached(result, size = 50, time = 15)]
     pub async fn by_id(id: Uuid) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get().await?;
 
@@ -82,13 +80,6 @@ pub mod select {
         Ok(object)
     }
 
-    #[cached(
-        result,
-        size = 50,
-        time = 15,
-        key = "String",
-        convert = r#"{ format!("{}{}{}{}", r#type, object_url, limit, offset) }"#
-    )]
     pub async fn by_type_and_object_url(
         r#type: &str,
         object_url: &str,
@@ -119,13 +110,6 @@ pub mod select {
         Ok(objects)
     }
 
-    #[cached(
-        result,
-        size = 50,
-        time = 15,
-        key = "String",
-        convert = r#"{ format!("{}{}{}{}", r#type, owner_id, limit, offset) }"#
-    )]
     pub async fn by_type_and_owner(
         r#type: &str,
         owner_id: &Uuid,
@@ -156,13 +140,6 @@ pub mod select {
         Ok(objects)
     }
 
-    #[cached(
-        result,
-        size = 50,
-        time = 15,
-        key = "String",
-        convert = r#"{ format!("{}{}{}", r#type, owner_id, object_url) }"#
-    )]
     pub async fn by_type_owner_and_object_url(
         r#type: &str,
         owner_id: &Uuid,
@@ -194,13 +171,6 @@ pub mod select {
         }
     }
 
-    #[cached(
-        result,
-        size = 50,
-        time = 15,
-        key = "String",
-        convert = r#"{ url.to_owned() }"#
-    )]
     pub async fn by_url(url: &str) -> Result<Object, Error> {
         let conn_pool = crate::database::connection::get().await?;
 

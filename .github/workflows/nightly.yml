@@ -2,9 +2,14 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
+name: Nightly build
+
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   build:
-    name: Build release
+    name: Build (Linux x86)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -22,10 +27,13 @@ jobs:
           command: build
           args: --release
 
+      - shell: bash
+        run: mv target/release/tranquility target/release/tranquility-x86
+
       - uses: actions/upload-artifact@v2
         with:
           name: tranquility-linux
-          path: target/release/tranquility
+          path: target/release/tranquility-x86
           retention-days: 1
     
   build_arm7:
@@ -44,10 +52,13 @@ jobs:
           command: build
           args: --release --target armv7-unknown-linux-gnueabihf
 
+      - shell: bash
+        run: mv target/release/tranquility target/release/tranquility-armv7
+
       - uses: actions/upload-artifact@v2
         with:
           name: tranquility-linux-armv7
-          path: target/release/tranquility
+          path: target/release/tranquility-armv7
           retention-days: 1
 
   publish:
