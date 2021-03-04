@@ -23,8 +23,6 @@ jobs:
   test:
     name: Test 
     runs-on: ubuntu-latest
-    env:
-      TEST_DB_URL: postgres://tranquility:tranquility@tests
 
     services:
       postgres:
