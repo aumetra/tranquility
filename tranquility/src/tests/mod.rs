@@ -52,15 +52,8 @@ fn test_config() -> Configuration {
 }
 
 async fn init_db() {
-    let conn_url = env::var("TEST_DB_URL").unwrap_or_else(|_| {
-        let db_host = env::var("POSTGRES_HOST").unwrap();
-        let db_port = env::var("POSTGRES_PORT").unwrap();
-
-        format!(
-            "postgres://tranquility:tranquility@{}:{}/tests",
-            db_host, db_port
-        )
-    });
+    let conn_url = env::var("TEST_DB_URL")
+        .unwrap_or_else(|_| "postgres://tranquility:tranquility@localhost:5432/tests".into());
 
     crate::database::connection::init_pool(&conn_url).await;
     crate::database::migrate().await.ok();
