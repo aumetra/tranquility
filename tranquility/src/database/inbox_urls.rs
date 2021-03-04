@@ -16,7 +16,7 @@ impl Into<String> for InboxUrl {
 }
 
 pub async fn resolve_followers(followed_url: &str) -> Result<Vec<String>, Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     let inbox_urls = sqlx::query_as!(
         InboxUrl,
@@ -38,7 +38,7 @@ pub async fn resolve_followers(followed_url: &str) -> Result<Vec<String>, Error>
 }
 
 pub async fn resolve_one(url: &str) -> Result<String, Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     let inbox_url = sqlx::query_as!(
         InboxUrl,

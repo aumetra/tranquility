@@ -1,11 +1,11 @@
-use warp::Filter;
+use {crate::config::ArcConfig, warp::Filter};
 
-pub async fn run() {
+pub async fn run(config: ArcConfig) {
     let logging = warp::trace::request();
 
-    let activitypub = crate::activitypub::routes::routes();
-    let api = crate::api::routes();
-    let webfinger = crate::webfinger::routes();
+    let activitypub = crate::activitypub::routes::routes(config.clone());
+    let api = crate::api::routes(config.clone());
+    let webfinger = crate::webfinger::routes(config.clone());
 
     let routes = activitypub
         .or(api)
@@ -13,7 +13,6 @@ pub async fn run() {
         .with(logging)
         .recover(crate::error::recover);
 
-    let config = crate::config::get();
     let server = warp::serve(routes);
 
     if config.tls.serve_tls_directly {

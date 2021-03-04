@@ -1,6 +1,6 @@
 use {
     crate::{
-        consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error,
+        config::ArcConfig, consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error,
         util::construct_cors,
     },
     once_cell::sync::Lazy,
@@ -57,17 +57,19 @@ pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejec
     warp::header("authorization").and_then(authorization_closure)
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn routes(
+    config: ArcConfig,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     // Enable CORS for all API endpoints
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
     let cors = construct_cors(API_ALLOWED_METHODS);
 
     let v1_prefix = warp::path!("api" / "v1" / ..);
 
-    let accounts = accounts::routes();
+    let accounts = accounts::routes(config.clone());
     let apps = apps::routes();
-    let statuses = statuses::routes();
-    let instance = instance::routes();
+    let statuses = statuses::routes(config.clone());
+    let instance = instance::routes(config);
 
     let v1_routes = accounts.or(apps).or(statuses).or(instance);
 

@@ -1,12 +1,17 @@
 use {
     crate::{
+        config::Configuration,
         database::model::{Actor as DbActor, Object as DBObject},
         error::Error,
     },
     tranquility_types::activitypub::{Activity, Actor},
 };
 
-pub async fn follow(db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
+pub async fn follow(
+    config: &Configuration,
+    db_actor: DbActor,
+    followed: &Actor,
+) -> Result<(), Error> {
     let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
     // Check if there's already a follow activity
@@ -22,6 +27,7 @@ pub async fn follow(db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
     }
 
     let (follow_activity_id, follow_activity) = crate::activitypub::instantiate::activity(
+        &config,
         "Follow",
         actor.id.as_str(),
         followed.id.clone(),
@@ -37,7 +43,11 @@ pub async fn follow(db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn undo(db_actor: DbActor, db_activity: DBObject) -> Result<(), Error> {
+pub async fn undo(
+    config: &Configuration,
+    db_actor: DbActor,
+    db_activity: DBObject,
+) -> Result<(), Error> {
     // Tried to delete someone else's activity
     if db_activity.owner_id != db_actor.id {
         return Err(Error::Unauthorized);
@@ -48,6 +58,7 @@ pub async fn undo(db_actor: DbActor, db_activity: DBObject) -> Result<(), Error>
 
     // Send the undo activity to everyone who received the original activity
     let (undo_activity_id, undo_activity) = crate::activitypub::instantiate::activity(
+        config,
         "Undo",
         actor.id.as_str(),
         activity.id,
@@ -62,7 +73,11 @@ pub async fn undo(db_actor: DbActor, db_activity: DBObject) -> Result<(), Error>
     Ok(())
 }
 
-pub async fn unfollow(db_actor: DbActor, followed_db_actor: DbActor) -> Result<(), Error> {
+pub async fn unfollow(
+    config: &Configuration,
+    db_actor: DbActor,
+    followed_db_actor: DbActor,
+) -> Result<(), Error> {
     let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
 
     let follow_activity = crate::database::object::select::by_type_owner_and_object_url(
@@ -72,5 +87,5 @@ pub async fn unfollow(db_actor: DbActor, followed_db_actor: DbActor) -> Result<(
     )
     .await?;
 
-    undo(db_actor, follow_activity).await
+    undo(config, db_actor, follow_activity).await
 }

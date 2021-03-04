@@ -1,19 +1,18 @@
 use {
     super::activitypub_datetime,
-    crate::format_uuid,
+    crate::{config::Configuration, format_uuid},
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey},
     uuid::Uuid,
 };
 
 pub fn activity<T: Into<ObjectField>>(
+    config: &Configuration,
     r#type: &str,
     owner_url: &str,
     object: T,
     to: Vec<String>,
     cc: Vec<String>,
 ) -> (Uuid, Activity) {
-    let config = crate::config::get();
-
     let prefix = format!("https://{}", config.instance.domain);
 
     let uuid = Uuid::new_v4();
@@ -37,9 +36,12 @@ pub fn activity<T: Into<ObjectField>>(
     (uuid, activity)
 }
 
-pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {
-    let config = crate::config::get();
-
+pub fn actor(
+    config: &Configuration,
+    user_id: &str,
+    username: &str,
+    public_key_pem: String,
+) -> Actor {
     let prefix = format!("https://{}", config.instance.domain);
     let id = format!("{}/users/{}", prefix, user_id);
 
@@ -76,6 +78,7 @@ pub fn actor(user_id: &str, username: &str, public_key_pem: String) -> Actor {
 }
 
 pub fn object(
+    config: &Configuration,
     owner_url: &str,
     summary: &str,
     content: &str,
@@ -83,8 +86,6 @@ pub fn object(
     to: Vec<String>,
     cc: Vec<String>,
 ) -> (Uuid, Object) {
-    let config = crate::config::get();
-
     let prefix = format!("https://{}", config.instance.domain);
 
     let uuid = Uuid::new_v4();

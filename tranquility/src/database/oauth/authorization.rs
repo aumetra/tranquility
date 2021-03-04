@@ -8,7 +8,7 @@ pub mod delete {
     use crate::error::Error;
 
     pub async fn expired() -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
             .execute(conn_pool)
@@ -22,7 +22,7 @@ pub mod select {
     use crate::{database::model::OAuthAuthorization, error::Error};
 
     pub async fn by_code(code: &str) -> Result<OAuthAuthorization, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let authorization = sqlx::query_as!(
             OAuthAuthorization,
@@ -45,7 +45,7 @@ pub async fn insert(
     code: String,
     valid_until: NaiveDateTime,
 ) -> Result<OAuthAuthorization, Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     let authorization = sqlx::query_as!(
         OAuthAuthorization,

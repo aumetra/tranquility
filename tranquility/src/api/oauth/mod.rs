@@ -1,8 +1,10 @@
 use {
-    crate::{consts::cors::OAUTH_TOKEN_ALLOWED_METHODS, util::construct_cors},
+    crate::{
+        config::Configuration, consts::cors::OAUTH_TOKEN_ALLOWED_METHODS, util::construct_cors,
+    },
     askama::Template,
     once_cell::sync::Lazy,
-    tranquility_ratelimit::{ratelimit, Configuration},
+    tranquility_ratelimit::{ratelimit, Configuration as RatelimitConfig},
     warp::{Filter, Rejection, Reply},
 };
 
@@ -57,10 +59,10 @@ where
     token_path.and(token_logic).with(cors)
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::get();
-
-    let ratelimit_config = Configuration::new()
+pub fn routes(
+    config: &Configuration,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let ratelimit_config = RatelimitConfig::new()
         .active(config.ratelimit.active)
         .burst_quota(config.ratelimit.authentication_quota);
     let ratelimit_filter =

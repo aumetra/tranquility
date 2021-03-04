@@ -1,7 +1,8 @@
 use {
     super::{authorization_optional, authorization_required, convert::IntoMastodon},
     crate::{
-        activitypub::interactions, database::model::Actor as DbActor, error::Error, format_uuid,
+        activitypub::interactions, config::ArcConfig, database::model::Actor as DbActor,
+        error::Error, format_uuid,
     },
     tranquility_types::{
         activitypub::Actor,
@@ -27,12 +28,16 @@ async fn accounts(id: Uuid, authorized_db_actor: Option<DbActor>) -> Result<impl
     Ok(warp::reply::json(&mastodon_account))
 }
 
-async fn follow(id: Uuid, authorized_db_actor: DbActor) -> Result<impl Reply, Rejection> {
+async fn follow(
+    id: Uuid,
+    config: ArcConfig,
+    authorized_db_actor: DbActor,
+) -> Result<impl Reply, Rejection> {
     let followed_db_actor = crate::database::actor::select::by_id(id).await?;
     let followed_actor: Actor =
         serde_json::from_value(followed_db_actor.actor).map_err(Error::from)?;
 
-    interactions::follow(authorized_db_actor, &followed_actor).await?;
+    interactions::follow(&config, authorized_db_actor, &followed_actor).await?;
 
     // TODO: Fill in information dynamically (followed by, blocked by, blocking, etc.)
     let follow_response = FollowResponse {
@@ -67,12 +72,16 @@ async fn followers(id: Uuid) -> Result<impl Reply, Rejection> {
 /*async fn statuses(id: Uuid, authorized_db_actor: Option<DbActor>) -> Result<impl Reply, Rejection> {
 }*/
 
-async fn unfollow(id: Uuid, authorized_db_actor: DbActor) -> Result<impl Reply, Rejection> {
+async fn unfollow(
+    id: Uuid,
+    config: ArcConfig,
+    authorized_db_actor: DbActor,
+) -> Result<impl Reply, Rejection> {
     // Fetch the follow activity
     let followed_db_actor = crate::database::actor::select::by_id(id).await?;
     let followed_actor_id = format_uuid!(followed_db_actor.id);
 
-    interactions::unfollow(authorized_db_actor, followed_db_actor).await?;
+    interactions::unfollow(&config, authorized_db_actor, followed_db_actor).await?;
 
     // TODO: Fill in information dynamically (followed by, blocked by, blocking, etc.)
     let unfollow_response = FollowResponse {
@@ -91,7 +100,11 @@ async fn verify_credentials(db_actor: DbActor) -> Result<impl Reply, Rejection> 
     Ok(warp::reply::json(&mastodon_account))
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes(
+    config: ArcConfig,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let config = crate::config::filter(config);
+
     let accounts = warp::path!("accounts" / Uuid)
         .and(warp::get())
         .and(authorization_optional())
@@ -99,6 +112,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 
     let follow = warp::path!("accounts" / Uuid / "follow")
         .and(warp::post())
+        .and(config.clone())
         .and(authorization_required())
         .and_then(follow);
 
@@ -117,6 +131,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 
     let unfollow = warp::path!("accounts" / Uuid / "unfollow")
         .and(warp::post())
+        .and(config)
         .and(authorization_required())
         .and_then(unfollow);
 

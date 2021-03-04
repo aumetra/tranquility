@@ -11,7 +11,7 @@ pub async fn insert(
     scopes: String,
     website: String,
 ) -> Result<OAuthApplication, Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     let client = sqlx::query_as!(
         OAuthApplication,
@@ -42,7 +42,7 @@ pub mod select {
     };
 
     pub async fn by_client_id(client_id: &Uuid) -> Result<OAuthApplication, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let application = sqlx::query_as!(
             OAuthApplication,

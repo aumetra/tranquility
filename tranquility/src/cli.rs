@@ -1,5 +1,8 @@
 use {
-    crate::consts::PROPER_VERSION, structopt::StructOpt, tracing_subscriber::filter::LevelFilter,
+    crate::{config::ArcConfig, consts::PROPER_VERSION},
+    std::sync::Arc,
+    structopt::StructOpt,
+    tracing_subscriber::filter::LevelFilter,
 };
 
 #[derive(StructOpt)]
@@ -17,7 +20,10 @@ pub struct Opts {
     verbose: i32,
 }
 
-pub async fn run() {
+/// - Initializes the tracing verbosity levels  
+/// - Initializes the database connection pool  
+/// - Returns the loaded configuration inside an arc
+pub async fn run() -> ArcConfig {
     let options = Opts::from_args();
 
     let level = match options.verbose {
@@ -27,5 +33,8 @@ pub async fn run() {
     };
     tracing_subscriber::fmt().with_max_level(level).init();
 
-    crate::config::init_once_cell(options.config).await;
+    let config = crate::config::load(options.config).await;
+    crate::database::connection::init_pool(&config.server.database_url).await;
+
+    Arc::new(config)
 }

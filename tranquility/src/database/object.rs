@@ -1,7 +1,7 @@
 use {crate::error::Error, serde_json::Value, uuid::Uuid};
 
 pub async fn insert(id: Uuid, owner_id: Uuid, object: Value) -> Result<(), Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     sqlx::query!(
         r#"
@@ -24,7 +24,7 @@ pub mod delete {
     use {crate::error::Error, uuid::Uuid};
 
     pub async fn by_id(id: Uuid) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         sqlx::query!(
             r#"
@@ -40,7 +40,7 @@ pub mod delete {
     }
 
     pub async fn by_url(url: &str) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         sqlx::query!(
             r#"
@@ -64,7 +64,7 @@ pub mod select {
     };
 
     pub async fn by_id(id: Uuid) -> Result<Object, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let object = sqlx::query_as!(
             Object,
@@ -86,7 +86,7 @@ pub mod select {
         limit: i64,
         offset: i64,
     ) -> Result<Vec<Object>, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let objects = sqlx::query_as!(
             Object,
@@ -116,7 +116,7 @@ pub mod select {
         limit: i64,
         offset: i64,
     ) -> Result<Vec<Object>, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let objects = sqlx::query_as!(
             Object,
@@ -145,7 +145,7 @@ pub mod select {
         owner_id: &Uuid,
         object_url: &str,
     ) -> Result<Object, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let object_result = sqlx::query_as!(
             Object,
@@ -172,7 +172,7 @@ pub mod select {
     }
 
     pub async fn by_url(url: &str) -> Result<Object, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let object = sqlx::query_as!(
             Object,
@@ -190,7 +190,7 @@ pub mod select {
 }
 
 pub async fn update(id: Uuid, object: Value) -> Result<(), Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     sqlx::query!(
         r#"

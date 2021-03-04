@@ -23,6 +23,22 @@ jobs:
   test:
     name: Test 
     runs-on: ubuntu-latest
+    env:
+      TEST_DB_URL: postgres://tranquility:tranquility@tests
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: tranquility
+          POSTGRES_PASSWORD: tranquility
+          POSTGRES_DB: tests
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1

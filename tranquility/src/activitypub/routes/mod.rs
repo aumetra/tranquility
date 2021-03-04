@@ -1,5 +1,5 @@
 use {
-    crate::error::Error,
+    crate::{config::ArcConfig, error::Error},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -47,7 +47,11 @@ pub struct CollectionQuery {
     last_id: Option<Uuid>,
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes(
+    config: ArcConfig,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let config = crate::config::filter(config);
+
     let followers = warp::path!("users" / Uuid / "followers")
         .and(warp::get())
         .and(warp::query())
@@ -62,6 +66,7 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Cop
 
     let inbox = warp::path!("users" / Uuid / "inbox")
         .and(warp::post())
+        .and(config)
         .and(inbox::validate_request())
         .and_then(inbox::inbox);
 

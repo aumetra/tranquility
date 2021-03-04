@@ -1,7 +1,7 @@
 use {crate::error::Error, tranquility_types::activitypub::Actor};
 
 pub async fn update(actor: &Actor) -> Result<(), Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     let actor_value = serde_json::to_value(actor)?;
     sqlx::query!(
@@ -34,7 +34,7 @@ pub mod insert {
         password: String,
         private_key_pem: String,
     ) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let actor_value = serde_json::to_value(&actor)?;
         sqlx::query!(
@@ -58,7 +58,7 @@ pub mod insert {
     }
 
     pub async fn remote(username: &str, actor: &Actor) -> Result<DbActor, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let actor = serde_json::to_value(actor)?;
         let db_actor = sqlx::query_as!(
@@ -87,7 +87,7 @@ pub mod select {
     };
 
     pub async fn by_id(id: Uuid) -> Result<Actor, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let actor = sqlx::query_as!(
             Actor,
@@ -104,7 +104,7 @@ pub mod select {
     }
 
     pub async fn by_url(url: &str) -> Result<Actor, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let actor = sqlx::query_as!(
             Actor,
@@ -121,7 +121,7 @@ pub mod select {
     }
 
     pub async fn by_username_local(username: &str) -> Result<Actor, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let actor = sqlx::query_as!(
             Actor,

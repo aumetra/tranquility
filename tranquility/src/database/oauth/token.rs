@@ -11,7 +11,7 @@ pub async fn insert(
     refresh_token: Option<String>,
     valid_until: NaiveDateTime,
 ) -> Result<OAuthToken, Error> {
-    let conn_pool = crate::database::connection::get().await?;
+    let conn_pool = crate::database::connection::get();
 
     let token = sqlx::query_as!(
         OAuthToken,
@@ -38,7 +38,7 @@ pub mod select {
     use crate::{database::model::OAuthToken, error::Error};
 
     pub async fn by_token(token: &str) -> Result<OAuthToken, Error> {
-        let conn_pool = crate::database::connection::get().await?;
+        let conn_pool = crate::database::connection::get();
 
         let token = sqlx::query_as!(
             OAuthToken,

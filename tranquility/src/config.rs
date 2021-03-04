@@ -1,13 +1,15 @@
 use {
-    once_cell::sync::OnceCell,
     serde::Deserialize,
+    std::{convert::Infallible, sync::Arc},
     tokio::{
         fs::File,
         io::{AsyncReadExt, BufReader},
     },
+    warp::Filter,
 };
 
-static CONFIGURATION: OnceCell<Configuration> = OnceCell::new();
+#[allow(clippy::module_name_repetitions)]
+pub type ArcConfig = Arc<Configuration>;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -58,7 +60,7 @@ pub struct Configuration {
     pub tls: ConfigurationTls,
 }
 
-pub async fn init_once_cell(config_path: String) {
+pub async fn load(config_path: String) -> Configuration {
     let config_file = File::open(config_path)
         .await
         .expect("Couldn't open configuration file");
@@ -69,12 +71,12 @@ pub async fn init_once_cell(config_path: String) {
         .read_to_end(&mut data)
         .await
         .expect("Couldn't read configuration file");
-    CONFIGURATION
-        .set(toml::from_slice(data.as_slice()).expect("Invalid TOML"))
-        .ok()
-        .expect("OnceCell already initialized");
+
+    toml::from_slice(data.as_slice()).expect("Invalid TOML")
 }
 
-pub fn get() -> &'static Configuration {
-    CONFIGURATION.get().unwrap()
+pub fn filter(
+    config: ArcConfig,
+) -> impl Filter<Extract = (ArcConfig,), Error = Infallible> + Clone {
+    warp::any().map(move || Arc::clone(&config))
 }

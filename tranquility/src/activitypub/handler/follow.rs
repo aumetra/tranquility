@@ -1,6 +1,7 @@
 use {
     crate::{
         activitypub::{self, deliverer, fetcher, FollowActivity},
+        config::Configuration,
         error::Error,
     },
     tranquility_types::activitypub::{activity::ObjectField, Activity},
@@ -8,7 +9,7 @@ use {
     warp::http::StatusCode,
 };
 
-pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(config: &Configuration, mut activity: Activity) -> Result<StatusCode, Error> {
     let actor_url = match activity.object {
         ObjectField::Actor(ref actor) => actor.id.as_str(),
         ObjectField::Url(ref url) => url.as_str(),
@@ -38,6 +39,7 @@ pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Send out an accept activity if the followed actor is local
     if follow_activity.approved {
         let (accept_activity_id, accept_activity) = activitypub::instantiate::activity(
+            config,
             "Accept",
             followed_url,
             follow_activity.activity.id,

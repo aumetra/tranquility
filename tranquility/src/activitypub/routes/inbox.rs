@@ -5,6 +5,7 @@ use {
             fetcher::{self, Entity},
             handler,
         },
+        config::ArcConfig,
         crypto,
         error::Error,
     },
@@ -76,13 +77,14 @@ pub async fn inbox(
     // Do we even care about the user ID?
     // Theoretically we could just use one shared inbox and get rid of the unique inboxes
     _user_id: uuid::Uuid,
+    config: ArcConfig,
     activity: Activity,
 ) -> Result<impl Reply, Rejection> {
     let response = match activity.r#type.as_str() {
         "Accept" => handler::accept::handle(activity).await,
         "Create" => handler::create::handle(activity).await,
         "Delete" => handler::delete::handle(activity).await,
-        "Follow" => handler::follow::handle(activity).await,
+        "Follow" => handler::follow::handle(&config, activity).await,
         "Like" => handler::like::handle(activity).await,
         "Reject" => handler::reject::handle(activity).await,
         "Undo" => handler::undo::handle(activity).await,

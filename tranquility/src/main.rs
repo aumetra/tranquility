@@ -14,13 +14,13 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {
-    cli::run().await;
+    let config = cli::run().await;
 
-    database::init()
+    database::migrate()
         .await
-        .expect("Database connection/migration failed");
+        .expect("Database migration failed");
     daemon::start();
-    server::run().await;
+    server::run(config).await;
 }
 
 mod activitypub;

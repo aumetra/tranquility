@@ -11,7 +11,7 @@ pub async fn activities(
     last_activity_id: Option<Uuid>,
     limit: i64,
 ) -> Result<Vec<Object>, Error> {
-    let conn = crate::database::connection::get().await?;
+    let conn = crate::database::connection::get();
 
     let last_activity_timestamp = last_activity_timestamp(last_activity_id).await?;
     let create_activities = sqlx::query_as!(

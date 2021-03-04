@@ -1,6 +1,6 @@
 use {
     super::{authorization_required, convert::IntoMastodon, urlencoded_or_json},
-    crate::{database::model::Actor as DbActor, error::Error},
+    crate::{config::ArcConfig, database::model::Actor as DbActor, error::Error},
     serde::Deserialize,
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
     warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
@@ -16,8 +16,11 @@ struct CreateForm {
     spoiler_text: String,
 }
 
-async fn create(author_db: DbActor, form: CreateForm) -> Result<Response, Rejection> {
-    let config = crate::config::get();
+async fn create(
+    config: ArcConfig,
+    author_db: DbActor,
+    form: CreateForm,
+) -> Result<Response, Rejection> {
     if config.instance.character_limit < form.status.chars().count() {
         return Ok(
             warp::reply::with_status("Status too long", StatusCode::BAD_REQUEST).into_response(),
@@ -27,12 +30,13 @@ async fn create(author_db: DbActor, form: CreateForm) -> Result<Response, Reject
     let author: Actor = serde_json::from_value(author_db.actor).map_err(Error::from)?;
 
     let (object_id, mut object) = crate::activitypub::instantiate::object(
+        &config,
         author.id.as_str(),
         form.spoiler_text.as_str(),
         form.status.as_str(),
         form.sensitive,
         // TODO: Actually add collections to the to/cc array
-        vec![PUBLIC_IDENTIFIER.into()],
+        vec![PUBLIC_IDENTIFIER.into(), author.followers],
         vec![],
     );
 
@@ -43,6 +47,7 @@ async fn create(author_db: DbActor, form: CreateForm) -> Result<Response, Reject
     crate::database::object::insert(object_id, author_db.id, object_value).await?;
 
     let (_create_activity_id, create_activity) = crate::activitypub::instantiate::activity(
+        &config,
         "Create",
         author.id.as_str(),
         object.clone(),
@@ -56,8 +61,13 @@ async fn create(author_db: DbActor, form: CreateForm) -> Result<Response, Reject
     Ok(warp::reply::json(&mastodon_status).into_response())
 }
 
-pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Copy {
+pub fn routes(
+    config: ArcConfig,
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let config = crate::config::filter(config);
+
     warp::path!("statuses")
+        .and(config)
         .and(authorization_required())
         .and(urlencoded_or_json())
         .and_then(create)
