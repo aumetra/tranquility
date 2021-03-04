@@ -20,7 +20,7 @@ pub mod daemon {
 }
 
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
-pub const VERSION: &str = concat!(
+pub const PROPER_VERSION: &str = concat!(
     "v",
     env!("CARGO_PKG_VERSION"),
     "-",
@@ -28,3 +28,4 @@ pub const VERSION: &str = concat!(
     "-",
     env!("GIT_COMMIT")
 );
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");

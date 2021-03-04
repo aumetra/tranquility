@@ -3,7 +3,7 @@ use {
     std::future::Future, tokio::sync::oneshot, tracing::Level, warp::cors::Cors,
 };
 
-pub static REQWEST_CLIENT: Lazy<Client> =
+pub static HTTP_CLIENT: Lazy<Client> =
     Lazy::new(|| Client::builder().user_agent(USER_AGENT).build().unwrap());
 
 pub fn construct_cors(allowed_methods: &[&str]) -> Cors {

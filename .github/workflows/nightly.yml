@@ -36,7 +36,7 @@ jobs:
           path: target/release/tranquility-x86
           retention-days: 1
     
-  build_arm7:
+  build_armv7:
     name: Build (Linux ARMv7)
     runs-on: ubuntu-latest
     steps:

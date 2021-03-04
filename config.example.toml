@@ -4,6 +4,11 @@ character-limit = 1024
 # If set to "true", the instance won't allow new users to sign up and always return a "403 Forbidden" status code
 # Useful for private/single user instances or instances with a large spam account problem
 closed-registrations = false
+# This is the description of your instance
+# It is delivered via the instance information endpoint (/api/v1/instance) as well as via nodeinfo
+description = """
+An ActivityPub instance running Tranquility
+"""
 # This is a very important value
 # Change this to your domain (eg. fedi.my-cool-domain.com) before you start Tranquility for the first time
 # This value is used to create the URLs used in activities

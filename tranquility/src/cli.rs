@@ -1,7 +1,9 @@
-use {crate::consts::VERSION, structopt::StructOpt, tracing_subscriber::filter::LevelFilter};
+use {
+    crate::consts::PROPER_VERSION, structopt::StructOpt, tracing_subscriber::filter::LevelFilter,
+};
 
 #[derive(StructOpt)]
-#[structopt(author = env!("CARGO_PKG_AUTHORS"), version = VERSION)]
+#[structopt(author = env!("CARGO_PKG_AUTHORS"), version = PROPER_VERSION)]
 pub struct Opts {
     #[structopt(default_value = "config.toml", long)]
     config: String,

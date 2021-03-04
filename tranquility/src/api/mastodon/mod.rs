@@ -67,8 +67,9 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
     let accounts = accounts::routes();
     let apps = apps::routes();
     let statuses = statuses::routes();
+    let instance = instance::routes();
 
-    let v1_routes = accounts.or(apps).or(statuses);
+    let v1_routes = accounts.or(apps).or(statuses).or(instance);
 
     v1_prefix.and(v1_routes).with(cors)
 }
@@ -76,4 +77,5 @@ pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clo
 pub mod accounts;
 pub mod apps;
 pub mod convert;
+pub mod instance;
 pub mod statuses;

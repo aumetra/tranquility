@@ -44,7 +44,7 @@ fn construct_deliver_future(
     async move {
         debug!("Delivering activity...",);
 
-        let client = &crate::util::REQWEST_CLIENT;
+        let client = &crate::util::HTTP_CLIENT;
         let request = prepare_request(client, url.as_str(), delivery_data).await?;
 
         client.execute(request).await.map_err(Error::from)

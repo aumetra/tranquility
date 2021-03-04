@@ -15,6 +15,8 @@ pub struct ConfigurationInstance {
     pub closed_registrations: bool,
     pub domain: String,
 
+    pub description: String,
+
     pub character_limit: usize,
     pub upload_limit: usize,
 
