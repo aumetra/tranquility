@@ -7,7 +7,7 @@ use {
     },
 };
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn register_endpoint() {
     init_db().await;
 
