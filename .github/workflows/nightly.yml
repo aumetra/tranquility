@@ -53,12 +53,12 @@ jobs:
           args: --release --target armv7-unknown-linux-gnueabihf
 
       - shell: bash
-        run: mv target/release/tranquility target/release/tranquility-armv7
+        run: mv target/armv7-unknown-linux-gnueabihf/release/tranquility target/armv7-unknown-linux-gnueabihf/release/tranquility-armv7
 
       - uses: actions/upload-artifact@v2
         with:
           name: tranquility-linux-armv7
-          path: target/release/tranquility-armv7
+          path: target/armv7-unknown-linux-gnueabihf/release/tranquility-armv7
           retention-days: 1
 
   publish:

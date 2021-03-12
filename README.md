@@ -10,7 +10,8 @@ Backwards incompatible changes might occur
 ## Requirements
 
 - **Rust** 1.50+  
-- **PostgreSQL** (9.5+ should be fine)
+- **PostgreSQL** (9.5+ should be fine)  
+- **Git** (build-time dependency; see [`build.rs`](tranquility/build.rs))  
 
 ## Custom memory allocators
 
