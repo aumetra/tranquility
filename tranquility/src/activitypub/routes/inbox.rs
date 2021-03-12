@@ -1,9 +1,8 @@
 use {
-    super::{custom_json_parser, optional_raw_query},
     crate::{
         activitypub::{
-            fetcher::{self, Entity},
-            handler,
+            fetcher, handler,
+            routes::{custom_json_parser, optional_raw_query},
         },
         config::ArcConfig,
         crypto,
@@ -25,10 +24,10 @@ pub fn validate_request() -> impl Filter<Extract = (Activity,), Error = Rejectio
         .and(warp::header::headers_cloned())
         .and(custom_json_parser())
         .and_then(verify_signature)
-        .and_then(verify_identity)
+        .and_then(verify_ownership)
 }
 
-async fn verify_identity(activity: Activity) -> Result<Activity, Rejection> {
+async fn verify_ownership(activity: Activity) -> Result<Activity, Rejection> {
     // It's fine if the objects or activities don't match in this case
     if activity.r#type == "Announce" || activity.r#type == "Follow" {
         return Ok(activity);
@@ -37,18 +36,15 @@ async fn verify_identity(activity: Activity) -> Result<Activity, Rejection> {
     let identity_match = match activity.object {
         ObjectField::Actor(ref actor) => actor.id == activity.actor,
         ObjectField::Object(ref object) => object.attributed_to == activity.actor,
-        ObjectField::Url(ref url) => match fetcher::fetch_any(url).await? {
-            Entity::Activity(ref_activity) => ref_activity.actor == activity.actor,
-            Entity::Object(ref_object) => ref_object.attributed_to == activity.actor,
-            Entity::Actor(ref_actor) => ref_actor.id == activity.actor,
-        },
+        ObjectField::Url(ref url) => {
+            let entity = fetcher::fetch_any(url).await?;
+            entity.is_owned_by(activity.actor.as_str())
+        }
     };
 
-    if identity_match {
-        Ok(activity)
-    } else {
-        Err(Error::Unauthorized.into())
-    }
+    identity_match
+        .then(|| activity)
+        .ok_or_else(|| Error::Unauthorized.into())
 }
 
 async fn verify_signature(
@@ -63,14 +59,12 @@ async fn verify_signature(
         .map_err(Error::from)?;
 
     let public_key = remote_actor.public_key.public_key_pem;
-
     let query = query.is_empty().not().then(|| query);
 
-    if crypto::request::verify(method, path, query, headers, public_key).await? {
-        Ok(activity)
-    } else {
-        Err(Error::Unauthorized.into())
-    }
+    crypto::request::verify(method, path, query, headers, public_key)
+        .await?
+        .then(|| activity)
+        .ok_or_else(|| Error::Unauthorized.into())
 }
 
 pub async fn inbox(

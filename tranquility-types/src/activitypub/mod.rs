@@ -10,35 +10,44 @@ pub fn context_field() -> Value {
     json!(["https://www.w3.org/ns/activitystreams"])
 }
 
+#[inline]
+/// A replacement for `<array>.contains(<value>)` because `.contains()` because, for example, the `.contains()` of `Vec<String>` can't be used with an `&str`  
+fn contains(vec: &[String], value: &str) -> bool {
+    vec.iter().any(|entry| entry == value)
+}
+
 macro_rules! is_public_unlisted_traits {
-    ($($type:ty),*) => {
+    ($($type:ty),+) => {
         $(
             impl IsPublic for $type {
                 fn is_public(&self) -> bool {
-                    self.to.contains(&PUBLIC_IDENTIFIER.to_string())
+                    contains(&self.to, PUBLIC_IDENTIFIER)
                 }
             }
 
             impl IsUnlisted for $type {
                 fn is_unlisted(&self) -> bool {
-                    self.cc.contains(&PUBLIC_IDENTIFIER.to_string())
+                    contains(&self.cc, PUBLIC_IDENTIFIER)
                 }
             }
-        )*
+        )+
     }
 }
 
 pub trait IsPublic {
+    /// Everyone is allowed to see the post and should appear in every timeline  
     fn is_public(&self) -> bool;
 }
 
 pub trait IsUnlisted {
+    /// Everyone is allowed to see the post but it should only appear in the follower's home timelines  
     fn is_unlisted(&self) -> bool;
 }
 
 is_public_unlisted_traits!(Activity, Object);
 
 pub trait IsPrivate {
+    /// Only followers and/or mentioned users are allowed to see the post and it should only appear in the aforementioned user groups home timelines  
     fn is_private(&self) -> bool;
 }
 

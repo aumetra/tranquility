@@ -1,5 +1,6 @@
 use {
     crate::{database::model::Actor as DbActor, error::Error},
+    paste::paste,
     reqwest::IntoUrl,
     serde_json::Value,
     std::fmt::Debug,
@@ -19,6 +20,38 @@ macro_rules! impl_from {
     }
 }
 
+macro_rules! impl_into {
+    ($enum:ty; $($type:ident),+) => {
+        paste! {
+            impl $enum {
+                $(
+                    #[allow(dead_code)]
+                    pub fn [<into_ $type:lower>](self) -> Option<$type> {
+                        match self {
+                            Self::$type(val) => Some(val),
+                            _ => None,
+                        }
+                    }
+                )+
+            }
+        }
+    }
+}
+
+macro_rules! impl_is_owned_by {
+    ($enum:ty; $(($branch:ident, $field:ident)),+) => {
+        impl $enum {
+            pub fn is_owned_by(&self, actor_id: &str) -> bool {
+                match self {
+                    $(
+                        Self::$branch(val) => val.$field == actor_id,
+                    )+
+                }
+            }
+        }
+    }
+}
+
 pub enum Entity {
     Activity(Activity),
     Actor(Actor),
@@ -26,41 +59,25 @@ pub enum Entity {
 }
 
 impl_from!(Entity; Activity, Actor, Object);
+impl_into!(Entity; Activity, Actor, Object);
+impl_is_owned_by!(
+    Entity;
+    (Activity, actor),
+    (Actor, id),
+    (Object, attributed_to)
+);
 
-// Keeping this for future use
-#[allow(dead_code)]
-impl Entity {
-    pub fn into_activity(self) -> Option<Activity> {
-        match self {
-            Self::Activity(activity) => Some(activity),
-            _ => None,
-        }
-    }
-
-    pub fn into_actor(self) -> Option<Actor> {
-        match self {
-            Self::Actor(actor) => Some(actor),
-            _ => None,
-        }
-    }
-
-    pub fn into_object(self) -> Option<Object> {
-        match self {
-            Self::Object(object) => Some(object),
-            _ => None,
-        }
-    }
-}
-
-// This macro generates code that attempts to fetch the resource via the given function from the URL
-// If the fetch succeeds, the function returns with the success value
-// If it doesn't, the error gets logged and the function continues
+/// Try fetching an something that can be turned into an `Entity` via the given methods  
+/// If the fetch succeeds, the function returns with the success value  
+/// If it doesn't, the error gets logged and the function continues  
 macro_rules! attempt_fetch {
-    ($func:ident, $url:ident) => {{
-        match $func($url).await {
-            Ok(val) => return Ok(val.into()),
-            Err(err) => debug!(error = ?err, "Couldn't fetch entity"),
-        }
+    ($url:ident, [$($func:ident),+]) => {{
+        $(
+            match $func($url).await {
+                Ok(val) => return Ok(val.into()),
+                Err(err) => debug!(error = ?err, "Couldn't fetch entity"),
+            }
+        )+
     }};
 }
 
@@ -71,9 +88,7 @@ pub async fn fetch_any(url: &str) -> Result<Entity, Error> {
     let fetch_actor_fn =
         |url| async move { fetch_actor(url).await.map(|(actor, _db_actor)| actor) };
 
-    attempt_fetch!(fetch_activity, url);
-    attempt_fetch!(fetch_actor_fn, url);
-    attempt_fetch!(fetch_object, url);
+    attempt_fetch!(url, [fetch_activity, fetch_actor_fn, fetch_object]);
 
     Err(Error::Fetch)
 }

@@ -42,7 +42,7 @@ fn construct_deliver_future(
     let delivery_data = Arc::clone(delivery_data);
 
     async move {
-        debug!("Delivering activity...",);
+        debug!("Delivering activity...");
 
         let client = &crate::util::HTTP_CLIENT;
         let request = prepare_request(client, url.as_str(), delivery_data).await?;
