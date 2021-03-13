@@ -13,6 +13,12 @@ Backwards incompatible changes might occur
 - **PostgreSQL** (9.5+ should be fine)  
 - **Git** (build-time dependency; see [`build.rs`](tranquility/build.rs))  
 
+## Prebuilt binaries
+
+Release binaries are built daily for Linux x86 and Linux ARMv7  
+
+[**Nightly tag**](https://github.com/smallglitch/tranquility/releases/tag/nightly)
+
 ## Custom memory allocators
 
 Tranquility currently supports two custom memory allocators  

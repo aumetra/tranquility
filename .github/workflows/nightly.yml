@@ -78,7 +78,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: tranquility*
+          file: tranquility/tranquility-*
           tag: nightly
           overwrite: true
           file_glob: true
+          prerelease: true
