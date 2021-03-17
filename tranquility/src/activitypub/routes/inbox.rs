@@ -72,6 +72,21 @@ async fn verify_signature(
         .ok_or_else(|| Error::Unauthorized.into())
 }
 
+macro_rules! match_handler {
+    {
+        ($state:ident, $activity_type:expr);
+
+        $($type:literal => $handler:expr),+
+    } => {
+        match $activity_type {
+            $(
+                $type => $handler(&$state, $activity).await,
+            )+
+            _ => Err(::crate::error::Error::UnknownActivity),
+        }
+    }
+}
+
 pub async fn inbox(
     // Do we even care about the user ID?
     // Theoretically we could just use one shared inbox and get rid of the unique inboxes
@@ -79,16 +94,17 @@ pub async fn inbox(
     state: ArcState,
     activity: Activity,
 ) -> Result<impl Reply, Rejection> {
-    let response = match activity.r#type.as_str() {
-        "Accept" => handler::accept::handle(&state, activity).await,
-        "Create" => handler::create::handle(&state, activity).await,
-        "Delete" => handler::delete::handle(&state, activity).await,
-        "Follow" => handler::follow::handle(&state, activity).await,
-        "Like" => handler::like::handle(&state, activity).await,
-        "Reject" => handler::reject::handle(&state, activity).await,
-        "Undo" => handler::undo::handle(&state, activity).await,
-        "Update" => handler::update::handle(&state, activity).await,
-        _ => Err(Error::UnknownActivity),
+    let response = match_handler! {
+        (state, activity);
+
+        "Accept" => handler::accept::handle,
+        "Create" => handler::create::handle,
+        "Delete" => handler::delete::handle,
+        "Follow" => handler::follow::handle,
+        "Like" => handler::like::handle,
+        "Reject" => handler::reject::handle,
+        "Undo" => handler::undo::handle,
+        "Update" => handler::update::handle,
     };
 
     response.map_err(Rejection::from)
