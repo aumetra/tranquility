@@ -1,5 +1,5 @@
 use {
-    super::{authorization_optional, authorization_required, convert::IntoMastodon},
+    super::{authorisation_optional, authorisation_required, convert::IntoMastodon},
     crate::{
         activitypub::interactions, config::ArcConfig, database::model::Actor as DbActor,
         error::Error, format_uuid,
@@ -107,13 +107,13 @@ pub fn routes(
 
     let accounts = warp::path!("accounts" / Uuid)
         .and(warp::get())
-        .and(authorization_optional())
+        .and(authorisation_optional())
         .and_then(accounts);
 
     let follow = warp::path!("accounts" / Uuid / "follow")
         .and(warp::post())
         .and(config.clone())
-        .and(authorization_required())
+        .and(authorisation_required())
         .and_then(follow);
 
     let following = warp::path!("accounts" / Uuid / "following")
@@ -132,12 +132,12 @@ pub fn routes(
     let unfollow = warp::path!("accounts" / Uuid / "unfollow")
         .and(warp::post())
         .and(config)
-        .and(authorization_required())
+        .and(authorisation_required())
         .and_then(unfollow);
 
     let verify_credentials = warp::path!("accounts" / "verify_credentials")
         .and(warp::get())
-        .and(authorization_required())
+        .and(authorisation_required())
         .and_then(verify_credentials);
 
     accounts

@@ -3,10 +3,15 @@ use {
         config::ArcConfig, consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error,
         util::construct_cors,
     },
+    headers::authorization::{Bearer, Credentials},
     once_cell::sync::Lazy,
     serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
-    warp::{reject::MissingHeader, Filter, Rejection, Reply},
+    warp::{
+        hyper::header::{HeaderValue, AUTHORIZATION},
+        reject::MissingHeader,
+        Filter, Rejection, Reply,
+    },
 };
 
 static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
@@ -22,7 +27,7 @@ pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
     urlencoded_filter.or(json_filter).unify()
 }
 
-pub fn authorization_optional() -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Copy
+pub fn authorisation_optional() -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Copy
 {
     let or_none_fn = |error: Rejection| async move {
         if error.find::<MissingHeader>().is_some() {
@@ -32,29 +37,21 @@ pub fn authorization_optional() -> impl Filter<Extract = (Option<Actor>,), Error
         }
     };
 
-    authorization_required().map(Some).or_else(or_none_fn)
+    authorisation_required().map(Some).or_else(or_none_fn)
 }
 
-pub fn authorization_required() -> impl Filter<Extract = (Actor,), Error = Rejection> + Copy {
-    let authorization_closure = |authorization_header: String| async move {
-        let token = {
-            let mut split_header = authorization_header.split_whitespace();
+async fn authorise_user(authorization_header: HeaderValue) -> Result<Actor, Rejection> {
+    let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
+    let token = credentials.token();
 
-            let bearer_part = split_header.next().ok_or(Error::Unauthorized)?;
-            if bearer_part.to_lowercase() != "bearer" {
-                return Err::<_, Rejection>(Error::Unauthorized.into());
-            }
+    let access_token = crate::database::oauth::token::select::by_token(token).await?;
+    let actor = crate::database::actor::select::by_id(access_token.actor_id).await?;
 
-            split_header.next().ok_or(Error::Unauthorized)?
-        };
+    Ok(actor)
+}
 
-        let access_token = crate::database::oauth::token::select::by_token(token).await?;
-        let actor = crate::database::actor::select::by_id(access_token.actor_id).await?;
-
-        Ok(actor)
-    };
-
-    warp::header("authorization").and_then(authorization_closure)
+pub fn authorisation_required() -> impl Filter<Extract = (Actor,), Error = Rejection> + Copy {
+    warp::header::value(AUTHORIZATION.as_ref()).and_then(authorise_user)
 }
 
 pub fn routes(

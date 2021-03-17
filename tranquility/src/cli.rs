@@ -1,30 +1,39 @@
+// Allow this because of expanded code of `argh`
+#![allow(clippy::default_trait_access)]
+
 use {
     crate::{config::ArcConfig, consts::PROPER_VERSION},
-    std::sync::Arc,
-    structopt::StructOpt,
+    argh::FromArgs,
+    std::{process, sync::Arc},
     tracing_subscriber::filter::LevelFilter,
 };
 
-#[derive(StructOpt)]
-#[structopt(author = env!("CARGO_PKG_AUTHORS"), version = PROPER_VERSION)]
+#[derive(FromArgs)]
+#[argh(description = "An ActivityPub server ^_^")]
 pub struct Opts {
-    #[structopt(default_value = "config.toml", long)]
+    #[argh(option, default = "String::from(\"config.toml\")")]
+    /// path to the configuration file (defaults to `config.toml`)
     config: String,
 
-    #[structopt(
-        about = "Sets the verbosity of the tracing output",
-        long,
-        parse(from_occurrences),
-        short
-    )]
-    verbose: i32,
+    #[argh(switch, short = 'v')]
+    /// set the verbosity of the tracing output
+    verbose: u8,
+
+    #[argh(switch, short = 'V')]
+    /// print the version
+    version: bool,
 }
 
 /// - Initializes the tracing verbosity levels  
 /// - Initializes the database connection pool  
 /// - Returns the loaded configuration inside an arc
 pub async fn run() -> ArcConfig {
-    let options = Opts::from_args();
+    let options = argh::from_env::<Opts>();
+
+    if options.version {
+        println!("{}", PROPER_VERSION);
+        process::exit(0);
+    }
 
     let level = match options.verbose {
         0 => LevelFilter::INFO,

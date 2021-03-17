@@ -1,5 +1,5 @@
 [profile.release]
-lto = true
+lto = 'thin'
 opt-level = 3
 
 [workspace]
@@ -9,4 +9,3 @@ members = [
     "tranquility-ratelimit",
     "tranquility-types",
 ]
-

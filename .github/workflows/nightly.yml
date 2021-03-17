@@ -80,6 +80,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: nightly
           prerelease: true
+          gzip: false
           files: >
             tranquility-linux-x86:./tranquility-linux/tranquility-x86
             tranquility-linux-armv7:./tranquility-linux-armv7/tranquility-armv7

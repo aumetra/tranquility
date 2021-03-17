@@ -1,5 +1,5 @@
 use {
-    super::{authorization_required, convert::IntoMastodon, urlencoded_or_json},
+    super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
     crate::{config::ArcConfig, database::model::Actor as DbActor, error::Error},
     serde::Deserialize,
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
@@ -68,7 +68,7 @@ pub fn routes(
 
     warp::path!("statuses")
         .and(config)
-        .and(authorization_required())
+        .and(authorisation_required())
         .and(urlencoded_or_json())
         .and_then(create)
 }
