@@ -74,15 +74,15 @@ async fn verify_signature(
 
 macro_rules! match_handler {
     {
-        ($state:ident, $activity_type:expr);
+        ($state:ident, $activity:ident);
 
         $($type:literal => $handler:expr),+
     } => {
-        match $activity_type {
+        match $activity.r#type.as_str() {
             $(
                 $type => $handler(&$state, $activity).await,
             )+
-            _ => Err(::crate::error::Error::UnknownActivity),
+            _ => Err(crate::error::Error::UnknownActivity),
         }
     }
 }
@@ -104,7 +104,7 @@ pub async fn inbox(
         "Like" => handler::like::handle,
         "Reject" => handler::reject::handle,
         "Undo" => handler::undo::handle,
-        "Update" => handler::update::handle,
+        "Update" => handler::update::handle
     };
 
     response.map_err(Rejection::from)
