@@ -1,5 +1,5 @@
 use {
-    super::{init_db, test_config},
+    super::test_state,
     std::sync::Arc,
     warp::{
         hyper::{body, StatusCode},
@@ -10,11 +10,8 @@ use {
 possibly_failing_test! {
     name => register_endpoint,
     body => {
-        init_db().await;
-
-        let config = Arc::new(test_config());
-
-        let register_endpoint = crate::api::register::routes(config);
+        let state = Arc::new(test_state().await);
+        let register_endpoint = crate::api::register::routes(&state);
 
         let test_request = warp::test::request()
             .method("POST")
@@ -35,12 +32,11 @@ possibly_failing_test! {
 
 #[tokio::test]
 async fn closed_registrations() {
-    init_db().await;
+    let mut state = test_state().await;
+    state.config.instance.closed_registrations = true;
+    let state = Arc::new(state);
 
-    let mut config = test_config();
-    config.instance.closed_registrations = true;
-
-    let register_endpoint = crate::api::register::routes(Arc::new(config));
+    let register_endpoint = crate::api::register::routes(&state);
 
     let test_request = warp::test::request()
         .method("POST")

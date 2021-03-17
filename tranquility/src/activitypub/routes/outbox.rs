@@ -1,6 +1,6 @@
 use {
     super::CollectionQuery,
-    crate::{consts::activitypub::ACTIVITIES_PER_PAGE, error::Error, format_uuid},
+    crate::{consts::activitypub::ACTIVITIES_PER_PAGE, error::Error, format_uuid, state::ArcState},
     itertools::Itertools,
     std::ops::Not,
     tranquility_types::activitypub::{
@@ -11,9 +11,18 @@ use {
     warp::{Rejection, Reply},
 };
 
-pub async fn outbox(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply, Rejection> {
-    let latest_activities =
-        crate::database::outbox::activities(user_id, query.last_id, ACTIVITIES_PER_PAGE).await?;
+pub async fn outbox(
+    user_id: Uuid,
+    state: ArcState,
+    query: CollectionQuery,
+) -> Result<impl Reply, Rejection> {
+    let latest_activities = crate::database::outbox::activities(
+        &state.db_pool,
+        user_id,
+        query.last_id,
+        ACTIVITIES_PER_PAGE,
+    )
+    .await?;
     let last_id = latest_activities
         .last()
         .map(|activity| format_uuid!(activity.id))
@@ -31,7 +40,7 @@ pub async fn outbox(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply,
         })
         .collect_vec();
 
-    let user_db = crate::database::actor::select::by_id(user_id).await?;
+    let user_db = crate::database::actor::select::by_id(&state.db_pool, user_id).await?;
     let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;
 
     let next = format!("{}?last_id={}", user.outbox, last_id);

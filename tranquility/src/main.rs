@@ -4,6 +4,8 @@
 #[macro_use]
 extern crate tracing;
 
+use std::sync::Arc;
+
 #[cfg(all(feature = "jemalloc", not(feature = "mimalloc"), not(test)))]
 #[global_allocator]
 static GLOBAL: jemalloc::Jemalloc = jemalloc::Jemalloc;
@@ -14,13 +16,18 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {
-    let config = cli::run().await;
+    let state = cli::run().await;
 
-    database::migrate()
+    database::migrate(&state.db_pool)
         .await
         .expect("Database migration failed");
-    daemon::start();
-    server::run(config).await;
+
+    {
+        let state = Arc::clone(&state);
+        daemon::start(state);
+    }
+
+    server::run(state).await;
 }
 
 mod activitypub;
@@ -33,6 +40,7 @@ mod daemon;
 mod database;
 mod error;
 mod server;
+mod state;
 mod util;
 mod webfinger;
 

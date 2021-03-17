@@ -4,24 +4,15 @@
 use {
     crate::error::Error,
     chrono::{NaiveDateTime, Utc},
+    sqlx::PgPool,
     uuid::Uuid,
 };
 
 pub mod connection {
-    use {once_cell::sync::OnceCell, sqlx::postgres::PgPool};
+    use {sqlx::PgPool, std::future::Future};
 
-    static DATABASE_POOL: OnceCell<PgPool> = OnceCell::new();
-
-    pub fn get() -> &'static PgPool {
-        DATABASE_POOL.get().unwrap()
-    }
-
-    pub async fn init_pool(db_url: &str) {
-        let conn_pool = PgPool::connect(db_url)
-            .await
-            .expect("Couldn't initialize connection to database");
-
-        DATABASE_POOL.set(conn_pool).ok();
+    pub fn init_pool(db_url: &'_ str) -> impl Future<Output = Result<PgPool, sqlx::Error>> + '_ {
+        PgPool::connect(db_url)
     }
 }
 
@@ -36,9 +27,10 @@ impl Into<NaiveDateTime> for ObjectTimestamp {
 }
 
 #[inline]
-async fn last_activity_timestamp(last_activity_id: Option<Uuid>) -> Result<NaiveDateTime, Error> {
-    let conn = crate::database::connection::get();
-
+async fn last_activity_timestamp(
+    conn_pool: &PgPool,
+    last_activity_id: Option<Uuid>,
+) -> Result<NaiveDateTime, Error> {
     let last_timestamp = sqlx::query_as!(
         ObjectTimestamp,
         r#"
@@ -47,15 +39,14 @@ async fn last_activity_timestamp(last_activity_id: Option<Uuid>) -> Result<Naive
         "#,
         last_activity_id,
     )
-    .fetch_one(conn)
+    .fetch_one(conn_pool)
     .await
     .map_or_else(|_| Utc::now().naive_local(), Into::into);
 
     Ok(last_timestamp)
 }
 
-pub async fn migrate() -> Result<(), Error> {
-    let conn_pool = connection::get();
+pub async fn migrate(conn_pool: &PgPool) -> Result<(), Error> {
     sqlx::migrate!("../migrations").run(conn_pool).await?;
 
     Ok(())

@@ -1,15 +1,14 @@
 use {
     crate::{database::model::OAuthAuthorization, error::Error},
     chrono::NaiveDateTime,
+    sqlx::PgPool,
     uuid::Uuid,
 };
 
 pub mod delete {
-    use crate::error::Error;
+    use {crate::error::Error, sqlx::PgPool};
 
-    pub async fn expired() -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn expired(conn_pool: &PgPool) -> Result<(), Error> {
         sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
             .execute(conn_pool)
             .await?;
@@ -19,11 +18,12 @@ pub mod delete {
 }
 
 pub mod select {
-    use crate::{database::model::OAuthAuthorization, error::Error};
+    use {
+        crate::{database::model::OAuthAuthorization, error::Error},
+        sqlx::PgPool,
+    };
 
-    pub async fn by_code(code: &str) -> Result<OAuthAuthorization, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_code(conn_pool: &PgPool, code: &str) -> Result<OAuthAuthorization, Error> {
         let authorization = sqlx::query_as!(
             OAuthAuthorization,
             r#"
@@ -40,13 +40,12 @@ pub mod select {
 }
 
 pub async fn insert(
+    conn_pool: &PgPool,
     application_id: Uuid,
     actor_id: Uuid,
     code: String,
     valid_until: NaiveDateTime,
 ) -> Result<OAuthAuthorization, Error> {
-    let conn_pool = crate::database::connection::get();
-
     let authorization = sqlx::query_as!(
         OAuthAuthorization,
         r#"

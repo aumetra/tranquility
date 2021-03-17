@@ -2,9 +2,12 @@
 #![allow(clippy::default_trait_access)]
 
 use {
-    crate::{config::ArcConfig, consts::PROPER_VERSION},
+    crate::{
+        consts::PROPER_VERSION,
+        state::{ArcState, State},
+    },
     argh::FromArgs,
-    std::{process, sync::Arc},
+    std::process,
     tracing_subscriber::filter::LevelFilter,
 };
 
@@ -25,9 +28,9 @@ pub struct Opts {
 }
 
 /// - Initializes the tracing verbosity levels  
-/// - Initializes the database connection pool  
-/// - Returns the loaded configuration inside an arc
-pub async fn run() -> ArcConfig {
+/// - Creates a database connection pool  
+/// - Returns a constructed state  
+pub async fn run() -> ArcState {
     let options = argh::from_env::<Opts>();
 
     if options.version {
@@ -43,7 +46,9 @@ pub async fn run() -> ArcConfig {
     tracing_subscriber::fmt().with_max_level(level).init();
 
     let config = crate::config::load(options.config).await;
-    crate::database::connection::init_pool(&config.server.database_url).await;
+    let db_pool = crate::database::connection::init_pool(&config.server.database_url)
+        .await
+        .expect("Couldn't connect to database");
 
-    Arc::new(config)
+    State::new(config, db_pool)
 }

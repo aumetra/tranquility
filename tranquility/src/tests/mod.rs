@@ -5,7 +5,9 @@ use {
             Configuration, ConfigurationInstance, ConfigurationRatelimit, ConfigurationServer,
             ConfigurationTls,
         },
+        state::State,
     },
+    sqlx::PgPool,
     std::env,
 };
 
@@ -78,12 +80,23 @@ macro_rules! possibly_failing_test {
     }
 }
 
-async fn init_db() {
+async fn init_db() -> PgPool {
     let conn_url = env::var("TEST_DB_URL")
         .unwrap_or_else(|_| "postgres://tranquility:tranquility@localhost:5432/tests".into());
 
-    crate::database::connection::init_pool(&conn_url).await;
-    crate::database::migrate().await.ok();
+    let conn_pool = crate::database::connection::init_pool(&conn_url)
+        .await
+        .unwrap();
+    crate::database::migrate(&conn_pool).await.ok();
+
+    conn_pool
+}
+
+async fn test_state() -> State {
+    let config = test_config();
+    let db_pool = init_db().await;
+
+    State::new_without_arc(config, db_pool)
 }
 
 #[test]

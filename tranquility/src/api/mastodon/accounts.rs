@@ -1,8 +1,8 @@
 use {
     super::{authorisation_optional, authorisation_required, convert::IntoMastodon},
     crate::{
-        activitypub::interactions, config::ArcConfig, database::model::Actor as DbActor,
-        error::Error, format_uuid,
+        activitypub::interactions, database::model::Actor as DbActor, error::Error, format_uuid,
+        state::ArcState,
     },
     tranquility_types::{
         activitypub::Actor,
@@ -12,15 +12,19 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
-async fn accounts(id: Uuid, authorized_db_actor: Option<DbActor>) -> Result<impl Reply, Rejection> {
-    let db_actor = crate::database::actor::select::by_id(id).await?;
-    let mut mastodon_account: Account = db_actor.into_mastodon().await?;
+async fn accounts(
+    id: Uuid,
+    state: ArcState,
+    authorized_db_actor: Option<DbActor>,
+) -> Result<impl Reply, Rejection> {
+    let db_actor = crate::database::actor::select::by_id(&state.db_pool, id).await?;
+    let mut mastodon_account: Account = db_actor.into_mastodon(&state).await?;
 
     // Add the source field to the returned account if the requested account
     // is the account that has authorized itself
     if let Some(authorized_db_actor) = authorized_db_actor {
         if id == authorized_db_actor.id {
-            let source: Source = authorized_db_actor.into_mastodon().await?;
+            let source: Source = authorized_db_actor.into_mastodon(&state).await?;
             mastodon_account.source = Some(source);
         }
     }
@@ -30,14 +34,14 @@ async fn accounts(id: Uuid, authorized_db_actor: Option<DbActor>) -> Result<impl
 
 async fn follow(
     id: Uuid,
-    config: ArcConfig,
+    state: ArcState,
     authorized_db_actor: DbActor,
 ) -> Result<impl Reply, Rejection> {
-    let followed_db_actor = crate::database::actor::select::by_id(id).await?;
+    let followed_db_actor = crate::database::actor::select::by_id(&state.db_pool, id).await?;
     let followed_actor: Actor =
         serde_json::from_value(followed_db_actor.actor).map_err(Error::from)?;
 
-    interactions::follow(&config, authorized_db_actor, &followed_actor).await?;
+    interactions::follow(&state, authorized_db_actor, &followed_actor).await?;
 
     // TODO: Fill in information dynamically (followed by, blocked by, blocking, etc.)
     let follow_response = FollowResponse {
@@ -48,22 +52,28 @@ async fn follow(
     Ok(warp::reply::json(&follow_response))
 }
 
-async fn following(id: Uuid) -> Result<impl Reply, Rejection> {
+async fn following(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
     let follow_activities =
-        crate::database::object::select::by_type_and_owner("Follow", &id, 10, 0).await?;
-    let followed_accounts: Vec<Account> = follow_activities.into_mastodon().await?;
+        crate::database::object::select::by_type_and_owner(&state.db_pool, "Follow", &id, 10, 0)
+            .await?;
+    let followed_accounts: Vec<Account> = follow_activities.into_mastodon(&state).await?;
 
     Ok(warp::reply::json(&followed_accounts))
 }
 
-async fn followers(id: Uuid) -> Result<impl Reply, Rejection> {
-    let db_actor = crate::database::actor::select::by_id(id).await?;
+async fn followers(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
+    let db_actor = crate::database::actor::select::by_id(&state.db_pool, id).await?;
     let actor: Actor = serde_json::from_value(db_actor.actor).map_err(Error::from)?;
 
-    let followed_activities =
-        crate::database::object::select::by_type_and_object_url("Follow", actor.id.as_str(), 10, 0)
-            .await?;
-    let follower_accounts: Vec<Account> = followed_activities.into_mastodon().await?;
+    let followed_activities = crate::database::object::select::by_type_and_object_url(
+        &state.db_pool,
+        "Follow",
+        actor.id.as_str(),
+        10,
+        0,
+    )
+    .await?;
+    let follower_accounts: Vec<Account> = followed_activities.into_mastodon(&state).await?;
 
     Ok(warp::reply::json(&follower_accounts))
 }
@@ -74,14 +84,14 @@ async fn followers(id: Uuid) -> Result<impl Reply, Rejection> {
 
 async fn unfollow(
     id: Uuid,
-    config: ArcConfig,
+    state: ArcState,
     authorized_db_actor: DbActor,
 ) -> Result<impl Reply, Rejection> {
     // Fetch the follow activity
-    let followed_db_actor = crate::database::actor::select::by_id(id).await?;
+    let followed_db_actor = crate::database::actor::select::by_id(&state.db_pool, id).await?;
     let followed_actor_id = format_uuid!(followed_db_actor.id);
 
-    interactions::unfollow(&config, authorized_db_actor, followed_db_actor).await?;
+    interactions::unfollow(&state, authorized_db_actor, followed_db_actor).await?;
 
     // TODO: Fill in information dynamically (followed by, blocked by, blocking, etc.)
     let unfollow_response = FollowResponse {
@@ -91,37 +101,38 @@ async fn unfollow(
     Ok(warp::reply::json(&unfollow_response))
 }
 
-async fn verify_credentials(db_actor: DbActor) -> Result<impl Reply, Rejection> {
-    let mut mastodon_account: Account = db_actor.clone().into_mastodon().await?;
-    let mastodon_account_source: Source = db_actor.into_mastodon().await?;
+async fn verify_credentials(state: ArcState, db_actor: DbActor) -> Result<impl Reply, Rejection> {
+    let mut mastodon_account: Account = db_actor.clone().into_mastodon(&state).await?;
+    let mastodon_account_source: Source = db_actor.into_mastodon(&state).await?;
 
     mastodon_account.source = Some(mastodon_account_source);
 
     Ok(warp::reply::json(&mastodon_account))
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::filter(config);
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let state_filter = crate::state::filter(state);
 
     let accounts = warp::path!("accounts" / Uuid)
         .and(warp::get())
-        .and(authorisation_optional())
+        .and(state_filter.clone())
+        .and(authorisation_optional(state))
         .and_then(accounts);
 
     let follow = warp::path!("accounts" / Uuid / "follow")
         .and(warp::post())
-        .and(config.clone())
-        .and(authorisation_required())
+        .and(state_filter.clone())
+        .and(authorisation_required(state))
         .and_then(follow);
 
     let following = warp::path!("accounts" / Uuid / "following")
         .and(warp::get())
+        .and(state_filter.clone())
         .and_then(following);
 
     let followers = warp::path!("accounts" / Uuid / "followers")
         .and(warp::get())
+        .and(state_filter.clone())
         .and_then(followers);
 
     /*let statuses = warp::path!("accounts" / Uuid / "statuses")
@@ -131,13 +142,14 @@ pub fn routes(
 
     let unfollow = warp::path!("accounts" / Uuid / "unfollow")
         .and(warp::post())
-        .and(config)
-        .and(authorisation_required())
+        .and(state_filter.clone())
+        .and(authorisation_required(state))
         .and_then(unfollow);
 
     let verify_credentials = warp::path!("accounts" / "verify_credentials")
         .and(warp::get())
-        .and(authorisation_required())
+        .and(state_filter)
+        .and(authorisation_required(state))
         .and_then(verify_credentials);
 
     accounts

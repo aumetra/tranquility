@@ -1,15 +1,10 @@
 use {
     serde::Deserialize,
-    std::{convert::Infallible, sync::Arc},
     tokio::{
         fs::File,
         io::{AsyncReadExt, BufReader},
     },
-    warp::Filter,
 };
-
-#[allow(clippy::module_name_repetitions)]
-pub type ArcConfig = Arc<Configuration>;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -73,10 +68,4 @@ pub async fn load(config_path: String) -> Configuration {
         .expect("Couldn't read configuration file");
 
     toml::from_slice(data.as_slice()).expect("Invalid TOML")
-}
-
-pub fn filter(
-    config: ArcConfig,
-) -> impl Filter<Extract = (ArcConfig,), Error = Infallible> + Clone {
-    warp::any().map(move || Arc::clone(&config))
 }

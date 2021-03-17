@@ -1,5 +1,5 @@
 use {
-    crate::{config::ArcConfig, error::Error},
+    crate::{error::Error, state::ArcState},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -47,42 +47,45 @@ pub struct CollectionQuery {
     last_id: Option<Uuid>,
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::filter(config);
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let state_filter = crate::state::filter(state);
 
     let followers = warp::path!("users" / Uuid / "followers")
         .and(warp::get())
+        .and(state_filter.clone())
         .and(warp::query())
         .and(header_requirements())
         .and_then(followers::followers);
 
     let following = warp::path!("users" / Uuid / "following")
         .and(warp::get())
+        .and(state_filter.clone())
         .and(warp::query())
         .and(header_requirements())
         .and_then(following::following);
 
     let inbox = warp::path!("users" / Uuid / "inbox")
         .and(warp::post())
-        .and(config)
-        .and(inbox::validate_request())
+        .and(state_filter.clone())
+        .and(inbox::validate_request(state))
         .and_then(inbox::inbox);
 
     let objects = warp::path!("objects" / Uuid)
         .and(warp::get())
+        .and(state_filter.clone())
         .and(header_requirements())
         .and_then(objects::objects);
 
     let outbox = warp::path!("users" / Uuid / "outbox")
         .and(warp::get())
+        .and(state_filter.clone())
         .and(warp::query())
         .and(header_requirements())
         .and_then(outbox::outbox);
 
     let users = warp::path!("users" / Uuid)
         .and(warp::get())
+        .and(state_filter)
         .and(header_requirements())
         .and_then(users::users);
 

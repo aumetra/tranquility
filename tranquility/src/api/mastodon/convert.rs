@@ -3,6 +3,7 @@ use {
         database::model::{Actor as DbActor, OAuthApplication, Object as DBObject},
         error::Error,
         format_uuid,
+        state::ArcState,
     },
     async_trait::async_trait,
     itertools::Itertools,
@@ -22,14 +23,14 @@ where
 {
     type Error: Into<Rejection>;
 
-    async fn into_mastodon(self) -> Result<ApiEntity, Self::Error>;
+    async fn into_mastodon(self, state: &ArcState) -> Result<ApiEntity, Self::Error>;
 }
 
 #[async_trait]
 impl IntoMastodon<Account> for DbActor {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Account, Self::Error> {
+    async fn into_mastodon(self, _state: &ArcState) -> Result<Account, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
 
         let id = format_uuid!(self.id);
@@ -76,7 +77,7 @@ impl IntoMastodon<Account> for DbActor {
 impl IntoMastodon<Source> for DbActor {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Source, Self::Error> {
+    async fn into_mastodon(self, _state: &ArcState) -> Result<Source, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
 
         let source = Source {
@@ -96,10 +97,10 @@ impl IntoMastodon<Source> for DbActor {
 impl IntoMastodon<Status> for DBObject {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Status, Self::Error> {
+    async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
         let activity_or_object: Object = serde_json::from_value(self.data)?;
 
-        activity_or_object.into_mastodon().await
+        activity_or_object.into_mastodon(state).await
     }
 }
 
@@ -107,7 +108,7 @@ impl IntoMastodon<Status> for DBObject {
 impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Vec<Account>, Self::Error> {
+    async fn into_mastodon(self, state: &ArcState) -> Result<Vec<Account>, Self::Error> {
         let db_to_url = |object: DBObject| {
             let activity: Activity = match serde_json::from_value(object.data) {
                 Ok(activity) => activity,
@@ -124,8 +125,9 @@ impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
 
         let mut accounts = Vec::new();
         for url in account_urls {
-            let account = crate::database::actor::select::by_url(url.as_str()).await?;
-            let account: Account = account.into_mastodon().await?;
+            let account =
+                crate::database::actor::select::by_url(&state.db_pool, url.as_str()).await?;
+            let account: Account = account.into_mastodon(state).await?;
 
             accounts.push(account);
         }
@@ -138,7 +140,7 @@ impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
 impl IntoMastodon<App> for OAuthApplication {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<App, Self::Error> {
+    async fn into_mastodon(self, _state: &ArcState) -> Result<App, Self::Error> {
         let id = format_uuid!(self.id);
         let client_id = format_uuid!(self.client_id);
         let website = if self.website.is_empty() {
@@ -165,14 +167,15 @@ impl IntoMastodon<App> for OAuthApplication {
 impl IntoMastodon<Status> for Object {
     type Error = Error;
 
-    async fn into_mastodon(self) -> Result<Status, Self::Error> {
-        let db_object = crate::database::object::select::by_url(self.id.as_str()).await?;
+    async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
+        let db_object =
+            crate::database::object::select::by_url(&state.db_pool, self.id.as_str()).await?;
         let (_actor, db_actor) =
-            crate::activitypub::fetcher::fetch_actor(self.attributed_to.as_str()).await?;
+            crate::activitypub::fetcher::fetch_actor(state, self.attributed_to.as_str()).await?;
 
         let id = format_uuid!(db_object.id);
         let application = super::DEFAULT_APPLICATION.clone();
-        let account = db_actor.into_mastodon().await?;
+        let account = db_actor.into_mastodon(state).await?;
 
         let status = Status {
             id,

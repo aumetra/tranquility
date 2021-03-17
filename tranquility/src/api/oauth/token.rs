@@ -1,6 +1,6 @@
 use {
     super::TokenTemplate,
-    crate::{crypto::password, error::Error},
+    crate::{crypto::password, error::Error, state::ArcState},
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
@@ -79,6 +79,7 @@ impl Default for AccessTokenResponse {
 }
 
 async fn code_grant(
+    state: &ArcState,
     FormCodeGrant {
         client_id,
         client_secret,
@@ -87,18 +88,22 @@ async fn code_grant(
         ..
     }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
-    let client = crate::database::oauth::application::select::by_client_id(&client_id).await?;
+    let client =
+        crate::database::oauth::application::select::by_client_id(&state.db_pool, &client_id)
+            .await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
     }
 
-    let authorization_code = crate::database::oauth::authorization::select::by_code(&code).await?;
+    let authorization_code =
+        crate::database::oauth::authorization::select::by_code(&state.db_pool, &code).await?;
 
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
 
     let access_token = crate::crypto::token::generate()?;
     let access_token = crate::database::oauth::token::insert(
+        &state.db_pool,
         Some(client.id),
         authorization_code.actor_id,
         access_token,
@@ -128,11 +133,14 @@ async fn code_grant(
 }
 
 async fn password_grant(
+    state: &ArcState,
     FormPasswordGrant {
         username, password, ..
     }: FormPasswordGrant,
 ) -> Result<impl Reply, Rejection> {
-    let actor = crate::database::actor::select::by_username_local(username.as_str()).await?;
+    let actor =
+        crate::database::actor::select::by_username_local(&state.db_pool, username.as_str())
+            .await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
     }
@@ -142,6 +150,7 @@ async fn password_grant(
 
     let access_token = crate::crypto::token::generate()?;
     let access_token = crate::database::oauth::token::insert(
+        &state.db_pool,
         None,
         actor.id,
         access_token,
@@ -159,15 +168,15 @@ async fn password_grant(
     Ok(warp::reply::json(&response))
 }
 
-pub async fn token(form: Form) -> Result<Response, Rejection> {
+pub async fn token(state: ArcState, form: Form) -> Result<Response, Rejection> {
     let response = match form.grant_type.as_str() {
         "authorization_code" => {
             let form_data = form.data.code_grant()?;
-            code_grant(form_data).await?.into_response()
+            code_grant(&state, form_data).await?.into_response()
         }
         "password" => {
             let form_data = form.data.password_grant()?;
-            password_grant(form_data).await?.into_response()
+            password_grant(&state, form_data).await?.into_response()
         }
         _ => return Err(Error::InvalidRequest.into()),
     };

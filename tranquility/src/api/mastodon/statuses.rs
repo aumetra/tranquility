@@ -1,7 +1,8 @@
 use {
     super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
-    crate::{config::ArcConfig, database::model::Actor as DbActor, error::Error},
+    crate::{database::model::Actor as DbActor, error::Error, state::ArcState},
     serde::Deserialize,
+    std::sync::Arc,
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
     warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
 };
@@ -17,11 +18,11 @@ struct CreateForm {
 }
 
 async fn create(
-    config: ArcConfig,
+    state: ArcState,
     author_db: DbActor,
     form: CreateForm,
 ) -> Result<Response, Rejection> {
-    if config.instance.character_limit < form.status.chars().count() {
+    if state.config.instance.character_limit < form.status.chars().count() {
         return Ok(
             warp::reply::with_status("Status too long", StatusCode::BAD_REQUEST).into_response(),
         );
@@ -30,7 +31,7 @@ async fn create(
     let author: Actor = serde_json::from_value(author_db.actor).map_err(Error::from)?;
 
     let (object_id, mut object) = crate::activitypub::instantiate::object(
-        &config,
+        &state.config,
         author.id.as_str(),
         form.spoiler_text.as_str(),
         form.status.as_str(),
@@ -44,10 +45,10 @@ async fn create(
     crate::activitypub::clean_object(&mut object);
 
     let object_value = serde_json::to_value(&object).map_err(Error::from)?;
-    crate::database::object::insert(object_id, author_db.id, object_value).await?;
+    crate::database::object::insert(&state.db_pool, object_id, author_db.id, object_value).await?;
 
     let (_create_activity_id, create_activity) = crate::activitypub::instantiate::activity(
-        &config,
+        &state.config,
         "Create",
         author.id.as_str(),
         object.clone(),
@@ -55,20 +56,18 @@ async fn create(
         object.cc.clone(),
     );
 
-    crate::activitypub::deliverer::deliver(create_activity).await?;
+    crate::activitypub::deliverer::deliver(create_activity, Arc::clone(&state)).await?;
 
-    let mastodon_status = object.into_mastodon().await?;
+    let mastodon_status = object.into_mastodon(&state).await?;
     Ok(warp::reply::json(&mastodon_status).into_response())
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::filter(config);
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let state_filter = crate::state::filter(state);
 
     warp::path!("statuses")
-        .and(config)
-        .and(authorisation_required())
+        .and(state_filter)
+        .and(authorisation_required(state))
         .and(urlencoded_or_json())
         .and_then(create)
 }

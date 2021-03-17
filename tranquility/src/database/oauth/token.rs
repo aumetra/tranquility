@@ -1,18 +1,18 @@
 use {
     crate::{database::model::OAuthToken, error::Error},
     chrono::NaiveDateTime,
+    sqlx::PgPool,
     uuid::Uuid,
 };
 
 pub async fn insert(
+    conn_pool: &PgPool,
     application_id: Option<Uuid>,
     actor_id: Uuid,
     access_token: String,
     refresh_token: Option<String>,
     valid_until: NaiveDateTime,
 ) -> Result<OAuthToken, Error> {
-    let conn_pool = crate::database::connection::get();
-
     let token = sqlx::query_as!(
         OAuthToken,
         r#"
@@ -35,11 +35,12 @@ pub async fn insert(
 }
 
 pub mod select {
-    use crate::{database::model::OAuthToken, error::Error};
+    use {
+        crate::{database::model::OAuthToken, error::Error},
+        sqlx::PgPool,
+    };
 
-    pub async fn by_token(token: &str) -> Result<OAuthToken, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_token(conn_pool: &PgPool, token: &str) -> Result<OAuthToken, Error> {
         let token = sqlx::query_as!(
             OAuthToken,
             r#"

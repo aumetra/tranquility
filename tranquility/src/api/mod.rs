@@ -1,16 +1,14 @@
 use {
-    crate::config::ArcConfig,
+    crate::state::ArcState,
     warp::{Filter, Rejection, Reply},
 };
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     #[cfg(feature = "mastodon-api")]
-    let mastodon_api = mastodon::routes(config.clone());
+    let mastodon_api = mastodon::routes(state);
 
-    let oauth = oauth::routes(&config);
-    let register = register::routes(config);
+    let oauth = oauth::routes(state);
+    let register = register::routes(state);
 
     #[cfg(feature = "mastodon-api")]
     {

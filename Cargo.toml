@@ -1,5 +1,5 @@
 [profile.release]
-lto = 'thin'
+lto = true
 opt-level = 3
 
 [workspace]

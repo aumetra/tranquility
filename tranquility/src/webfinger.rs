@@ -1,7 +1,7 @@
 use {
     crate::{
-        config::ArcConfig, consts::cors::GENERAL_ALLOWED_METHODS,
-        database::model::Actor as DbActor, error::Error, util::construct_cors,
+        consts::cors::GENERAL_ALLOWED_METHODS, database::model::Actor as DbActor, error::Error,
+        state::ArcState, util::construct_cors,
     },
     serde::Deserialize,
     tranquility_types::{
@@ -13,7 +13,11 @@ use {
 
 // Keeping this for future use
 #[allow(dead_code)]
-pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DbActor), Error> {
+pub async fn fetch_actor(
+    state: &ArcState,
+    username: &str,
+    domain: &str,
+) -> Result<(Actor, DbActor), Error> {
     let resource = format!("acct:{}@{}", username, domain);
     let url = format!(
         "https://{}/.well-known/webfinger?resource={}",
@@ -33,7 +37,7 @@ pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DbActor
         .find(|link| link.rel == "self")
         .ok_or(Error::UnexpectedWebfingerResource)?;
 
-    crate::activitypub::fetcher::fetch_actor(&actor_url.href).await
+    crate::activitypub::fetcher::fetch_actor(state, &actor_url.href).await
 }
 
 #[derive(Deserialize)]
@@ -41,17 +45,18 @@ pub struct Query {
     resource: String,
 }
 
-pub async fn webfinger(config: ArcConfig, query: Query) -> Result<Response, Rejection> {
+pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Rejection> {
     let resource = query.resource;
     let mut resource_tokens = resource.trim_start_matches("acct:").split('@');
 
     let username = resource_tokens.next().ok_or(Error::InvalidRequest)?;
 
-    if resource_tokens.next().ok_or(Error::InvalidRequest)? != config.instance.domain {
+    if resource_tokens.next().ok_or(Error::InvalidRequest)? != state.config.instance.domain {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let actor_db = crate::database::actor::select::by_username_local(username).await?;
+    let actor_db =
+        crate::database::actor::select::by_username_local(&state.db_pool, username).await?;
     let actor: Actor = serde_json::from_value(actor_db.actor).map_err(Error::from)?;
 
     let link = Link {
@@ -77,17 +82,15 @@ pub async fn webfinger(config: ArcConfig, query: Query) -> Result<Response, Reje
     .into_response())
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::filter(config);
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let state = crate::state::filter(state);
 
     // Enable CORS for the ".well-known" routes
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
     let cors = construct_cors(GENERAL_ALLOWED_METHODS);
 
     warp::path!(".well-known" / "webfinger")
-        .and(config)
+        .and(state)
         .and(warp::query())
         .and_then(webfinger)
         .with(cors)

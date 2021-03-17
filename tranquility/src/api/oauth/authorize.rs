@@ -1,6 +1,6 @@
 use {
     super::{TokenTemplate, AUTHORIZE_FORM},
-    crate::{crypto::password, error::Error},
+    crate::{crypto::password, error::Error, state::ArcState},
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
@@ -32,8 +32,9 @@ pub async fn get() -> Result<impl Reply, Rejection> {
     Ok(warp::reply::html(AUTHORIZE_FORM.as_str()))
 }
 
-pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
-    let actor = crate::database::actor::select::by_username_local(&form.username).await?;
+pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response, Rejection> {
+    let actor =
+        crate::database::actor::select::by_username_local(&state.db_pool, &form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
     }
@@ -48,7 +49,8 @@ pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
     }
 
     let client =
-        crate::database::oauth::application::select::by_client_id(&query.client_id).await?;
+        crate::database::oauth::application::select::by_client_id(&state.db_pool, &query.client_id)
+            .await?;
     if client.redirect_uris != query.redirect_uri {
         return Err(Error::InvalidRequest.into());
     }
@@ -59,6 +61,7 @@ pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
     let valid_until = chrono::Utc::now() + validity_duration;
 
     let authorization_code = crate::database::oauth::authorization::insert(
+        &state.db_pool,
         client.id,
         actor.id,
         authorization_code,

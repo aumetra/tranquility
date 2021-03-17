@@ -1,9 +1,11 @@
 use {
     crate::{database::model::OAuthApplication, error::Error},
+    sqlx::PgPool,
     uuid::Uuid,
 };
 
 pub async fn insert(
+    conn_pool: &PgPool,
     client_name: String,
     client_id: Uuid,
     client_secret: String,
@@ -11,8 +13,6 @@ pub async fn insert(
     scopes: String,
     website: String,
 ) -> Result<OAuthApplication, Error> {
-    let conn_pool = crate::database::connection::get();
-
     let client = sqlx::query_as!(
         OAuthApplication,
         r#"
@@ -38,12 +38,14 @@ pub async fn insert(
 pub mod select {
     use {
         crate::{database::model::OAuthApplication, error::Error},
+        sqlx::PgPool,
         uuid::Uuid,
     };
 
-    pub async fn by_client_id(client_id: &Uuid) -> Result<OAuthApplication, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_client_id(
+        conn_pool: &PgPool,
+        client_id: &Uuid,
+    ) -> Result<OAuthApplication, Error> {
         let application = sqlx::query_as!(
             OAuthApplication,
             r#"

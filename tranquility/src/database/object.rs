@@ -1,8 +1,11 @@
-use {crate::error::Error, serde_json::Value, uuid::Uuid};
+use {crate::error::Error, serde_json::Value, sqlx::PgPool, uuid::Uuid};
 
-pub async fn insert(id: Uuid, owner_id: Uuid, object: Value) -> Result<(), Error> {
-    let conn_pool = crate::database::connection::get();
-
+pub async fn insert(
+    conn_pool: &PgPool,
+    id: Uuid,
+    owner_id: Uuid,
+    object: Value,
+) -> Result<(), Error> {
     sqlx::query!(
         r#"
             INSERT INTO objects 
@@ -21,11 +24,9 @@ pub async fn insert(id: Uuid, owner_id: Uuid, object: Value) -> Result<(), Error
 }
 
 pub mod delete {
-    use {crate::error::Error, uuid::Uuid};
+    use {crate::error::Error, sqlx::PgPool, uuid::Uuid};
 
-    pub async fn by_id(id: Uuid) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<(), Error> {
         sqlx::query!(
             r#"
                 DELETE FROM objects
@@ -39,9 +40,7 @@ pub mod delete {
         Ok(())
     }
 
-    pub async fn by_url(url: &str) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<(), Error> {
         sqlx::query!(
             r#"
                 DELETE FROM objects
@@ -59,13 +58,11 @@ pub mod delete {
 pub mod select {
     use {
         crate::{database::model::Object, error::Error},
-        sqlx::Error as SqlxError,
+        sqlx::{Error as SqlxError, PgPool},
         uuid::Uuid,
     };
 
-    pub async fn by_id(id: Uuid) -> Result<Object, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Object, Error> {
         let object = sqlx::query_as!(
             Object,
             r#"
@@ -81,13 +78,12 @@ pub mod select {
     }
 
     pub async fn by_type_and_object_url(
+        conn_pool: &PgPool,
         r#type: &str,
         object_url: &str,
         limit: i64,
         offset: i64,
     ) -> Result<Vec<Object>, Error> {
-        let conn_pool = crate::database::connection::get();
-
         let objects = sqlx::query_as!(
             Object,
             r#"
@@ -111,13 +107,12 @@ pub mod select {
     }
 
     pub async fn by_type_and_owner(
+        conn_pool: &PgPool,
         r#type: &str,
         owner_id: &Uuid,
         limit: i64,
         offset: i64,
     ) -> Result<Vec<Object>, Error> {
-        let conn_pool = crate::database::connection::get();
-
         let objects = sqlx::query_as!(
             Object,
             r#"
@@ -141,12 +136,11 @@ pub mod select {
     }
 
     pub async fn by_type_owner_and_object_url(
+        conn_pool: &PgPool,
         r#type: &str,
         owner_id: &Uuid,
         object_url: &str,
     ) -> Result<Object, Error> {
-        let conn_pool = crate::database::connection::get();
-
         let object_result = sqlx::query_as!(
             Object,
             r#"
@@ -171,9 +165,7 @@ pub mod select {
         }
     }
 
-    pub async fn by_url(url: &str) -> Result<Object, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Object, Error> {
         let object = sqlx::query_as!(
             Object,
             r#"
@@ -189,9 +181,7 @@ pub mod select {
     }
 }
 
-pub async fn update(id: Uuid, object: Value) -> Result<(), Error> {
-    let conn_pool = crate::database::connection::get();
-
+pub async fn update(conn_pool: &PgPool, id: Uuid, object: Value) -> Result<(), Error> {
     sqlx::query!(
         r#"
             UPDATE objects

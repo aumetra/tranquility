@@ -1,5 +1,5 @@
 use {
-    crate::{config::ArcConfig, consts::VERSION},
+    crate::{consts::VERSION, state::ArcState},
     tranquility_types::mastodon::{
         instance::{Stats, Urls},
         Instance,
@@ -7,20 +7,20 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
-async fn instance(config: ArcConfig) -> Result<impl Reply, Rejection> {
-    let streaming_api = format!("wss://{}", config.instance.domain);
+async fn instance(state: ArcState) -> Result<impl Reply, Rejection> {
+    let streaming_api = format!("wss://{}", state.config.instance.domain);
 
     let instance = Instance {
         version: VERSION.into(),
-        title: config.instance.domain.clone(),
-        uri: config.instance.domain.clone(),
+        title: state.config.instance.domain.clone(),
+        uri: state.config.instance.domain.clone(),
         short_description: None,
-        description: config.instance.description.clone(),
+        description: state.config.instance.description.clone(),
 
         urls: Urls { streaming_api },
         stats: Stats { ..Stats::default() },
 
-        registrations: !config.instance.closed_registrations,
+        registrations: !state.config.instance.closed_registrations,
         invites_enabled: false,
         approval_required: false,
 
@@ -33,10 +33,8 @@ async fn instance(config: ArcConfig) -> Result<impl Reply, Rejection> {
     Ok(warp::reply::json(&instance))
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let config = crate::config::filter(config);
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let state = crate::state::filter(state);
 
-    warp::path!("instance").and(config).and_then(instance)
+    warp::path!("instance").and(state).and_then(instance)
 }

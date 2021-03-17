@@ -1,6 +1,6 @@
 use {
     crate::{
-        config::ArcConfig, consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error,
+        consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error, state::ArcState,
         util::construct_cors,
     },
     headers::authorization::{Bearer, Credentials},
@@ -27,8 +27,9 @@ pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
     urlencoded_filter.or(json_filter).unify()
 }
 
-pub fn authorisation_optional() -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Copy
-{
+pub fn authorisation_optional(
+    state: &ArcState,
+) -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Clone {
     let or_none_fn = |error: Rejection| async move {
         if error.find::<MissingHeader>().is_some() {
             Ok((None,))
@@ -37,36 +38,43 @@ pub fn authorisation_optional() -> impl Filter<Extract = (Option<Actor>,), Error
         }
     };
 
-    authorisation_required().map(Some).or_else(or_none_fn)
+    authorisation_required(state).map(Some).or_else(or_none_fn)
 }
 
-async fn authorise_user(authorization_header: HeaderValue) -> Result<Actor, Rejection> {
+async fn authorise_user(
+    state: ArcState,
+    authorization_header: HeaderValue,
+) -> Result<Actor, Rejection> {
     let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
     let token = credentials.token();
 
-    let access_token = crate::database::oauth::token::select::by_token(token).await?;
-    let actor = crate::database::actor::select::by_id(access_token.actor_id).await?;
+    let access_token =
+        crate::database::oauth::token::select::by_token(&state.db_pool, token).await?;
+    let actor =
+        crate::database::actor::select::by_id(&state.db_pool, access_token.actor_id).await?;
 
     Ok(actor)
 }
 
-pub fn authorisation_required() -> impl Filter<Extract = (Actor,), Error = Rejection> + Copy {
-    warp::header::value(AUTHORIZATION.as_ref()).and_then(authorise_user)
+pub fn authorisation_required(
+    state: &ArcState,
+) -> impl Filter<Extract = (Actor,), Error = Rejection> + Clone {
+    crate::state::filter(state)
+        .and(warp::header::value(AUTHORIZATION.as_ref()))
+        .and_then(authorise_user)
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     // Enable CORS for all API endpoints
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
     let cors = construct_cors(API_ALLOWED_METHODS);
 
     let v1_prefix = warp::path!("api" / "v1" / ..);
 
-    let accounts = accounts::routes(config.clone());
-    let apps = apps::routes();
-    let statuses = statuses::routes(config.clone());
-    let instance = instance::routes(config);
+    let accounts = accounts::routes(state);
+    let apps = apps::routes(state);
+    let statuses = statuses::routes(state);
+    let instance = instance::routes(state);
 
     let v1_routes = accounts.or(apps).or(statuses).or(instance);
 

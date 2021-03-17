@@ -1,5 +1,5 @@
 use {
-    crate::{activitypub, config::ArcConfig, error::Error},
+    crate::{activitypub, error::Error, state::ArcState},
     once_cell::sync::Lazy,
     regex::Regex,
     serde::Deserialize,
@@ -31,8 +31,8 @@ pub struct RegistrationForm {
     password: String,
 }
 
-async fn register(config: ArcConfig, form: RegistrationForm) -> Result<Response, Rejection> {
-    if config.instance.closed_registrations {
+async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, Rejection> {
+    if state.config.instance.closed_registrations {
         return Ok(StatusCode::FORBIDDEN.into_response());
     }
 
@@ -45,13 +45,14 @@ async fn register(config: ArcConfig, form: RegistrationForm) -> Result<Response,
     let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(&rsa_private_key)?;
 
     let actor = activitypub::instantiate::actor(
-        &config,
+        &state.config,
         &user_id.to_hyphenated_ref().to_string(),
         &form.username,
         public_key_pem,
     );
 
     crate::database::actor::insert::local(
+        &state.db_pool,
         user_id,
         actor,
         form.email,
@@ -63,20 +64,18 @@ async fn register(config: ArcConfig, form: RegistrationForm) -> Result<Response,
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }
 
-pub fn routes(
-    config: ArcConfig,
-) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     let ratelimit_config = Configuration::new()
-        .active(config.ratelimit.active)
-        .burst_quota(config.ratelimit.registration_quota);
+        .active(state.config.ratelimit.active)
+        .burst_quota(state.config.ratelimit.registration_quota);
 
-    let config_filter = crate::config::filter(config);
+    let state_filter = crate::state::filter(state);
 
     // Ratelimit only the logic
     let ratelimit_wrapper =
         ratelimit!(from_config: ratelimit_config).expect("Couldn't construct ratelimit wrapper");
     let register_logic = warp::post()
-        .and(config_filter)
+        .and(state_filter)
         .and(warp::body::form())
         .and_then(register)
         .with(ratelimit_wrapper);

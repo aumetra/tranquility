@@ -1,8 +1,6 @@
-use {crate::error::Error, tranquility_types::activitypub::Actor};
+use {crate::error::Error, sqlx::PgPool, tranquility_types::activitypub::Actor};
 
-pub async fn update(actor: &Actor) -> Result<(), Error> {
-    let conn_pool = crate::database::connection::get();
-
+pub async fn update(conn_pool: &PgPool, actor: &Actor) -> Result<(), Error> {
     let actor_value = serde_json::to_value(actor)?;
     sqlx::query!(
         r#"
@@ -23,19 +21,19 @@ pub async fn update(actor: &Actor) -> Result<(), Error> {
 pub mod insert {
     use {
         crate::{database::model::Actor as DbActor, error::Error},
+        sqlx::PgPool,
         tranquility_types::activitypub::Actor,
         uuid::Uuid,
     };
 
     pub async fn local(
+        conn_pool: &PgPool,
         id: Uuid,
         actor: Actor,
         email: String,
         password: String,
         private_key_pem: String,
     ) -> Result<(), Error> {
-        let conn_pool = crate::database::connection::get();
-
         let actor_value = serde_json::to_value(&actor)?;
         sqlx::query!(
             r#"
@@ -57,9 +55,11 @@ pub mod insert {
         Ok(())
     }
 
-    pub async fn remote(username: &str, actor: &Actor) -> Result<DbActor, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn remote(
+        conn_pool: &PgPool,
+        username: &str,
+        actor: &Actor,
+    ) -> Result<DbActor, Error> {
         let actor = serde_json::to_value(actor)?;
         let db_actor = sqlx::query_as!(
             DbActor,
@@ -83,12 +83,11 @@ pub mod insert {
 pub mod select {
     use {
         crate::{database::model::Actor, error::Error},
+        sqlx::PgPool,
         uuid::Uuid,
     };
 
-    pub async fn by_id(id: Uuid) -> Result<Actor, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Actor, Error> {
         let actor = sqlx::query_as!(
             Actor,
             r#"
@@ -103,9 +102,7 @@ pub mod select {
         Ok(actor)
     }
 
-    pub async fn by_url(url: &str) -> Result<Actor, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Actor, Error> {
         let actor = sqlx::query_as!(
             Actor,
             r#"
@@ -120,9 +117,7 @@ pub mod select {
         Ok(actor)
     }
 
-    pub async fn by_username_local(username: &str) -> Result<Actor, Error> {
-        let conn_pool = crate::database::connection::get();
-
+    pub async fn by_username_local(conn_pool: &PgPool, username: &str) -> Result<Actor, Error> {
         let actor = sqlx::query_as!(
             Actor,
             r#"
