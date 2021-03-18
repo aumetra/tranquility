@@ -1,56 +1,14 @@
 use {
-    crate::{database::model::Actor as DbActor, error::Error, state::ArcState},
-    paste::paste,
+    crate::{
+        attempt_fetch, database::model::Actor as DbActor, error::Error, impl_from, impl_into,
+        impl_is_owned_by, state::ArcState,
+    },
     reqwest::IntoUrl,
     serde_json::Value,
     std::fmt::Debug,
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object},
     uuid::Uuid,
 };
-
-macro_rules! impl_from {
-    ($enum:ty; $($type:ident),+) => {
-        $(
-            impl From<$type> for $enum {
-                fn from(value: $type) -> Self {
-                    Self::$type(value)
-                }
-            }
-        )+
-    }
-}
-
-macro_rules! impl_into {
-    ($enum:ty; $($type:ident),+) => {
-        paste! {
-            impl $enum {
-                $(
-                    #[allow(dead_code)]
-                    pub fn [<into_ $type:lower>](self) -> Option<$type> {
-                        match self {
-                            Self::$type(val) => Some(val),
-                            _ => None,
-                        }
-                    }
-                )+
-            }
-        }
-    }
-}
-
-macro_rules! impl_is_owned_by {
-    ($enum:ty; $(($branch:ident, $field:ident)),+) => {
-        impl $enum {
-            pub fn is_owned_by(&self, actor_id: &str) -> bool {
-                match self {
-                    $(
-                        Self::$branch(val) => val.$field == actor_id,
-                    )+
-                }
-            }
-        }
-    }
-}
 
 pub enum Entity {
     Activity(Activity),
@@ -66,20 +24,6 @@ impl_is_owned_by!(
     (Actor, id),
     (Object, attributed_to)
 );
-
-/// Try fetching an something that can be turned into an `Entity` via the given methods  
-/// If the fetch succeeds, the function returns with the success value  
-/// If it doesn't, the error gets logged and the function continues  
-macro_rules! attempt_fetch {
-    ($state:ident, $url:ident, [$($func:ident),+]) => {{
-        $(
-            match $func($state, $url).await {
-                Ok(val) => return Ok(val.into()),
-                Err(err) => debug!(error = ?err, "Couldn't fetch entity"),
-            }
-        )+
-    }};
-}
 
 #[instrument(skip(state))]
 pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {

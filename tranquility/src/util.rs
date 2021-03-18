@@ -38,11 +38,3 @@ where
 
     receiver.map(Result::unwrap)
 }
-
-/// Format UUIDs in a unified way
-#[macro_export]
-macro_rules! format_uuid {
-    ($uuid:expr) => {{
-        $uuid.to_simple_ref().to_string()
-    }};
-}

@@ -1,11 +1,12 @@
 use {
     crate::{
         activitypub::{
-            fetcher, handler,
+            fetcher,
             routes::{custom_json_parser, optional_raw_query},
         },
         crypto,
         error::Error,
+        match_handler,
         state::ArcState,
     },
     core::ops::Not,
@@ -72,21 +73,6 @@ async fn verify_signature(
         .ok_or_else(|| Error::Unauthorized.into())
 }
 
-macro_rules! match_handler {
-    {
-        ($state:ident, $activity:ident);
-
-        $($type:literal => $handler:expr),+
-    } => {
-        match $activity.r#type.as_str() {
-            $(
-                $type => $handler(&$state, $activity).await,
-            )+
-            _ => Err(crate::error::Error::UnknownActivity),
-        }
-    }
-}
-
 pub async fn inbox(
     // Do we even care about the user ID?
     // Theoretically we could just use one shared inbox and get rid of the unique inboxes
@@ -97,14 +83,14 @@ pub async fn inbox(
     let response = match_handler! {
         (state, activity);
 
-        "Accept" => handler::accept::handle,
-        "Create" => handler::create::handle,
-        "Delete" => handler::delete::handle,
-        "Follow" => handler::follow::handle,
-        "Like" => handler::like::handle,
-        "Reject" => handler::reject::handle,
-        "Undo" => handler::undo::handle,
-        "Update" => handler::update::handle
+        Accept,
+        Create,
+        Delete,
+        Follow,
+        Like,
+        Reject,
+        Undo,
+        Update
     };
 
     response.map_err(Rejection::from)

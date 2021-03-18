@@ -39,6 +39,7 @@ mod crypto;
 mod daemon;
 mod database;
 mod error;
+mod macros;
 mod server;
 mod state;
 mod util;
