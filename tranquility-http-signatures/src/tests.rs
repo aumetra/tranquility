@@ -1,5 +1,7 @@
-use crate::HttpRequest;
-use http::{header::HeaderName, HeaderMap, HeaderValue};
+use {
+    crate::{wrap_cow, wrap_cow_option, Request},
+    http::{header::HeaderName, HeaderMap, HeaderValue},
+};
 
 const RSA_PUBLIC_KEY: &str = r#"
 -----BEGIN PUBLIC KEY-----
@@ -73,11 +75,19 @@ fn verify_all_signature() {
         HeaderValue::from_static(ALL_SIGNATURE_HEADER_VALUE),
     );
 
-    let request = HttpRequest::new(
-        "post",
-        "/foo",
-        Some("param=value&pet=dog"),
-        &headers_signature,
+    let method = "post";
+    let path = "/foo";
+    let query = Some("param=value&pet=dog");
+
+    wrap_cow!(Borrowed; method, path);
+    wrap_cow!(Owned; headers_signature);
+    wrap_cow_option!(Borrowed; query);
+
+    let request = Request::new(
+        method.clone(),
+        path.clone(),
+        query.clone(),
+        headers_signature,
     );
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 
@@ -87,20 +97,17 @@ fn verify_all_signature() {
         HeaderValue::from_static(ALL_AUTHORIZATION_HEADER_VALUE),
     );
 
-    let request = HttpRequest::new(
-        "post",
-        "/foo",
-        Some("param=value&pet=dog"),
-        &headers_authorization,
-    );
+    wrap_cow!(Owned; headers_authorization);
+
+    let request = Request::new(method, path, query, headers_authorization);
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 }
-
+/*
 #[test]
 fn create_basic_signature() {
     let headers = construct_headers();
 
-    let request = HttpRequest::new("post", "/foo", Some("param=value&pet=dog"), &headers);
+    let request = Request::new("post", "/foo", Some("param=value&pet=dog"), &headers);
 
     let (header_name, header_value) = crate::sign(
         request,
@@ -116,10 +123,10 @@ fn create_basic_signature() {
     let mut headers = construct_headers();
     headers.insert(header_name, header_value);
 
-    let request = HttpRequest::new("post", "/foo", Some("param=value&pet=dog"), &headers);
+    let request = Request::new("post", "/foo", Some("param=value&pet=dog"), &headers);
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 }
-
+*/
 #[test]
 fn verify_basic_signature() {
     let headers = construct_headers();
@@ -130,11 +137,19 @@ fn verify_basic_signature() {
         HeaderValue::from_static(BASIC_SIGNATURE_HEADER_VALUE),
     );
 
-    let request = HttpRequest::new(
-        "post",
-        "/foo",
-        Some("param=value&pet=dog"),
-        &headers_signature,
+    let method = "post";
+    let path = "/foo";
+    let query = Some("param=value&pet=dog");
+
+    wrap_cow!(Borrowed; method, path);
+    wrap_cow!(Owned; headers_signature);
+    wrap_cow_option!(Borrowed; query);
+
+    let request = Request::new(
+        method.clone(),
+        path.clone(),
+        query.clone(),
+        headers_signature,
     );
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 
@@ -144,20 +159,17 @@ fn verify_basic_signature() {
         HeaderValue::from_static(BASIC_AUTHORIZATION_HEADER_VALUE),
     );
 
-    let request = HttpRequest::new(
-        "post",
-        "/foo",
-        Some("param=value&pet=dog"),
-        &headers_authorization,
-    );
+    wrap_cow!(Owned; headers_authorization);
+
+    let request = Request::new(method, path, query, headers_authorization);
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 }
-
+/*
 #[test]
 fn create_default_signature() {
     let headers = construct_headers();
 
-    let request = HttpRequest::new("post", "/foo", Some("param=value&pet=dog"), &headers);
+    let request = Request::new("post", "/foo", Some("param=value&pet=dog"), &headers);
 
     let (header_name, header_value) =
         crate::sign(request, "Test", &["date"], RSA_PRIVATE_KEY.as_bytes()).unwrap();
@@ -168,10 +180,10 @@ fn create_default_signature() {
     let mut headers = construct_headers();
     headers.insert(header_name, header_value);
 
-    let request = HttpRequest::new("post", "/foo", Some("param=value&pet=dog"), &headers);
+    let request = Request::new("post", "/foo", Some("param=value&pet=dog"), &headers);
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 }
-
+*/
 #[test]
 fn verify_default_signature() {
     let headers = construct_headers();
@@ -182,11 +194,19 @@ fn verify_default_signature() {
         HeaderValue::from_static(SIGNATURE_HEADER_VALUE),
     );
 
-    let request = HttpRequest::new(
-        "post",
-        "/foo",
-        Some("param=value&pet=dog"),
-        &headers_signature,
+    let method = "post";
+    let path = "/foo";
+    let query = Some("param=value&pet=dog");
+
+    wrap_cow!(Borrowed; method, path);
+    wrap_cow!(Owned; headers_signature);
+    wrap_cow_option!(Borrowed; query);
+
+    let request = Request::new(
+        method.clone(),
+        path.clone(),
+        query.clone(),
+        headers_signature,
     );
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 
@@ -196,11 +216,8 @@ fn verify_default_signature() {
         HeaderValue::from_static(AUTHORIZATION_HEADER_VALUE),
     );
 
-    let request = HttpRequest::new(
-        "post",
-        "/foo",
-        Some("param=value&pet=dog"),
-        &headers_authorization,
-    );
+    wrap_cow!(Owned; headers_authorization);
+
+    let request = Request::new(method, path, query, headers_authorization);
     assert!(crate::verify(request, RSA_PUBLIC_KEY.as_bytes()).unwrap());
 }
