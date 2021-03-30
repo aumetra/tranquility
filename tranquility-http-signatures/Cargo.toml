@@ -11,6 +11,7 @@ license = "MIT"
 base64 = "0.13"
 http = "0.2"
 pem = "0.8"
+rsa = "0.4"
 sha2 = "0.9"
 thiserror = "1"
 
@@ -18,10 +19,6 @@ thiserror = "1"
 version = "0.11"
 default-features = false
 optional = true
-
-[dependencies.rsa]
-git = "https://github.com/RustCrypto/RSA.git"
-rev = "a9c5797877a94fd48a1654bdb6b72717d71f5952"
 
 [features]
 default = [ ]

@@ -90,7 +90,7 @@ pub mod request {
     use {
         crate::{error::Error, util::cpu_intensive_task},
         std::future::Future,
-        tranquility_http_signatures::Request,
+        tranquility_http_signatures::HttpRequest,
         warp::{
             http::{
                 header::{HeaderMap, HeaderName, HeaderValue},
@@ -138,7 +138,7 @@ pub mod request {
             let headers = &headers;
             let public_key = public_key.as_bytes();
 
-            let request = Request::new(method, path, query, headers);
+            let request = HttpRequest::new(method, path, query, headers);
 
             tranquility_http_signatures::verify(request, public_key).map_err(Error::from)
         })

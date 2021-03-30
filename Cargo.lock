@@ -2349,9 +2349,10 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "http",
- "once_cell",
  "pem",
  "reqwest",
+ "rsa",
+ "sha2",
  "thiserror",
 ]
 
