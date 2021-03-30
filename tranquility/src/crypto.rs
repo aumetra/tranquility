@@ -89,9 +89,8 @@ pub mod token {
 pub mod request {
     use {
         crate::{error::Error, util::cpu_intensive_task},
-        reqwest::Request,
         std::future::Future,
-        tranquility_http_signatures::HttpRequest,
+        tranquility_http_signatures::Request,
         warp::{
             http::{
                 header::{HeaderMap, HeaderName, HeaderValue},
@@ -102,7 +101,7 @@ pub mod request {
     };
 
     pub fn sign(
-        request: Request,
+        request: reqwest::Request,
         key_id: String,
         // The public key is provided in the PEM format
         // That's why the function takes a `String`
@@ -139,7 +138,7 @@ pub mod request {
             let headers = &headers;
             let public_key = public_key.as_bytes();
 
-            let request = HttpRequest::new(method, path, query, headers);
+            let request = Request::new(method, path, query, headers);
 
             tranquility_http_signatures::verify(request, public_key).map_err(Error::from)
         })

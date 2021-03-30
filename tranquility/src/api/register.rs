@@ -65,9 +65,12 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
 }
 
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let active = state.config.ratelimit.active;
+    let registration_quota = state.config.ratelimit.registration_quota;
+
     let ratelimit_config = Configuration::new()
-        .active(state.config.ratelimit.active)
-        .burst_quota(state.config.ratelimit.registration_quota);
+        .active(active)
+        .burst_quota(registration_quota);
 
     let state_filter = crate::state::filter(state);
 

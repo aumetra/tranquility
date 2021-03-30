@@ -10,6 +10,7 @@ use {
     tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
 };
 
+/// Structure that holds data relevant to delivering an activity
 struct DeliveryData {
     author: Actor,
     author_db: DbActor,
@@ -33,11 +34,12 @@ impl DeliveryData {
     }
 }
 
+/// Create a future that delivers the activity to the provided URL
 #[instrument(
     fields(activity_id = delivery_data.activity.id.as_str()),
     skip(delivery_data),
 )]
-fn construct_deliver_future(
+fn construct_deliver_future<'a>(
     delivery_data: &Arc<DeliveryData>,
     url: String,
 ) -> impl Future<Output = Result<Response, Error>> + Send {
@@ -47,12 +49,16 @@ fn construct_deliver_future(
         debug!("Delivering activity...");
 
         let client = &crate::util::HTTP_CLIENT;
-        let request = prepare_request(client, url.as_str(), delivery_data).await?;
+        let request = prepare_request(client, &url, delivery_data).await?;
 
         client.execute(request).await.map_err(Error::from)
     }
 }
 
+/// Prepare the HTTP request
+///
+/// - Sign the request
+/// - Serialize the body
 #[instrument(skip(client, delivery_data))]
 async fn prepare_request(
     client: &Client,
@@ -95,6 +101,7 @@ async fn prepare_request(
     Ok(request)
 }
 
+/// Resolve the follow collections and the actor URL to inbox URLs
 async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<String>, Error> {
     // Check if the current URL is the user's follower collection
     if delivery_data.author.followers == url {
@@ -116,6 +123,7 @@ async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<St
     }
 }
 
+/// De-duplicate the recipients and resolve the follow collections  
 async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>, Error> {
     // Merge the to and cc arrays, deduplicate them, remove the public identifier
     // and construct futures that resolve the URLs
@@ -145,6 +153,7 @@ async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>,
     Ok(recipient_list)
 }
 
+/// Deliver an activity to the specified user (groups)
 pub async fn deliver(activity: Activity, state: ArcState) -> Result<(), Error> {
     let delivery_data = DeliveryData::new(activity, state).await?;
 

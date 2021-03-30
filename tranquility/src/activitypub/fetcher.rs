@@ -25,6 +25,10 @@ impl_is_owned_by!(
     (Object, attributed_to)
 );
 
+/// Takes any URL that points to an ActivityPub entity  
+///
+/// It makes multiple attempts to fetch the entity and decode it into different normalized forms.
+/// If none of the attempts succeed, a `Fetch` error is returned
 #[instrument(skip(state))]
 pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {
     // Create a custom closure around the `fetch_actor` function
@@ -40,6 +44,7 @@ pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {
     Err(Error::Fetch)
 }
 
+/// Attempt to deserialize the data from the given URL as an ActivityPub activity
 #[instrument(skip(state))]
 pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Error> {
     debug!("Fetching remote actor...");
@@ -89,6 +94,7 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
     }
 }
 
+/// Attempt to deserialize the data from the given URL as an ActivityPub actor
 #[instrument(skip(state))]
 pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor), Error> {
     debug!("Fetching remote actor...");
@@ -116,6 +122,7 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     }
 }
 
+/// Attempt to deserialize the data from the given URL as an ActivityPub object
 #[instrument(skip(state))]
 pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> {
     debug!("Fetching remote object...");

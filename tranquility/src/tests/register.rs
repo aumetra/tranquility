@@ -18,6 +18,7 @@ possibly_failing_test! {
             .path("/api/tranquility/v1/register")
             .body("username=test&email=test@example.com&password=test1234.")
             .filter(&register_endpoint);
+
         let test_response = test_request
             .await
             .expect("Unsuccessful request")

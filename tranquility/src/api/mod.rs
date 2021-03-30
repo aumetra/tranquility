@@ -22,5 +22,6 @@ pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = 
 
 #[cfg(feature = "mastodon-api")]
 pub mod mastodon;
+
 pub mod oauth;
 pub mod register;

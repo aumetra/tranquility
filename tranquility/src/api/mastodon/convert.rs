@@ -1,6 +1,8 @@
+#![allow(clippy::filter_map)]
+
 use {
     crate::{
-        database::model::{Actor as DbActor, OAuthApplication, Object as DBObject},
+        database::model::{Actor as DbActor, OAuthApplication, Object as DbObject},
         error::Error,
         format_uuid,
         state::ArcState,
@@ -36,6 +38,7 @@ impl IntoMastodon<Account> for DbActor {
         let id = format_uuid!(self.id);
         let username = actor.username;
         let url = actor.id;
+
         let acct = if self.remote {
             let parsed_url = Url::parse(&url)?;
 
@@ -47,17 +50,19 @@ impl IntoMastodon<Account> for DbActor {
         } else {
             username.clone()
         };
+
         let display_name = actor.name;
         let avatar = actor
             .icon
             .map(|attachment| attachment.url)
             .unwrap_or_default();
+
         let header = actor
             .image
             .map(|attachment| attachment.url)
             .unwrap_or_default();
 
-        Ok(Account {
+        let account = Account {
             id,
             username,
             acct,
@@ -69,7 +74,9 @@ impl IntoMastodon<Account> for DbActor {
             header_static: header.clone(),
             header,
             ..Account::default()
-        })
+        };
+
+        Ok(account)
     }
 }
 
@@ -94,7 +101,7 @@ impl IntoMastodon<Source> for DbActor {
 }
 
 #[async_trait]
-impl IntoMastodon<Status> for DBObject {
+impl IntoMastodon<Status> for DbObject {
     type Error = Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
@@ -105,11 +112,11 @@ impl IntoMastodon<Status> for DBObject {
 }
 
 #[async_trait]
-impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
+impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
     type Error = Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<Vec<Account>, Self::Error> {
-        let db_to_url = |object: DBObject| {
+        let db_to_url = |object: DbObject| {
             let activity: Activity = match serde_json::from_value(object.data) {
                 Ok(activity) => activity,
                 Err(err) => {
@@ -121,16 +128,21 @@ impl IntoMastodon<Vec<Account>> for Vec<DBObject> {
             activity.object.as_url().map(ToOwned::to_owned)
         };
 
-        let account_urls = self.into_iter().filter_map(db_to_url).collect_vec();
-
-        let mut accounts = Vec::new();
-        for url in account_urls {
+        let fetch_account_fn = |url: String| async move {
             let account =
                 crate::database::actor::select::by_url(&state.db_pool, url.as_str()).await?;
             let account: Account = account.into_mastodon(state).await?;
 
-            accounts.push(account);
-        }
+            Ok::<_, Error>(account)
+        };
+        let account_futures = self.into_iter().filter_map(db_to_url).map(fetch_account_fn);
+
+        // The `join_all` function has a complexity of O(n^2) because it polls every future whenever one is ready
+        // This should be fine for this use-case though as not a lot of objects should get converted anyway
+        let accounts = futures_util::future::join_all(account_futures)
+            .await
+            .into_iter()
+            .try_collect()?;
 
         Ok(accounts)
     }

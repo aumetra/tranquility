@@ -1,6 +1,6 @@
 use {
     crate::{
-        database::model::{Actor as DbActor, Object as DBObject},
+        database::model::{Actor as DbActor, Object as DbObject},
         error::Error,
         state::ArcState,
     },
@@ -47,7 +47,7 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
     Ok(())
 }
 
-pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DBObject) -> Result<(), Error> {
+pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) -> Result<(), Error> {
     // Tried to delete someone else's activity
     if db_activity.owner_id != db_actor.id {
         return Err(Error::Unauthorized);
