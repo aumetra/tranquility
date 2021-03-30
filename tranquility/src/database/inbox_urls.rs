@@ -10,9 +10,9 @@ struct InboxUrl {
     inbox_url: String,
 }
 
-impl Into<String> for InboxUrl {
-    fn into(self) -> String {
-        self.inbox_url
+impl From<InboxUrl> for String {
+    fn from(inbox_url: InboxUrl) -> Self {
+        inbox_url.inbox_url
     }
 }
 

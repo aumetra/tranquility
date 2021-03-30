@@ -20,9 +20,9 @@ struct ObjectTimestamp {
     timestamp: NaiveDateTime,
 }
 
-impl Into<NaiveDateTime> for ObjectTimestamp {
-    fn into(self) -> NaiveDateTime {
-        self.timestamp
+impl From<ObjectTimestamp> for NaiveDateTime {
+    fn from(timestamp: ObjectTimestamp) -> Self {
+        timestamp.timestamp
     }
 }
 
