@@ -1,22 +1,22 @@
 use {
     crate::error::{Error, Result},
     http::header::{AsHeaderName, HeaderMap, HeaderValue},
-    std::{borrow::Cow, collections::HashMap, hash::Hash, iter::FromIterator},
+    std::{collections::HashMap, hash::Hash, iter::FromIterator},
 };
 
-pub trait CowHeaderMapExt {
-    /// Convenience function. Is equivalent to `.as_ref().get().ok_or(Error::MissingHeader)`
+pub trait HeaderMapExt {
+    /// Convenience function. Is equivalent to `.get().ok_or(Error::MissingHeader)`
     fn get_header<K>(&self, key: K) -> Result<&HeaderValue>
     where
         K: AsHeaderName;
 }
 
-impl<'a> CowHeaderMapExt for Cow<'a, HeaderMap> {
+impl<'a> HeaderMapExt for &'a HeaderMap {
     fn get_header<K>(&self, key: K) -> Result<&HeaderValue>
     where
         K: AsHeaderName,
     {
-        self.as_ref().get(key).ok_or(Error::MissingHeader)
+        self.get(key).ok_or(Error::MissingHeader)
     }
 }
 
@@ -25,6 +25,14 @@ pub trait IteratorExt: Iterator + Sized {
     fn collect_hashmap<K, V>(self) -> HashMap<K, V>
     where
         HashMap<K, V>: FromIterator<<Self as Iterator>::Item>,
+    {
+        self.collect()
+    }
+
+    /// Convenience function. Is equivalent to `.collect::<String>()`
+    fn collect_string(self) -> String
+    where
+        String: FromIterator<<Self as Iterator>::Item>,
     {
         self.collect()
     }

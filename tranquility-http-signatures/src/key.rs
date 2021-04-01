@@ -4,10 +4,10 @@ pub type PublicKey<'a> = &'a [u8];
 /// Private key for signing the request
 pub struct PrivateKey<'a> {
     /// ID of the associated public key (this is usually an URL pointing to the key)
-    key_id: &'a str,
+    pub(crate) key_id: &'a str,
 
     /// Private key in PKCS#8 PEM format
-    data: &'a [u8],
+    pub(crate) data: &'a [u8],
 }
 
 impl<'a> PrivateKey<'a> {

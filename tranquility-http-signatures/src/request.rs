@@ -1,35 +1,34 @@
 use {
     crate::{
         error::{Error, Result},
-        wrap_cow, wrap_cow_option, SIGNATURE_HEADER,
+        SIGNATURE,
     },
     http::header::{HeaderMap, AUTHORIZATION},
-    std::borrow::Cow,
 };
 
 /// HTTP request that is being processed
 pub struct Request<'a> {
     /// Method of the HTTP request
-    pub(crate) method: Cow<'a, str>,
+    pub(crate) method: &'a str,
 
     /// Requested path
-    pub(crate) path: Cow<'a, str>,
+    pub(crate) path: &'a str,
 
     /// Optional query of the request
-    pub(crate) query: Option<Cow<'a, str>>,
+    pub(crate) query: Option<&'a str>,
 
     /// The headers of the HTTP request
-    pub(crate) headers: Cow<'a, HeaderMap>,
+    pub(crate) headers: &'a HeaderMap,
 }
 
 impl<'a> Request<'a> {
     #[must_use]
     /// Construct a new request
     pub fn new(
-        method: Cow<'a, str>,
-        path: Cow<'a, str>,
-        query: Option<Cow<'a, str>>,
-        headers: Cow<'a, HeaderMap>,
+        method: &'a str,
+        path: &'a str,
+        query: Option<&'a str>,
+        headers: &'a HeaderMap,
     ) -> Self {
         Self {
             method,
@@ -39,19 +38,20 @@ impl<'a> Request<'a> {
         }
     }
 
-    /// Get the signature string from the HTTP request
-    pub(crate) fn signature_string(&self) -> Result<&str> {
-        let headers = self.headers.as_ref();
-
-        // Try to get the signature string from the signature header
-        if let Some(header_value) = headers.get(&*SIGNATURE_HEADER) {
-            return Ok(header_value.to_str()?.trim());
+    /// Get the signature from the HTTP request
+    pub(crate) fn signature(&self) -> Result<&str> {
+        // Try to get the signature from the signature header
+        if let Some(header_value) = self.headers.get(&*SIGNATURE) {
+            return Ok(header_value.to_str()?);
         }
 
-        // Try to get the signature string from the authorization header
-        if let Some(header_value) = headers.get(AUTHORIZATION) {
+        // Try to get the signature from the authorization header
+        if let Some(header_value) = self.headers.get(AUTHORIZATION) {
             let header_value_str = header_value.to_str()?;
-            let header_value_str = header_value_str.trim_start_matches("signature").trim();
+
+            // Split off the `Signature`
+            let first_space_pos = header_value_str.find(' ').ok_or(Error::InvalidHeader)?;
+            let (_, header_value_str) = header_value_str.split_at(first_space_pos);
 
             return Ok(header_value_str);
         }
@@ -69,10 +69,6 @@ impl<'a, T> From<&'a http::Request<T>> for Request<'a> {
         let path = uri.path();
         let query = uri.query();
 
-        // Wrap the variables in `Cow`s
-        wrap_cow!(Borrowed; method, headers, path);
-        wrap_cow_option!(Borrowed; query);
-
         Self::new(method, path, query, headers)
     }
 }
@@ -86,10 +82,6 @@ impl<'a> From<&'a reqwest::Request> for Request<'a> {
         let uri = req.url();
         let path = uri.path();
         let query = uri.query();
-
-        // Wrap the variables in `Cow`s
-        wrap_cow!(Borrowed; method, headers, path);
-        wrap_cow_option!(Borrowed; query);
 
         Self::new(method, path, query, headers)
     }
