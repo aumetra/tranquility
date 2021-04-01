@@ -12,7 +12,7 @@ pub struct Signature<'a> {
     pub(crate) key_id: &'a str,
 
     /// Used algorithm (if empty, default to RSA-SHA256)
-    pub(crate) algorithm: &'a str,
+    pub(crate) algorithm: Option<&'a str>,
 
     /// Headers used by the signature
     pub(crate) headers: Vec<&'a str>,
@@ -20,8 +20,10 @@ pub struct Signature<'a> {
     /// base64-encoded signature
     pub(crate) signature: &'a str,
 
-    /// Signature-related timestamps (unix timestamps)
+    /// Timestamp when the signature was created
     pub(crate) created: Option<&'a str>,
+
+    /// Timestamp when the signature will expire
     pub(crate) expires: Option<&'a str>,
 }
 
@@ -29,9 +31,9 @@ impl<'a> Signature<'a> {
     /// Create a new signature
     pub fn new(
         key_id: &'a str,
-        algorithm: &'a str,
+        algorithm: Option<&'a str>,
         headers: Vec<&'a str>,
-        signature: &'a str,
+        encoded_signature: &'a str,
         created: Option<&'a str>,
         expires: Option<&'a str>,
     ) -> Self {
@@ -39,7 +41,7 @@ impl<'a> Signature<'a> {
             key_id,
             algorithm,
             headers,
-            signature,
+            signature: encoded_signature,
             created,
             expires,
         }
@@ -48,12 +50,14 @@ impl<'a> Signature<'a> {
     /// Encode the signature into a `HeaderValue`
     pub fn encode(self) -> Result<HeaderValue> {
         let mut signature = format!(
-            r#"keyId="{}",algorithm="{}",headers="{}""#,
+            r#"keyId="{}",headers="{}""#,
             self.key_id,
-            self.algorithm,
             self.headers.join(" ")
         );
 
+        if let Some(algorithm) = self.algorithm {
+            append_key(&mut signature, "algorithm", algorithm);
+        }
         if let Some(created) = self.created {
             append_key(&mut signature, "created", created);
         }
@@ -82,18 +86,17 @@ impl<'a> Signature<'a> {
 
                 Some((key, value))
             })
-            // Collect the key/value tuples into a hashmap
             .collect_hashmap();
 
         let key_id = parsed_header_value.get_signature_field("keyId")?;
-        let algorithm = parsed_header_value.get_signature_field("algorithm")?;
+
+        let algorithm = parsed_header_value.get_signature_field("algorithm").ok();
 
         // The header field might be absent
         let headers = parsed_header_value
             .get_signature_field("headers")
             .unwrap_or_default()
             .split_whitespace()
-            .filter(|header| header.is_empty())
             .collect_vec();
 
         let signature = parsed_header_value.get_signature_field("signature")?;

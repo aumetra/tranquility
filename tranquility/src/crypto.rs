@@ -114,9 +114,8 @@ pub mod request {
 
             tranquility_http_signatures::sign(
                 request,
-                key_id,
                 &["(request-target)", "date", "digest"],
-                private_key,
+                (key_id, private_key),
             )
             .map_err(Error::from)
         })

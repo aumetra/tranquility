@@ -2,24 +2,26 @@ use {
     crate::{
         error::{Error, Result},
         request::Request,
-        util::{CowHeaderMapExt as _, IteratorExt as _},
+        util::{HeaderMapExt as _, IteratorExt as _},
     },
     http::header::DATE,
-    std::borrow::Cow,
 };
 
+#[derive(Debug, PartialEq)]
 pub enum Part<'a> {
-    Created(&'a str),
-    Expires(&'a str),
+    /// Header with key and value
     Header(&'a str, &'a str),
+
+    /// Parts needed for the request target (method, path and query)
     RequestTarget(&'a str, &'a str, Option<&'a str>),
+
+    /// Absolutely nothing
+    None,
 }
 
 impl<'a> ToString for Part<'a> {
     fn to_string(&self) -> String {
         match self {
-            Part::Created(val) => format!("(created): {}", val),
-            Part::Expires(val) => format!("(expires): {}", val),
             Part::Header(key, value) => format!("{}: {}", key, value),
             Part::RequestTarget(method, path, query) => {
                 let method = method.to_lowercase();
@@ -27,6 +29,8 @@ impl<'a> ToString for Part<'a> {
 
                 format!("(request-target): {} {}{}", method, path, query)
             }
+
+            Part::None => unreachable!(),
         }
     }
 }
@@ -41,14 +45,16 @@ impl<'a> SignatureString<'a> {
         let mut parts = requested_fields
             .iter()
             .map(|field| {
-                let method = request.method.as_ref();
-                let path = request.path.as_ref();
-                let query = request.query.as_ref().map(Cow::as_ref);
+                let method = request.method;
+                let path = request.path;
+                let query = request.query;
 
                 let part = match *field {
                     "(request-target)" => Part::RequestTarget(method, path, query),
-                    "(created)" => unimplemented!(),
-                    "(expires)" => unimplemented!(),
+                    "(created)" | "(expires)" => {
+                        // The `created` and `expires` fields shouldn't be part of the signature string
+                        Part::None
+                    }
                     header_name => {
                         let header_value = request.headers.get_header(header_name)?;
                         let header_value = header_value.to_str()?;
@@ -59,6 +65,8 @@ impl<'a> SignatureString<'a> {
 
                 Ok::<_, Error>(part)
             })
+            // Filter out the `Part::None`s
+            .filter(|part| !matches!(part, Ok(Part::None)))
             .try_collect_vec()?;
 
         // If a list of headers isn't included, only the "date" header is used
