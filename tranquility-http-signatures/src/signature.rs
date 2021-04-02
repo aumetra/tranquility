@@ -50,14 +50,16 @@ impl<'a> Signature<'a> {
     /// Encode the signature into a `HeaderValue`
     pub fn encode(self) -> Result<HeaderValue> {
         let mut signature = format!(
-            r#"keyId="{}",headers="{}""#,
+            r#"keyId="{}",headers="{}",signature="{}""#,
             self.key_id,
-            self.headers.join(" ")
+            self.headers.join(" "),
+            self.signature
         );
 
         if let Some(algorithm) = self.algorithm {
             append_key(&mut signature, "algorithm", algorithm);
         }
+
         if let Some(created) = self.created {
             append_key(&mut signature, "created", created);
         }

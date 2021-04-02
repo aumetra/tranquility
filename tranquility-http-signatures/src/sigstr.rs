@@ -40,6 +40,7 @@ impl<'a> SignatureString<'a> {
         let mut parts = requested_fields
             .iter()
             // The `created` and `expires` fields shouldn't be part of the signature string
+            // (theoretically only if the algorithm field of the signature header starts with `rsa`, `hmac` or `ecdsa`)
             .filter(|field| **field != "(created)" && **field != "(expires)")
             .map(|field| {
                 let method = request.method;

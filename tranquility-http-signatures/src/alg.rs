@@ -98,7 +98,7 @@ impl<'a> Algorithm<'a> {
             let key_pair = RsaKeyPair::from_der(key_bytes.as_ref())?;
             let rng = rand::SystemRandom::new();
 
-            let mut signature = Vec::with_capacity(key_pair.public_modulus_len());
+            let mut signature = vec![0; key_pair.public_modulus_len()];
             key_pair.sign(algorithm, &rng, data.as_ref(), &mut signature)?;
 
             Ok(signature)
