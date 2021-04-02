@@ -28,6 +28,9 @@ jobs:
           args: --release
 
       - shell: bash
+        run: strip target/release/tranquility
+
+      - shell: bash
         run: mv target/release/tranquility target/release/tranquility-x86
 
       - uses: actions/upload-artifact@v2
