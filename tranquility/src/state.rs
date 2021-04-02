@@ -15,10 +15,10 @@ pub struct State {
 
 impl State {
     pub fn new(config: Configuration, db_pool: PgPool) -> ArcState {
-        Arc::new(Self::new_without_arc(config, db_pool))
+        Arc::new(Self::new_arcless(config, db_pool))
     }
 
-    pub fn new_without_arc(config: Configuration, db_pool: PgPool) -> Self {
+    pub fn new_arcless(config: Configuration, db_pool: PgPool) -> Self {
         Self { config, db_pool }
     }
 }

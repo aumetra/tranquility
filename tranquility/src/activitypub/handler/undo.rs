@@ -10,11 +10,10 @@ pub async fn handle(state: &ArcState, delete_activity: Activity) -> Result<Statu
         .as_url()
         .ok_or(Error::UnknownActivity)?;
 
-    let activity =
-        crate::database::object::select::by_url(&state.db_pool, activity_url.as_ref()).await?;
+    let activity = crate::database::object::select::by_url(&state.db_pool, &activity_url).await?;
     let activity: Activity = serde_json::from_value(activity.data)?;
 
-    crate::database::object::delete::by_url(&state.db_pool, activity.id.as_ref()).await?;
+    crate::database::object::delete::by_url(&state.db_pool, &activity.id).await?;
 
     Ok(StatusCode::CREATED)
 }

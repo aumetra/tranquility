@@ -14,9 +14,6 @@ pub enum Part<'a> {
 
     /// Parts needed for the request target (method, path and query)
     RequestTarget(&'a str, &'a str, Option<&'a str>),
-
-    /// Absolutely nothing
-    None,
 }
 
 impl<'a> ToString for Part<'a> {
@@ -29,8 +26,6 @@ impl<'a> ToString for Part<'a> {
 
                 format!("(request-target): {} {}{}", method, path, query)
             }
-
-            Part::None => unreachable!(),
         }
     }
 }
@@ -44,6 +39,8 @@ impl<'a> SignatureString<'a> {
     pub fn build(request: &'a Request<'a>, requested_fields: &'a [&str]) -> Result<Self> {
         let mut parts = requested_fields
             .iter()
+            // The `created` and `expires` fields shouldn't be part of the signature string
+            .filter(|field| **field != "(created)" && **field != "(expires)")
             .map(|field| {
                 let method = request.method;
                 let path = request.path;
@@ -51,10 +48,6 @@ impl<'a> SignatureString<'a> {
 
                 let part = match *field {
                     "(request-target)" => Part::RequestTarget(method, path, query),
-                    "(created)" | "(expires)" => {
-                        // The `created` and `expires` fields shouldn't be part of the signature string
-                        Part::None
-                    }
                     header_name => {
                         let header_value = request.headers.get_header(header_name)?;
                         let header_value = header_value.to_str()?;
@@ -65,8 +58,6 @@ impl<'a> SignatureString<'a> {
 
                 Ok::<_, Error>(part)
             })
-            // Filter out the `Part::None`s
-            .filter(|part| !matches!(part, Ok(Part::None)))
             .try_collect_vec()?;
 
         // If a list of headers isn't included, only the "date" header is used

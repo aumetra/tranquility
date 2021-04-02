@@ -96,7 +96,7 @@ async fn test_state() -> State {
     let config = test_config();
     let db_pool = init_db().await;
 
-    State::new_without_arc(config, db_pool)
+    State::new_arcless(config, db_pool)
 }
 
 #[test]

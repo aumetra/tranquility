@@ -34,6 +34,19 @@ macro_rules! impl_from {
     }
 }
 
+/// This macro is intended for enums like `Entity` whose arms have the same name as their containing type
+///
+/// Something like `impl_into!(Entity; Activity)` expands to
+/// ```
+/// impl Entity {
+///     pub fn into_activity(self) -> Option<Activity> {
+///         match self {
+///             Self::Activity(val) => Some(val),
+///             _ => None,
+///         }
+///     }
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_into {
     ($enum:ty; $($type:ident),+) => {
@@ -53,6 +66,25 @@ macro_rules! impl_into {
     }
 }
 
+/// This macro is intended for enums like `Entity` that can contain multiple different ActivityPub entities
+///
+/// Every ActivityPub entity has some kind of reference to their author in form of the actor ID but the fields that contain those IDs can be named differently
+///
+/// For example:
+/// - `Actor` => `id`
+/// - `Activity` => `actor`
+/// - `Object` => `attributedTo`
+///
+/// Something like `impl_is_owned_by!(Entity; (Activity, actor))` expands to
+/// ```
+/// impl Entity {
+///     pub fn is_owned_by(&self, actor_id: &str) -> bool {
+///         match self {
+///             Self::Activity(val) => val.actor == actor_id,
+///         }
+///     }
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_is_owned_by {
     ($enum:ty; $(($branch:ident, $field:ident)),+) => {

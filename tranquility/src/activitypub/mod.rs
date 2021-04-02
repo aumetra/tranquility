@@ -34,6 +34,7 @@ impl IsUnlisted for ActivityObject {
 pub struct FollowActivity {
     #[serde(flatten)]
     pub activity: Activity,
+
     #[serde(default)]
     pub approved: bool,
 }

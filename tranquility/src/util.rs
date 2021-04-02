@@ -1,6 +1,6 @@
 use {
     crate::consts::USER_AGENT, futures_util::FutureExt, once_cell::sync::Lazy, reqwest::Client,
-    std::future::Future, tokio::sync::oneshot, tracing::Level, warp::cors::Cors,
+    std::future::Future, tokio::sync::oneshot, warp::cors::Cors,
 };
 
 pub static HTTP_CLIENT: Lazy<Client> =
@@ -22,8 +22,7 @@ where
     let (sender, receiver) = oneshot::channel();
 
     rayon::spawn(move || {
-        let span = span!(
-            Level::INFO,
+        let span = info_span!(
             "CPU intensive task",
             worker_id = rayon::current_thread_index().unwrap()
         );

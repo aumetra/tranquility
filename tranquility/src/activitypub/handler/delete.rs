@@ -7,8 +7,8 @@ use {
 pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
     // Normalize activity
     match activity.object {
-        ObjectField::Actor(_) => return Err(Error::UnknownActivity),
-        ObjectField::Object(_) => (),
+        ObjectField::Actor(..) => return Err(Error::UnknownActivity),
+        ObjectField::Object(..) => (),
         ObjectField::Url(ref url) => {
             let object = fetcher::fetch_object(state, url).await?;
 
@@ -18,7 +18,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
 
     let object = activity.object.as_object().unwrap();
 
-    crate::database::object::delete::by_url(&state.db_pool, object.id.as_ref()).await?;
+    crate::database::object::delete::by_url(&state.db_pool, &object.id).await?;
 
     Ok(StatusCode::CREATED)
 }

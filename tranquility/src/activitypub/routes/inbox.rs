@@ -60,7 +60,7 @@ async fn verify_signature(
     headers: HeaderMap,
     activity: Activity,
 ) -> Result<(ArcState, Activity), Rejection> {
-    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(&state, activity.actor.as_ref())
+    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(&state, &activity.actor)
         .await
         .map_err(Error::from)?;
 
