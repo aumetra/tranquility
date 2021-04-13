@@ -1,33 +1,43 @@
-use {chrono::NaiveDateTime, serde_json::Value, uuid::Uuid};
+use {chrono::NaiveDateTime, ormx::Table, serde_json::Value, uuid::Uuid};
 
-#[derive(Clone)]
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "actors", insertable)]
 pub struct Actor {
     pub id: Uuid,
 
     pub username: String,
+
+    #[ormx(get_optional(&str))]
     pub email: Option<String>,
+
     pub password_hash: Option<String>,
     pub private_key: Option<String>,
 
     pub actor: Value,
     pub remote: bool,
 
+    #[ormx(default)]
     pub created_at: NaiveDateTime,
+    #[ormx(default)]
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "objects", insertable)]
 pub struct Object {
     pub id: Uuid,
 
     pub owner_id: Uuid,
     pub data: Value,
 
+    #[ormx(default)]
     pub created_at: NaiveDateTime,
+    #[ormx(default)]
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "oauth_applications", insertable)]
 pub struct OAuthApplication {
     pub id: Uuid,
 
@@ -39,11 +49,14 @@ pub struct OAuthApplication {
     pub scopes: String,
     pub website: String,
 
+    #[ormx(default)]
     pub created_at: NaiveDateTime,
+    #[ormx(default)]
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "oauth_authorizations", insertable)]
 pub struct OAuthAuthorization {
     pub id: Uuid,
 
@@ -53,11 +66,14 @@ pub struct OAuthAuthorization {
     pub code: String,
     pub valid_until: NaiveDateTime,
 
+    #[ormx(default)]
     pub created_at: NaiveDateTime,
+    #[ormx(default)]
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "oauth_tokens", insertable)]
 pub struct OAuthToken {
     pub id: Uuid,
 
@@ -68,6 +84,8 @@ pub struct OAuthToken {
     pub refresh_token: Option<String>,
     pub valid_until: NaiveDateTime,
 
+    #[ormx(default)]
     pub created_at: NaiveDateTime,
+    #[ormx(default)]
     pub updated_at: NaiveDateTime,
 }

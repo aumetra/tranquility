@@ -84,23 +84,7 @@ pub mod select {
     use {
         crate::{database::model::Actor, error::Error},
         sqlx::PgPool,
-        uuid::Uuid,
     };
-
-    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Actor, Error> {
-        let actor = sqlx::query_as!(
-            Actor,
-            r#"
-                SELECT * FROM actors
-                WHERE id = $1
-            "#,
-            id
-        )
-        .fetch_one(conn_pool)
-        .await?;
-
-        Ok(actor)
-    }
 
     pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Actor, Error> {
         let actor = sqlx::query_as!(

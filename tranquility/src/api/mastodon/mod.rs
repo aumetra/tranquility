@@ -5,6 +5,7 @@ use {
     },
     headers::authorization::{Bearer, Credentials},
     once_cell::sync::Lazy,
+    ormx::Table,
     serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
     warp::{
@@ -50,8 +51,9 @@ async fn authorise_user(
 
     let access_token =
         crate::database::oauth::token::select::by_token(&state.db_pool, token).await?;
-    let actor =
-        crate::database::actor::select::by_id(&state.db_pool, access_token.actor_id).await?;
+    let actor = Actor::get(&state.db_pool, access_token.actor_id)
+        .await
+        .map_err(Error::from)?;
 
     Ok(actor)
 }

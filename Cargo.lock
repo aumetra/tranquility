@@ -1236,6 +1236,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
+name = "ormx"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d99c9ec0597b587e61d52d8dc5914845a48a5a71f412a0a20ac4edef5db4f98"
+dependencies = [
+ "futures",
+ "ormx-macros",
+ "sqlx",
+]
+
+[[package]]
+name = "ormx-macros"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afe154fda773c54b533b54d4c9b97949aa37ebe5d77cdabc497e494f3ec05418"
+dependencies = [
+ "itertools",
+ "once_cell",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2352,6 +2377,7 @@ dependencies = [
  "jemallocator",
  "mimalloc",
  "once_cell",
+ "ormx",
  "paste",
  "rand 0.8.3",
  "rayon",
