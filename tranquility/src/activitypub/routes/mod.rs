@@ -1,5 +1,5 @@
 use {
-    crate::{error::Error, state::ArcState},
+    crate::{error::Error, map_err, state::ArcState},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -30,7 +30,7 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
 fn custom_json_parser<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
 {
     let custom_json_parser_fn = |body: Bytes| async move {
-        let value = serde_json::from_slice(&body).map_err(Error::from)?;
+        let value = map_err!(serde_json::from_slice(&body))?;
 
         Ok::<T, Rejection>(value)
     };

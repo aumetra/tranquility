@@ -2,7 +2,7 @@ use {
     super::CollectionQuery,
     crate::{
         activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE,
-        database::model::Actor as DbActor, error::Error, format_uuid, state::ArcState,
+        database::model::Actor as DbActor, format_uuid, map_err, state::ArcState,
     },
     itertools::Itertools,
     ormx::Table,
@@ -40,10 +40,8 @@ pub async fn following(
         })
         .collect_vec();
 
-    let user_db = DbActor::get(&state.db_pool, user_id)
-        .await
-        .map_err(Error::from)?;
-    let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;
+    let user_db = map_err!(DbActor::get(&state.db_pool, user_id).await)?;
+    let user: Actor = map_err!(serde_json::from_value(user_db.actor))?;
 
     let next = format!("{}?last_id={}", user.following, last_id);
 

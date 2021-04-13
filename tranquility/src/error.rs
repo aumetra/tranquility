@@ -1,4 +1,5 @@
 use {
+    crate::map_err,
     argon2::Error as Argon2Error,
     askama::Error as AskamaError,
     reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
@@ -90,7 +91,7 @@ pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
 
             // Add special case to send the previously defined error messages
             Error::Validation(err) => {
-                let response_payload = serde_json::to_string(err).map_err(Error::from)?;
+                let response_payload = map_err!(serde_json::to_string(err))?;
                 let response = warp::reply::with_status(response_payload, StatusCode::BAD_REQUEST)
                     .into_response();
 

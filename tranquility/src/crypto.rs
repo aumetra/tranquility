@@ -88,7 +88,7 @@ pub mod token {
 
 pub mod request {
     use {
-        crate::{error::Error, util::cpu_intensive_task},
+        crate::{error::Error, map_err, util::cpu_intensive_task},
         std::future::Future,
         tranquility_http_signatures::Request,
         warp::{
@@ -112,12 +112,11 @@ pub mod request {
             let key_id = key_id.as_str();
             let private_key = private_key.as_bytes();
 
-            tranquility_http_signatures::sign(
+            map_err!(tranquility_http_signatures::sign(
                 request,
                 &["(request-target)", "date", "digest"],
                 (key_id, private_key),
-            )
-            .map_err(Error::from)
+            ))
         })
     }
 
@@ -139,7 +138,7 @@ pub mod request {
 
             let request = Request::new(method, path, query, headers);
 
-            tranquility_http_signatures::verify(request, public_key).map_err(Error::from)
+            map_err!(tranquility_http_signatures::verify(request, public_key))
         })
     }
 }

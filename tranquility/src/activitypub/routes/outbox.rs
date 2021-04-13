@@ -1,8 +1,8 @@
 use {
     super::CollectionQuery,
     crate::{
-        consts::activitypub::ACTIVITIES_PER_PAGE, database::model::Actor as DbActor, error::Error,
-        format_uuid, state::ArcState,
+        consts::activitypub::ACTIVITIES_PER_PAGE, database::model::Actor as DbActor, format_uuid,
+        map_err, state::ArcState,
     },
     itertools::Itertools,
     ormx::Table,
@@ -44,10 +44,8 @@ pub async fn outbox(
         })
         .collect_vec();
 
-    let user_db = DbActor::get(&state.db_pool, user_id)
-        .await
-        .map_err(Error::from)?;
-    let user: Actor = serde_json::from_value(user_db.actor).map_err(Error::from)?;
+    let user_db = map_err!(DbActor::get(&state.db_pool, user_id).await)?;
+    let user: Actor = map_err!(serde_json::from_value(user_db.actor))?;
 
     let next = format!("{}?last_id={}", user.outbox, last_id);
 
