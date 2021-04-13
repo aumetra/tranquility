@@ -12,7 +12,7 @@ An ActivityPub instance running Tranquility
 # This is a very important value
 # Change this to your domain (eg. fedi.my-cool-domain.com) before you start Tranquility for the first time
 # This value is used to create the URLs used in activities
-# If it is set to a wrong domain, federation will break/won't work! 
+# If it is set to a wrong domain, federation will break! 
 # 
 # !! ActivityPub entities will not automatically update when this value changes !!
 # !! You'll either have to change every activity manually or start from scratch (the latter option is by far easier) !!

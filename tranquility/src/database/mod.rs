@@ -46,6 +46,7 @@ async fn last_activity_timestamp(
     Ok(last_timestamp)
 }
 
+/// Execute the embedded database migrations
 pub async fn migrate(conn_pool: &PgPool) -> Result<(), Error> {
     sqlx::migrate!("../migrations").run(conn_pool).await?;
 

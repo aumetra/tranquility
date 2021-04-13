@@ -19,7 +19,7 @@ pub struct Opts {
     config: String,
 
     #[argh(switch, short = 'v')]
-    /// set the verbosity of the tracing output
+    /// verbosity of the tracing output
     verbose: u8,
 
     #[argh(switch, short = 'V')]
@@ -27,7 +27,7 @@ pub struct Opts {
     version: bool,
 }
 
-/// - Initializes the tracing verbosity levels  
+/// - Initialises the tracing verbosity levels  
 /// - Creates a database connection pool  
 /// - Returns a constructed state  
 pub async fn run() -> ArcState {
