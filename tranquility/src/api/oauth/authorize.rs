@@ -4,6 +4,7 @@ use {
         crypto::password,
         database::model::{InsertOAuthAuthorization, OAuthApplication},
         error::Error,
+        map_err,
         state::ArcState,
     },
     askama::Template,
@@ -54,9 +55,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         return Err(Error::InvalidRequest.into());
     }
 
-    let client = OAuthApplication::by_client_id(&state.db_pool, &query.client_id)
-        .await
-        .map_err(Error::from)?;
+    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &query.client_id).await)?;
     if client.redirect_uris != query.redirect_uri {
         return Err(Error::InvalidRequest.into());
     }
@@ -66,24 +65,24 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
     let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
     let valid_until = chrono::Utc::now() + validity_duration;
 
-    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
-    let authorization_code = InsertOAuthAuthorization {
-        application_id: client.id,
-        actor_id: actor.id,
-        code: authorization_code,
-        valid_until: valid_until.naive_utc(),
-    }
-    .insert(&mut db_conn)
-    .await
-    .map_err(Error::from)?;
+    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
+    let authorization_code = map_err! {
+        InsertOAuthAuthorization {
+            application_id: client.id,
+            actor_id: actor.id,
+            code: authorization_code,
+            valid_until: valid_until.naive_utc(),
+        }
+        .insert(&mut db_conn)
+        .await
+    }?;
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if query.redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = TokenTemplate {
+        let page = map_err!(TokenTemplate {
             token: authorization_code.code,
         }
-        .render()
-        .map_err(Error::from)?;
+        .render())?;
 
         Ok(warp::reply::html(page).into_response())
     } else {

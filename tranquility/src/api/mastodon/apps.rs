@@ -1,6 +1,6 @@
 use {
     super::{convert::IntoMastodon, urlencoded_or_json},
-    crate::{database::model::InsertOAuthApplication, error::Error, state::ArcState},
+    crate::{database::model::InsertOAuthApplication, map_err, state::ArcState},
     ormx::Insert,
     serde::Deserialize,
     uuid::Uuid,
@@ -25,18 +25,19 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate()?;
 
-    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
-    let application = InsertOAuthApplication {
-        client_name: form.client_name,
-        client_id,
-        client_secret,
-        redirect_uris: form.redirect_uris,
-        scopes: form.scopes,
-        website: form.website,
-    }
-    .insert(&mut db_conn)
-    .await
-    .map_err(Error::from)?;
+    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
+    let application = map_err! {
+        InsertOAuthApplication {
+            client_name: form.client_name,
+            client_id,
+            client_secret,
+            redirect_uris: form.redirect_uris,
+            scopes: form.scopes,
+            website: form.website,
+        }
+        .insert(&mut db_conn)
+        .await
+    }?;
     let mastodon_application = application.into_mastodon(&state).await?;
 
     Ok(warp::reply::json(&mastodon_application))

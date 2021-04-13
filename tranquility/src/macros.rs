@@ -100,6 +100,18 @@ macro_rules! impl_is_owned_by {
     }
 }
 
+/// Something like `map_err!(Err::<(), ()>(()))` expands to
+///
+/// ```rust
+/// Err::<(), ()>(()).map_err(crate::error::Error)
+/// ```
+#[macro_export]
+macro_rules! map_err {
+    ($op:expr) => {
+        $op.map_err(crate::error::Error::from)
+    };
+}
+
 /// This expands to a match expression with arms like these
 ///
 /// ```rust

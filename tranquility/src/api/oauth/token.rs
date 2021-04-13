@@ -4,6 +4,7 @@ use {
         crypto::password,
         database::model::{InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
+        map_err,
         state::ArcState,
     },
     askama::Template,
@@ -94,41 +95,37 @@ async fn code_grant(
         ..
     }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
-    let client = OAuthApplication::by_client_id(&state.db_pool, &client_id)
-        .await
-        .map_err(Error::from)?;
+    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &client_id).await)?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
     }
 
-    let authorization_code = OAuthAuthorization::by_code(&state.db_pool, &code)
-        .await
-        .map_err(Error::from)?;
+    let authorization_code = map_err!(OAuthAuthorization::by_code(&state.db_pool, &code).await)?;
 
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
 
     let access_token = crate::crypto::token::generate()?;
 
-    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
-    let access_token = InsertOAuthToken {
-        application_id: Some(client.id),
-        actor_id: authorization_code.actor_id,
-        access_token,
-        refresh_token: None,
-        valid_until: valid_until.naive_utc(),
-    }
-    .insert(&mut db_conn)
-    .await
-    .map_err(Error::from)?;
+    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
+    let access_token = map_err! {
+        InsertOAuthToken {
+            application_id: Some(client.id),
+            actor_id: authorization_code.actor_id,
+            access_token,
+            refresh_token: None,
+            valid_until: valid_until.naive_utc(),
+        }
+        .insert(&mut db_conn)
+        .await
+    }?;
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = TokenTemplate {
+        let page = map_err!(TokenTemplate {
             token: access_token.access_token,
         }
-        .render()
-        .map_err(Error::from)?;
+        .render())?;
 
         Ok(warp::reply::html(page).into_response())
     } else {
@@ -160,17 +157,18 @@ async fn password_grant(
 
     let access_token = crate::crypto::token::generate()?;
 
-    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
-    let access_token = InsertOAuthToken {
-        application_id: None,
-        actor_id: actor.id,
-        access_token,
-        refresh_token: None,
-        valid_until: valid_until.naive_utc(),
-    }
-    .insert(&mut db_conn)
-    .await
-    .map_err(Error::from)?;
+    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
+    let access_token = map_err! {
+        InsertOAuthToken {
+            application_id: None,
+            actor_id: actor.id,
+            access_token,
+            refresh_token: None,
+            valid_until: valid_until.naive_utc(),
+        }
+        .insert(&mut db_conn)
+        .await
+    }?;
 
     let response = AccessTokenResponse {
         access_token: access_token.access_token,

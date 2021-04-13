@@ -1,5 +1,5 @@
 use {
-    crate::{activitypub, error::Error, state::ArcState},
+    crate::{activitypub, map_err, state::ArcState},
     once_cell::sync::Lazy,
     regex::Regex,
     serde::Deserialize,
@@ -36,7 +36,7 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         return Ok(StatusCode::FORBIDDEN.into_response());
     }
 
-    form.validate().map_err(Error::from)?;
+    map_err!(form.validate())?;
 
     let user_id = Uuid::new_v4();
     let password_hash = crate::crypto::password::hash(form.password).await?;

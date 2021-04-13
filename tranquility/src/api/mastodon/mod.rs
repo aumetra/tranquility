@@ -3,6 +3,7 @@ use {
         consts::cors::API_ALLOWED_METHODS,
         database::model::{Actor, OAuthToken},
         error::Error,
+        map_err,
         state::ArcState,
         util::construct_cors,
     },
@@ -52,12 +53,8 @@ async fn authorise_user(
     let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
     let token = credentials.token();
 
-    let access_token = OAuthToken::by_access_token(&state.db_pool, token)
-        .await
-        .map_err(Error::from)?;
-    let actor = Actor::get(&state.db_pool, access_token.actor_id)
-        .await
-        .map_err(Error::from)?;
+    let access_token = map_err!(OAuthToken::by_access_token(&state.db_pool, token).await)?;
+    let actor = map_err!(Actor::get(&state.db_pool, access_token.actor_id).await)?;
 
     Ok(actor)
 }

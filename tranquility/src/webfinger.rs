@@ -1,7 +1,7 @@
 use {
     crate::{
         consts::cors::GENERAL_ALLOWED_METHODS, database::model::Actor as DbActor, error::Error,
-        state::ArcState, util::construct_cors,
+        map_err, state::ArcState, util::construct_cors,
     },
     serde::Deserialize,
     tranquility_types::{
@@ -57,7 +57,7 @@ pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Reject
 
     let actor_db =
         crate::database::actor::select::by_username_local(&state.db_pool, username).await?;
-    let actor: Actor = serde_json::from_value(actor_db.actor).map_err(Error::from)?;
+    let actor: Actor = map_err!(serde_json::from_value(actor_db.actor))?;
 
     let link = Link {
         rel: "self".into(),
