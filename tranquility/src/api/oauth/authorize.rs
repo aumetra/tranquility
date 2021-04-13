@@ -1,9 +1,15 @@
 use {
     super::{TokenTemplate, AUTHORIZE_FORM},
-    crate::{crypto::password, error::Error, state::ArcState},
+    crate::{
+        crypto::password,
+        database::model::{InsertOAuthAuthorization, OAuthApplication},
+        error::Error,
+        state::ArcState,
+    },
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
+    ormx::Insert,
     serde::Deserialize,
     std::convert::TryFrom,
     uuid::Uuid,
@@ -48,9 +54,9 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         return Err(Error::InvalidRequest.into());
     }
 
-    let client =
-        crate::database::oauth::application::select::by_client_id(&state.db_pool, &query.client_id)
-            .await?;
+    let client = OAuthApplication::by_client_id(&state.db_pool, &query.client_id)
+        .await
+        .map_err(Error::from)?;
     if client.redirect_uris != query.redirect_uri {
         return Err(Error::InvalidRequest.into());
     }
@@ -60,14 +66,16 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
     let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
     let valid_until = chrono::Utc::now() + validity_duration;
 
-    let authorization_code = crate::database::oauth::authorization::insert(
-        &state.db_pool,
-        client.id,
-        actor.id,
-        authorization_code,
-        valid_until.naive_utc(),
-    )
-    .await?;
+    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
+    let authorization_code = InsertOAuthAuthorization {
+        application_id: client.id,
+        actor_id: actor.id,
+        code: authorization_code,
+        valid_until: valid_until.naive_utc(),
+    }
+    .insert(&mut db_conn)
+    .await
+    .map_err(Error::from)?;
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if query.redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
