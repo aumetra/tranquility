@@ -1,9 +1,15 @@
 use {
     super::TokenTemplate,
-    crate::{crypto::password, error::Error, state::ArcState},
+    crate::{
+        crypto::password,
+        database::model::{InsertOAuthToken, OAuthApplication, OAuthAuthorization},
+        error::Error,
+        state::ArcState,
+    },
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
+    ormx::Insert,
     serde::{Deserialize, Serialize},
     uuid::Uuid,
     warp::{reply::Response, Rejection, Reply},
@@ -88,29 +94,33 @@ async fn code_grant(
         ..
     }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
-    let client =
-        crate::database::oauth::application::select::by_client_id(&state.db_pool, &client_id)
-            .await?;
+    let client = OAuthApplication::by_client_id(&state.db_pool, &client_id)
+        .await
+        .map_err(Error::from)?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
     }
 
-    let authorization_code =
-        crate::database::oauth::authorization::select::by_code(&state.db_pool, &code).await?;
+    let authorization_code = OAuthAuthorization::by_code(&state.db_pool, &code)
+        .await
+        .map_err(Error::from)?;
 
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
 
     let access_token = crate::crypto::token::generate()?;
-    let access_token = crate::database::oauth::token::insert(
-        &state.db_pool,
-        Some(client.id),
-        authorization_code.actor_id,
+
+    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
+    let access_token = InsertOAuthToken {
+        application_id: Some(client.id),
+        actor_id: authorization_code.actor_id,
         access_token,
-        None,
-        valid_until.naive_utc(),
-    )
-    .await?;
+        refresh_token: None,
+        valid_until: valid_until.naive_utc(),
+    }
+    .insert(&mut db_conn)
+    .await
+    .map_err(Error::from)?;
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
@@ -149,15 +159,18 @@ async fn password_grant(
     let valid_until = chrono::Utc::now() + valid_until;
 
     let access_token = crate::crypto::token::generate()?;
-    let access_token = crate::database::oauth::token::insert(
-        &state.db_pool,
-        None,
-        actor.id,
+
+    let mut db_conn = state.db_pool.acquire().await.map_err(Error::from)?;
+    let access_token = InsertOAuthToken {
+        application_id: None,
+        actor_id: actor.id,
         access_token,
-        None,
-        valid_until.naive_utc(),
-    )
-    .await?;
+        refresh_token: None,
+        valid_until: valid_until.naive_utc(),
+    }
+    .insert(&mut db_conn)
+    .await
+    .map_err(Error::from)?;
 
     let response = AccessTokenResponse {
         access_token: access_token.access_token,
