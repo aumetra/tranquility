@@ -1,28 +1,5 @@
 use {crate::error::Error, serde_json::Value, sqlx::PgPool, uuid::Uuid};
 
-pub async fn insert(
-    conn_pool: &PgPool,
-    id: Uuid,
-    owner_id: Uuid,
-    object: Value,
-) -> Result<(), Error> {
-    sqlx::query!(
-        r#"
-            INSERT INTO objects 
-            ( id, owner_id, data ) 
-            VALUES 
-            ( $1, $2, $3 )
-        "#,
-        id,
-        owner_id,
-        object,
-    )
-    .execute(conn_pool)
-    .await?;
-
-    Ok(())
-}
-
 pub mod delete {
     use {crate::error::Error, sqlx::PgPool, uuid::Uuid};
 

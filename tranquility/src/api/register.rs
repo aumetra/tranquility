@@ -1,5 +1,10 @@
 use {
-    crate::{activitypub, map_err, state::ArcState},
+    crate::{
+        activitypub,
+        database::{model::InsertActor, InsertExt},
+        map_err,
+        state::ArcState,
+    },
     once_cell::sync::Lazy,
     regex::Regex,
     serde::Deserialize,
@@ -50,16 +55,21 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         &form.username,
         public_key_pem,
     );
+    let actor = map_err!(serde_json::to_value(&actor))?;
 
-    crate::database::actor::insert::local(
-        &state.db_pool,
-        user_id,
-        actor,
-        form.email,
-        password_hash,
-        private_key_pem,
-    )
-    .await?;
+    map_err!(
+        InsertActor {
+            id: user_id,
+            username: form.username,
+            actor,
+            email: Some(form.email),
+            password_hash: Some(password_hash),
+            private_key: Some(private_key_pem),
+            remote: false
+        }
+        .insert(&state.db_pool)
+        .await
+    )?;
 
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }

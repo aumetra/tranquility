@@ -67,7 +67,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
     let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
     let valid_until = chrono::Utc::now() + validity_duration;
 
-    let authorization_code = map_err! {
+    let authorization_code = map_err!(
         InsertOAuthAuthorization {
             application_id: client.id,
             actor_id: actor.id,
@@ -76,7 +76,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         }
         .insert(&state.db_pool)
         .await
-    }?;
+    )?;
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if query.redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {

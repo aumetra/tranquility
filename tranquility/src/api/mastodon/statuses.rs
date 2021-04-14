@@ -1,6 +1,13 @@
 use {
     super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
-    crate::{database::model::Actor as DbActor, map_err, state::ArcState},
+    crate::{
+        database::{
+            model::{Actor as DbActor, InsertObject},
+            InsertExt,
+        },
+        map_err,
+        state::ArcState,
+    },
     serde::Deserialize,
     std::sync::Arc,
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
@@ -45,7 +52,15 @@ async fn create(
     crate::activitypub::clean_object(&mut object);
 
     let object_value = map_err!(serde_json::to_value(&object))?;
-    crate::database::object::insert(&state.db_pool, object_id, author_db.id, object_value).await?;
+    map_err!(
+        InsertObject {
+            id: object_id,
+            owner_id: author_db.id,
+            data: object_value
+        }
+        .insert(&state.db_pool)
+        .await
+    )?;
 
     let (_create_activity_id, create_activity) = crate::activitypub::instantiate::activity(
         &state.config,

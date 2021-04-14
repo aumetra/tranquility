@@ -1,7 +1,13 @@
 use {
     crate::{
-        attempt_fetch, database::model::Actor as DbActor, error::Error, impl_from, impl_into,
-        impl_is_owned_by, state::ArcState,
+        attempt_fetch,
+        database::{
+            model::{Actor as DbActor, InsertActor, InsertObject},
+            InsertExt,
+        },
+        error::Error,
+        impl_from, impl_into, impl_is_owned_by, map_err,
+        state::ArcState,
     },
     reqwest::IntoUrl,
     serde_json::Value,
@@ -64,13 +70,15 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
             crate::activitypub::clean_object(object);
 
             let object_value = serde_json::to_value(&object)?;
-            crate::database::object::insert(
-                &state.db_pool,
-                Uuid::new_v4(),
-                actor_db.id,
-                object_value,
-            )
-            .await?;
+            map_err!(
+                InsertObject {
+                    id: Uuid::new_v4(),
+                    owner_id: actor_db.id,
+                    data: object_value,
+                }
+                .insert(&state.db_pool)
+                .await
+            )?;
 
             activity.object = ObjectField::Url(object.id.to_owned());
         } else if activity.object.as_actor().is_some() {
@@ -78,13 +86,15 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
         }
 
         let activity_value = serde_json::to_value(&activity)?;
-        crate::database::object::insert(
-            &state.db_pool,
-            Uuid::new_v4(),
-            actor_db.id,
-            activity_value,
-        )
-        .await?;
+        map_err!(
+            InsertObject {
+                id: Uuid::new_v4(),
+                owner_id: actor_db.id,
+                data: activity_value,
+            }
+            .insert(&state.db_pool)
+            .await
+        )?;
 
         Ok(activity)
     } else {
@@ -110,8 +120,20 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     if let Entity::Actor(mut actor) = fetch_entity(url).await? {
         crate::activitypub::clean_actor(&mut actor);
 
-        let db_actor =
-            crate::database::actor::insert::remote(&state.db_pool, &actor.username, &actor).await?;
+        let actor_value = map_err!(serde_json::to_value(&actor))?;
+        let db_actor = map_err!(
+            InsertActor {
+                id: Uuid::new_v4(),
+                username: actor.username.clone(),
+                email: None,
+                password_hash: None,
+                actor: actor_value,
+                private_key: None,
+                remote: true,
+            }
+            .insert(&state.db_pool)
+            .await
+        )?;
 
         Ok((actor, db_actor))
     } else {
@@ -140,8 +162,15 @@ pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> 
         let (_actor, actor_db) = fetch_actor(state, &object.attributed_to).await?;
 
         let object_value = serde_json::to_value(&object)?;
-        crate::database::object::insert(&state.db_pool, Uuid::new_v4(), actor_db.id, object_value)
-            .await?;
+        map_err!(
+            InsertObject {
+                id: Uuid::new_v4(),
+                owner_id: actor_db.id,
+                data: object_value,
+            }
+            .insert(&state.db_pool)
+            .await
+        )?;
 
         Ok(object)
     } else {
