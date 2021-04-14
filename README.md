@@ -31,6 +31,11 @@ Use them by compiling the server with one of the following feature flags:
 These features are mutually exclusive  
 If more than one is activated, all selected allocators are compiled in the binary but neither will be actually used  
 
+## Jaeger telemetry
+
+Tranquility supports exporting the information logged via tracing to a jaeger backend via OpenTelemetry  
+To enable this feature, compile Tranquility with the `jaeger` feature
+
 ## Progress
 
 - [ ] Federation

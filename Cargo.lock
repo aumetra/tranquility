@@ -1255,6 +1255,8 @@ dependencies = [
  "pin-project",
  "rand 0.8.3",
  "thiserror",
+ "tokio",
+ "tokio-stream",
 ]
 
 [[package]]
@@ -1268,6 +1270,7 @@ dependencies = [
  "opentelemetry",
  "thiserror",
  "thrift",
+ "tokio",
 ]
 
 [[package]]
@@ -2456,6 +2459,7 @@ dependencies = [
  "jemallocator",
  "mimalloc",
  "once_cell",
+ "opentelemetry",
  "opentelemetry-jaeger",
  "ormx",
  "paste",

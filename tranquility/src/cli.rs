@@ -43,7 +43,7 @@ fn init_tracing(level: LevelFilter) {
     let subscriber = {
         let jaeger_tracer = opentelemetry_jaeger::new_pipeline()
             .with_service_name(env!("CARGO_PKG_NAME"))
-            .install_simple()
+            .install_batch(opentelemetry::runtime::Tokio)
             .unwrap();
 
         subscriber.with(OpenTelemetryLayer::new(jaeger_tracer))
