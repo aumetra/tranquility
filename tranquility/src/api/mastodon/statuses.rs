@@ -52,15 +52,14 @@ async fn create(
     crate::activitypub::clean_object(&mut object);
 
     let object_value = map_err!(serde_json::to_value(&object))?;
-    map_err!(
-        InsertObject {
-            id: object_id,
-            owner_id: author_db.id,
-            data: object_value
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+
+    InsertObject {
+        id: object_id,
+        owner_id: author_db.id,
+        data: object_value,
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     let (_create_activity_id, create_activity) = crate::activitypub::instantiate::activity(
         &state.config,

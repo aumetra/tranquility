@@ -57,19 +57,17 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
     );
     let actor = map_err!(serde_json::to_value(&actor))?;
 
-    map_err!(
-        InsertActor {
-            id: user_id,
-            username: form.username,
-            actor,
-            email: Some(form.email),
-            password_hash: Some(password_hash),
-            private_key: Some(private_key_pem),
-            remote: false
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+    InsertActor {
+        id: user_id,
+        username: form.username,
+        actor,
+        email: Some(form.email),
+        password_hash: Some(password_hash),
+        private_key: Some(private_key_pem),
+        remote: false,
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }
