@@ -28,7 +28,7 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate()?;
 
-    let application = map_err! {
+    let application = map_err!(
         InsertOAuthApplication {
             client_name: form.client_name,
             client_id,
@@ -39,7 +39,7 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
         }
         .insert(&state.db_pool)
         .await
-    }?;
+    )?;
     let mastodon_application = application.into_mastodon(&state).await?;
 
     Ok(warp::reply::json(&mastodon_application))

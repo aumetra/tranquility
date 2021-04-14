@@ -1,7 +1,9 @@
 use {
     crate::{
         activitypub::{self, deliverer, fetcher, FollowActivity},
+        database::{model::InsertObject, InsertExt},
         error::Error,
+        map_err,
         state::ArcState,
     },
     std::sync::Arc,
@@ -32,7 +34,15 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     };
     let activity = serde_json::to_value(&follow_activity)?;
 
-    crate::database::object::insert(&state.db_pool, Uuid::new_v4(), actor_db.id, activity).await?;
+    map_err!(
+        InsertObject {
+            id: Uuid::new_v4(),
+            owner_id: actor_db.id,
+            data: activity,
+        }
+        .insert(&state.db_pool)
+        .await
+    )?;
 
     let followed_url = follow_activity.activity.object.as_url().unwrap();
     let followed_actor =
@@ -50,13 +60,15 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
         );
         let accept_activity_value = serde_json::to_value(&accept_activity)?;
 
-        crate::database::object::insert(
-            &state.db_pool,
-            accept_activity_id,
-            followed_actor.id,
-            accept_activity_value,
-        )
-        .await?;
+        map_err!(
+            InsertObject {
+                id: accept_activity_id,
+                owner_id: followed_actor.id,
+                data: accept_activity_value,
+            }
+            .insert(&state.db_pool)
+            .await
+        )?;
 
         deliverer::deliver(accept_activity, Arc::clone(state)).await?;
     }

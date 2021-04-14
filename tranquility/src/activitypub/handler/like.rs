@@ -1,5 +1,11 @@
 use {
-    crate::{activitypub::fetcher, error::Error, state::ArcState},
+    crate::{
+        activitypub::fetcher,
+        database::{model::InsertObject, InsertExt},
+        error::Error,
+        map_err,
+        state::ArcState,
+    },
     tranquility_types::activitypub::Activity,
     uuid::Uuid,
     warp::http::StatusCode,
@@ -15,8 +21,15 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
     let actor = crate::database::actor::select::by_url(&state.db_pool, &activity.actor).await?;
 
     let activity_value = serde_json::to_value(&activity)?;
-    crate::database::object::insert(&state.db_pool, Uuid::new_v4(), actor.id, activity_value)
-        .await?;
+    map_err!(
+        InsertObject {
+            id: Uuid::new_v4(),
+            owner_id: actor.id,
+            data: activity_value,
+        }
+        .insert(&state.db_pool)
+        .await
+    )?;
 
     Ok(StatusCode::CREATED)
 }
