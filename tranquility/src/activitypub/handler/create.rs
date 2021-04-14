@@ -3,7 +3,6 @@ use {
         activitypub::fetcher,
         database::{model::InsertObject, InsertExt},
         error::Error,
-        map_err,
         state::ArcState,
     },
     tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
@@ -19,15 +18,13 @@ async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, 
 
     let object_value = serde_json::to_value(&object)?;
 
-    map_err!(
-        InsertObject {
-            id: Uuid::new_v4(),
-            owner_id: owner_db.id,
-            data: object_value
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+    InsertObject {
+        id: Uuid::new_v4(),
+        owner_id: owner_db.id,
+        data: object_value,
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     Ok(object)
 }

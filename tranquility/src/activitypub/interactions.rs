@@ -5,7 +5,6 @@ use {
             InsertExt,
         },
         error::Error,
-        map_err,
         state::ArcState,
     },
     std::sync::Arc,
@@ -38,15 +37,13 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
     );
     let follow_activity_value = serde_json::to_value(&follow_activity)?;
 
-    map_err!(
-        InsertObject {
-            id: follow_activity_id,
-            owner_id: db_actor.id,
-            data: follow_activity_value
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+    InsertObject {
+        id: follow_activity_id,
+        owner_id: db_actor.id,
+        data: follow_activity_value,
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     crate::activitypub::deliverer::deliver(follow_activity, Arc::clone(state)).await?;
 
@@ -72,15 +69,14 @@ pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) ->
         activity.cc,
     );
     let undo_activity_value = serde_json::to_value(&undo_activity)?;
-    map_err!(
-        InsertObject {
-            id: undo_activity_id,
-            owner_id: db_actor.id,
-            data: undo_activity_value
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+
+    InsertObject {
+        id: undo_activity_id,
+        owner_id: db_actor.id,
+        data: undo_activity_value,
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     crate::activitypub::deliverer::deliver(undo_activity, Arc::clone(state)).await?;
 

@@ -109,17 +109,15 @@ async fn code_grant(
 
     let access_token = crate::crypto::token::generate()?;
 
-    let access_token = map_err!(
-        InsertOAuthToken {
-            application_id: Some(client.id),
-            actor_id: authorization_code.actor_id,
-            access_token,
-            refresh_token: None,
-            valid_until: valid_until.naive_utc(),
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+    let access_token = InsertOAuthToken {
+        application_id: Some(client.id),
+        actor_id: authorization_code.actor_id,
+        access_token,
+        refresh_token: None,
+        valid_until: valid_until.naive_utc(),
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
@@ -158,17 +156,15 @@ async fn password_grant(
 
     let access_token = crate::crypto::token::generate()?;
 
-    let access_token = map_err!(
-        InsertOAuthToken {
-            application_id: None,
-            actor_id: actor.id,
-            access_token,
-            refresh_token: None,
-            valid_until: valid_until.naive_utc(),
-        }
-        .insert(&state.db_pool)
-        .await
-    )?;
+    let access_token = InsertOAuthToken {
+        application_id: None,
+        actor_id: actor.id,
+        access_token,
+        refresh_token: None,
+        valid_until: valid_until.naive_utc(),
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     let response = AccessTokenResponse {
         access_token: access_token.access_token,
