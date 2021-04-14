@@ -2,7 +2,10 @@ use {
     super::{TokenTemplate, AUTHORIZE_FORM},
     crate::{
         crypto::password,
-        database::model::{InsertOAuthAuthorization, OAuthApplication},
+        database::{
+            model::{InsertOAuthAuthorization, OAuthApplication},
+            InsertExt,
+        },
         error::Error,
         map_err,
         state::ArcState,
@@ -10,7 +13,6 @@ use {
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
-    ormx::Insert,
     serde::Deserialize,
     std::convert::TryFrom,
     uuid::Uuid,
@@ -65,7 +67,6 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
     let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
     let valid_until = chrono::Utc::now() + validity_duration;
 
-    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
     let authorization_code = map_err! {
         InsertOAuthAuthorization {
             application_id: client.id,
@@ -73,7 +74,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
             code: authorization_code,
             valid_until: valid_until.naive_utc(),
         }
-        .insert(&mut db_conn)
+        .insert(&state.db_pool)
         .await
     }?;
 

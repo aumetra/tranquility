@@ -1,7 +1,10 @@
 use {
     super::{convert::IntoMastodon, urlencoded_or_json},
-    crate::{database::model::InsertOAuthApplication, map_err, state::ArcState},
-    ormx::Insert,
+    crate::{
+        database::{model::InsertOAuthApplication, InsertExt},
+        map_err,
+        state::ArcState,
+    },
     serde::Deserialize,
     uuid::Uuid,
     warp::{Filter, Rejection, Reply},
@@ -25,7 +28,6 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate()?;
 
-    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
     let application = map_err! {
         InsertOAuthApplication {
             client_name: form.client_name,
@@ -35,7 +37,7 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
             scopes: form.scopes,
             website: form.website,
         }
-        .insert(&mut db_conn)
+        .insert(&state.db_pool)
         .await
     }?;
     let mastodon_application = application.into_mastodon(&state).await?;
