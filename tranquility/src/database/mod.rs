@@ -3,6 +3,7 @@
 
 use {
     crate::error::Error,
+    async_trait::async_trait,
     chrono::{NaiveDateTime, Utc},
     sqlx::PgPool,
     uuid::Uuid,
@@ -15,6 +16,24 @@ pub mod connection {
         PgPool::connect(db_url)
     }
 }
+
+#[async_trait]
+/// Convenience extension trait. Allows insertion via an immutable reference to a database pool
+pub trait InsertExt: ormx::Insert {
+    /// Insert a row into the database, returning the inserted row
+    async fn insert(
+        self,
+        conn_pool: &sqlx::Pool<ormx::Db>,
+    ) -> Result<<Self as ormx::Insert>::Table, sqlx::Error> {
+        // Acquire a connection from the database pool
+        let mut db_conn = conn_pool.acquire().await?;
+
+        ormx::Insert::insert(self, &mut db_conn).await
+    }
+}
+
+#[async_trait]
+impl<T> InsertExt for T where T: ormx::Insert {}
 
 struct ObjectTimestamp {
     timestamp: NaiveDateTime,

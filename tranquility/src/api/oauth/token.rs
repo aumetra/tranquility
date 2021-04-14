@@ -2,7 +2,10 @@ use {
     super::TokenTemplate,
     crate::{
         crypto::password,
-        database::model::{InsertOAuthToken, OAuthApplication, OAuthAuthorization},
+        database::{
+            model::{InsertOAuthToken, OAuthApplication, OAuthAuthorization},
+            InsertExt,
+        },
         error::Error,
         map_err,
         state::ArcState,
@@ -10,7 +13,6 @@ use {
     askama::Template,
     chrono::Duration,
     once_cell::sync::Lazy,
-    ormx::Insert,
     serde::{Deserialize, Serialize},
     uuid::Uuid,
     warp::{reply::Response, Rejection, Reply},
@@ -107,7 +109,6 @@ async fn code_grant(
 
     let access_token = crate::crypto::token::generate()?;
 
-    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
     let access_token = map_err! {
         InsertOAuthToken {
             application_id: Some(client.id),
@@ -116,7 +117,7 @@ async fn code_grant(
             refresh_token: None,
             valid_until: valid_until.naive_utc(),
         }
-        .insert(&mut db_conn)
+        .insert(&state.db_pool)
         .await
     }?;
 
@@ -157,7 +158,6 @@ async fn password_grant(
 
     let access_token = crate::crypto::token::generate()?;
 
-    let mut db_conn = map_err!(state.db_pool.acquire().await)?;
     let access_token = map_err! {
         InsertOAuthToken {
             application_id: None,
@@ -166,7 +166,7 @@ async fn password_grant(
             refresh_token: None,
             valid_until: valid_until.naive_utc(),
         }
-        .insert(&mut db_conn)
+        .insert(&state.db_pool)
         .await
     }?;
 
