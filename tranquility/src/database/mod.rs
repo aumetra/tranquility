@@ -60,6 +60,7 @@ async fn last_activity_timestamp(
     )
     .fetch_one(conn_pool)
     .await
+    // Either return the current time or convert it via the `Into` trait
     .map_or_else(|_| Utc::now().naive_local(), Into::into);
 
     Ok(last_timestamp)

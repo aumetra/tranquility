@@ -43,11 +43,13 @@ fn activitypub_datetime() -> String {
     chrono::Utc::now().format(DATE_TIME_FORMAT).to_string()
 }
 
+/// Clean any fields that could potentially contain malicious HTML
 pub fn clean_actor(actor: &mut Actor) {
     actor.name = ammonia::clean(actor.name.as_str());
     actor.summary = ammonia::clean(actor.summary.as_str());
 }
 
+/// Clean any fields that could potentially contain malicious HTML
 pub fn clean_object(object: &mut Object) {
     object.summary = ammonia::clean(object.summary.as_str());
     object.content = ammonia::clean(object.content.as_str());
