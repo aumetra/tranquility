@@ -25,7 +25,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release
+          args: --release --features jaeger
 
       - shell: bash
         run: strip target/release/tranquility
@@ -53,7 +53,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target armv7-unknown-linux-gnueabihf
+          args: --release --target armv7-unknown-linux-gnueabihf --features jaeger
 
       - shell: bash
         run: mv target/armv7-unknown-linux-gnueabihf/release/tranquility target/armv7-unknown-linux-gnueabihf/release/tranquility-armv7
