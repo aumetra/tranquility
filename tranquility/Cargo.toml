@@ -46,6 +46,10 @@ opentelemetry = { version = "0.13", features = ["rt-tokio"], optional = true }
 opentelemetry-jaeger = { version = "0.12", features = ["tokio"], optional = true }
 tracing-opentelemetry = { version = "0.12", optional = true }
 
+# Memory allocators
+jemalloc = { package = "jemallocator", version = "0.3", optional = true }
+mimalloc = { version = "0.1", optional = true }
+
 [dependencies.tranquility-http-signatures]
 path = "../tranquility-http-signatures"
 features = ["reqwest"]
@@ -56,16 +60,6 @@ path = "../tranquility-ratelimit"
 [dependencies.tranquility-types]
 path = "../tranquility-types"
 features = ["activitypub", "webfinger"]
-
-# Memory allocators
-[dependencies.jemalloc]
-package = "jemallocator"
-version = "0.3"
-optional = true
-
-[dependencies.mimalloc]
-version = "0.1"
-optional = true
 
 [features]
 default = ["mastodon-api"]
