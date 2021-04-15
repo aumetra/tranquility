@@ -1,9 +1,6 @@
 use {
     crate::{
-        database::{
-            model::{InsertObject, Object as DbObject},
-            Actor as DbActor, InsertExt,
-        },
+        database::{Actor as DbActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
         state::ArcState,
     },
@@ -16,7 +13,7 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
 
     // Check if there's already a follow activity
     // If there's already a follow activity, just say everything was successful
-    let existing_follow_activity = crate::database::object::select::by_type_owner_and_object_url(
+    let existing_follow_activity = DbObject::by_type_owner_and_object_url(
         &state.db_pool,
         "Follow",
         &db_actor.id,
@@ -90,7 +87,7 @@ pub async fn unfollow(
 ) -> Result<(), Error> {
     let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
 
-    let follow_activity = crate::database::object::select::by_type_owner_and_object_url(
+    let follow_activity = DbObject::by_type_owner_and_object_url(
         &state.db_pool,
         "Follow",
         &db_actor.id,

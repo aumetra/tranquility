@@ -1,6 +1,6 @@
 use {
     crate::{
-        database::{last_activity_timestamp, model::Object},
+        database::{last_activity_timestamp, Object},
         error::Error,
     },
     sqlx::PgPool,

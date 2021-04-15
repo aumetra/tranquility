@@ -82,3 +82,4 @@ pub mod object;
 pub mod outbox;
 
 pub use actor::*;
+pub use object::*;

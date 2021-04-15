@@ -1,18 +1,4 @@
-use {chrono::NaiveDateTime, ormx::Table, serde_json::Value, uuid::Uuid};
-
-#[derive(Clone, Table)]
-#[ormx(id = id, table = "objects", insertable)]
-pub struct Object {
-    pub id: Uuid,
-
-    pub owner_id: Uuid,
-    pub data: Value,
-
-    #[ormx(default)]
-    pub created_at: NaiveDateTime,
-    #[ormx(default)]
-    pub updated_at: NaiveDateTime,
-}
+use {chrono::NaiveDateTime, ormx::Table, uuid::Uuid};
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_applications", insertable)]

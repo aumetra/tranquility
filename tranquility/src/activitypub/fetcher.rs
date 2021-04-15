@@ -1,7 +1,7 @@
 use {
     crate::{
         attempt_fetch,
-        database::{model::InsertObject, Actor as DbActor, InsertActor, InsertExt},
+        database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
         impl_from, impl_into, impl_is_owned_by, map_err,
         state::ArcState,
@@ -52,7 +52,7 @@ pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {
 pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Error> {
     debug!("Fetching remote actor...");
 
-    match crate::database::object::select::by_url(&state.db_pool, url).await {
+    match DbObject::by_url(&state.db_pool, url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => debug!(
             error = ?e,
@@ -140,7 +140,7 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
 pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> {
     debug!("Fetching remote object...");
 
-    match crate::database::object::select::by_url(&state.db_pool, url).await {
+    match DbObject::by_url(&state.db_pool, url).await {
         Ok(object) => return Ok(serde_json::from_value(object.data)?),
         Err(e) => debug!(
             error = ?e,
