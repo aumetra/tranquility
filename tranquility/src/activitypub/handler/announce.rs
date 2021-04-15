@@ -1,12 +1,12 @@
 use {
     crate::{
         activitypub::fetcher,
-        database::{Actor, InsertObject, InsertExt},
+        database::{Actor, InsertExt, InsertObject},
         error::Error,
         state::ArcState,
     },
-    uuid::Uuid,
     tranquility_types::activitypub::Activity,
+    uuid::Uuid,
     warp::http::StatusCode,
 };
 
