@@ -1,57 +1,20 @@
-use {
-    crate::{database::model::OAuthToken, error::Error},
-    chrono::NaiveDateTime,
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use {chrono::NaiveDateTime, ormx::Table, uuid::Uuid};
 
-pub async fn insert(
-    conn_pool: &PgPool,
-    application_id: Option<Uuid>,
-    actor_id: Uuid,
-    access_token: String,
-    refresh_token: Option<String>,
-    valid_until: NaiveDateTime,
-) -> Result<OAuthToken, Error> {
-    let token = sqlx::query_as!(
-        OAuthToken,
-        r#"
-            INSERT INTO oauth_tokens
-            ( application_id, actor_id, access_token, refresh_token, valid_until )
-            VALUES
-            ( $1, $2, $3, $4, $5 )
-            RETURNING *
-        "#,
-        application_id,
-        actor_id,
-        access_token,
-        refresh_token,
-        valid_until,
-    )
-    .fetch_one(conn_pool)
-    .await?;
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "oauth_tokens", insertable)]
+pub struct OAuthToken {
+    #[ormx(default)]
+    pub id: Uuid,
 
-    Ok(token)
-}
+    pub application_id: Option<Uuid>,
+    pub actor_id: Uuid,
+    #[ormx(get_one(&str))]
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    pub valid_until: NaiveDateTime,
 
-pub mod select {
-    use {
-        crate::{database::model::OAuthToken, error::Error},
-        sqlx::PgPool,
-    };
-
-    pub async fn by_token(conn_pool: &PgPool, token: &str) -> Result<OAuthToken, Error> {
-        let token = sqlx::query_as!(
-            OAuthToken,
-            r#"
-                SELECT * FROM oauth_tokens
-                WHERE access_token = $1
-            "#,
-            token
-        )
-        .fetch_one(conn_pool)
-        .await?;
-
-        Ok(token)
-    }
+    #[ormx(default)]
+    pub created_at: NaiveDateTime,
+    #[ormx(default)]
+    pub updated_at: NaiveDateTime,
 }

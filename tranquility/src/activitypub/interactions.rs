@@ -1,6 +1,6 @@
 use {
     crate::{
-        database::model::{Actor as DbActor, Object as DbObject},
+        database::{Actor as DbActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
         state::ArcState,
     },
@@ -13,7 +13,7 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
 
     // Check if there's already a follow activity
     // If there's already a follow activity, just say everything was successful
-    let existing_follow_activity = crate::database::object::select::by_type_owner_and_object_url(
+    let existing_follow_activity = DbObject::by_type_owner_and_object_url(
         &state.db_pool,
         "Follow",
         &db_actor.id,
@@ -34,12 +34,12 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
     );
     let follow_activity_value = serde_json::to_value(&follow_activity)?;
 
-    crate::database::object::insert(
-        &state.db_pool,
-        follow_activity_id,
-        db_actor.id,
-        follow_activity_value,
-    )
+    InsertObject {
+        id: follow_activity_id,
+        owner_id: db_actor.id,
+        data: follow_activity_value,
+    }
+    .insert(&state.db_pool)
     .await?;
 
     crate::activitypub::deliverer::deliver(follow_activity, Arc::clone(state)).await?;
@@ -66,12 +66,13 @@ pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) ->
         activity.cc,
     );
     let undo_activity_value = serde_json::to_value(&undo_activity)?;
-    crate::database::object::insert(
-        &state.db_pool,
-        undo_activity_id,
-        db_actor.id,
-        undo_activity_value,
-    )
+
+    InsertObject {
+        id: undo_activity_id,
+        owner_id: db_actor.id,
+        data: undo_activity_value,
+    }
+    .insert(&state.db_pool)
     .await?;
 
     crate::activitypub::deliverer::deliver(undo_activity, Arc::clone(state)).await?;
@@ -86,7 +87,7 @@ pub async fn unfollow(
 ) -> Result<(), Error> {
     let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
 
-    let follow_activity = crate::database::object::select::by_type_owner_and_object_url(
+    let follow_activity = DbObject::by_type_owner_and_object_url(
         &state.db_pool,
         "Follow",
         &db_actor.id,

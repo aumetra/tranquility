@@ -2,7 +2,8 @@
 #![allow(clippy::used_underscore_binding, clippy::similar_names)]
 
 use {
-    crate::error::Error,
+    crate::{error::Error, map_err},
+    async_trait::async_trait,
     chrono::{NaiveDateTime, Utc},
     sqlx::PgPool,
     uuid::Uuid,
@@ -15,6 +16,24 @@ pub mod connection {
         PgPool::connect(db_url)
     }
 }
+
+#[async_trait]
+/// Convenience extension trait. Allows insertion via an immutable reference to a database pool
+pub trait InsertExt: ormx::Insert {
+    /// Insert a row into the database, returning the inserted row
+    async fn insert(
+        self,
+        conn_pool: &sqlx::Pool<ormx::Db>,
+    ) -> Result<<Self as ormx::Insert>::Table, Error> {
+        // Acquire a connection from the database pool
+        let mut db_conn = map_err!(conn_pool.acquire().await)?;
+
+        map_err!(ormx::Insert::insert(self, &mut db_conn).await)
+    }
+}
+
+#[async_trait]
+impl<T> InsertExt for T where T: ormx::Insert {}
 
 struct ObjectTimestamp {
     timestamp: NaiveDateTime,
@@ -41,6 +60,7 @@ async fn last_activity_timestamp(
     )
     .fetch_one(conn_pool)
     .await
+    // Either return the current time or convert it via the `Into` trait
     .map_or_else(|_| Utc::now().naive_local(), Into::into);
 
     Ok(last_timestamp)
@@ -56,7 +76,10 @@ pub async fn migrate(conn_pool: &PgPool) -> Result<(), Error> {
 pub mod actor;
 pub mod follow;
 pub mod inbox_urls;
-pub mod model;
 pub mod oauth;
 pub mod object;
 pub mod outbox;
+
+pub use actor::*;
+pub use oauth::*;
+pub use object::*;

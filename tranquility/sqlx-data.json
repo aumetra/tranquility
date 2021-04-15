@@ -1,88 +1,5 @@
 {
   "db": "PostgreSQL",
-  "014b2aa30a3da006a89718db65a3c9d6a8514affd371ade8eaac18c296807a16": {
-    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n                RETURNING *\n            ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 7,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 8,
-          "name": "remote",
-          "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Jsonb"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
-  "079ce9654063b1edb6751e98f90529b1b232b18d0f0e09ec327852bfec71a956": {
-    "query": "\n            UPDATE actors\n            SET actor = $1, username = $2\n            WHERE actor->>'id' = $3\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "0b65b47aadbb3375bf04a73e311cc456040dc3351c1b9ab4aee67acff702cc35": {
     "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND owner_id = $1\n            AND created_at < $2\n            LIMIT $3\n        ",
     "describe": {
@@ -127,6 +44,20 @@
         false,
         false
       ]
+    }
+  },
+  "0d92ecaf0a459e35dfb1d8e5617f7ffe4f19e74558b5c97920c89ace24c5d76b": {
+    "query": "\n                UPDATE actors\n                SET actor = $1, username = $2\n                WHERE actor->>'id' = $3\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
     }
   },
   "0db67a3667c10583d3a68255e2b205c948ba9ac5a0ee143ba9f4629ace7cf3fc": {
@@ -181,6 +112,180 @@
       },
       "nullable": [
         false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "1d2ccbf155299448d06c2a44889610e4a7198e2b4e6bb340fc61f646671aca83": {
+    "query": "INSERT INTO actors (id, username, email, password_hash, private_key, actor, remote) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING created_at, updated_at",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 1,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Jsonb",
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
+  "21b3164aa7c6a6d73d7d30f8a9588b1be167ee2d261116a9fc1b81c23fe5a167": {
+    "query": "UPDATE oauth_applications SET client_name = $1, client_id = $2, client_secret = $3, redirect_uris = $4, scopes = $5, website = $6, created_at = $7, updated_at = $8 WHERE id = $9",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Timestamp",
+          "Timestamp",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "2702cc4e0672b2c582a9b8948bd14b4e09a6a2dd3a60f11e12cf0fe54214517f": {
+    "query": "SELECT id, application_id, actor_id, code, valid_until, created_at, updated_at FROM oauth_authorizations WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "2c478d1291a84ac8f58fa85aff5c4bb46cc7ed60d6b264ef003b44905477927b": {
+    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
         false,
         false,
         false,
@@ -256,8 +361,8 @@
       ]
     }
   },
-  "3b01aaf6344f26b5338695a232aa1d9e8bb509f9a72d16720f82e2e8a7b9b80b": {
-    "query": "\n                SELECT * FROM oauth_authorizations\n                WHERE code = $1\n            ",
+  "3068a2b8947157eb721400e2021ba0a918c740c2f522f2f240bb1b183233f446": {
+    "query": "INSERT INTO oauth_authorizations (application_id, actor_id, code, valid_until) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at",
     "describe": {
       "columns": [
         {
@@ -267,53 +372,48 @@
         },
         {
           "ordinal": 1,
-          "name": "application_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 2,
-          "name": "actor_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 3,
-          "name": "code",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "valid_until",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
           "name": "created_at",
           "type_info": "Timestamp"
         },
         {
-          "ordinal": 6,
+          "ordinal": 2,
           "name": "updated_at",
           "type_info": "Timestamp"
         }
       ],
       "parameters": {
         "Left": [
-          "Text"
+          "Uuid",
+          "Uuid",
+          "Text",
+          "Timestamp"
         ]
       },
       "nullable": [
-        false,
-        false,
-        false,
-        false,
         false,
         false,
         false
       ]
     }
   },
-  "3c50e1b4edd7c6fe9a073e140df1b2d0f009bbfefbe5fe920b632a87a74bae6e": {
-    "query": "\n            INSERT INTO oauth_tokens\n            ( application_id, actor_id, access_token, refresh_token, valid_until )\n            VALUES\n            ( $1, $2, $3, $4, $5 )\n            RETURNING *\n        ",
+  "431387a061e8678576a4c1a8df69205ad7f3b9f574a2542828ebb7678a7eccdf": {
+    "query": "UPDATE objects SET owner_id = $1, data = $2, created_at = $3, updated_at = $4 WHERE id = $5",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Jsonb",
+          "Timestamp",
+          "Timestamp",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "448d89b8ce4d702b5def6d21680a100b150dd69bf47c119073e317cd74ccf29c": {
+    "query": "SELECT id, application_id, actor_id, access_token, refresh_token, valid_until, created_at, updated_at FROM oauth_tokens",
     "describe": {
       "columns": [
         {
@@ -358,13 +458,7 @@
         }
       ],
       "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Text",
-          "Text",
-          "Timestamp"
-        ]
+        "Left": []
       },
       "nullable": [
         false,
@@ -372,79 +466,6 @@
         false,
         false,
         true,
-        false,
-        false,
-        false
-      ]
-    }
-  },
-  "4467a6aee265a780c75b257f65014a4f240bafc85cbf06bf071db8c69b09c7fe": {
-    "query": "\n            INSERT INTO oauth_applications\n            ( client_name, client_id, client_secret, redirect_uris, scopes, website )\n            VALUES\n            ( $1, $2, $3, $4, $5, $6 )\n            RETURNING *\n        ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "client_name",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "client_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 3,
-          "name": "client_secret",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "redirect_uris",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "scopes",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 6,
-          "name": "website",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 7,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 8,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid",
-          "Text",
-          "Text",
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
         false,
         false,
         false
@@ -468,6 +489,74 @@
       },
       "nullable": [
         null
+      ]
+    }
+  },
+  "51aaa43171f2a3e02ca9054207f669aa07a53c1a3993d722836c891df5507dcf": {
+    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors WHERE email = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
       ]
     }
   },
@@ -518,6 +607,24 @@
       ]
     }
   },
+  "5c9a82c6ad190e606e2a67888be5819303f39437a703310dcc7477b4aa3577d1": {
+    "query": "UPDATE oauth_authorizations SET application_id = $1, actor_id = $2, code = $3, valid_until = $4, created_at = $5, updated_at = $6 WHERE id = $7",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text",
+          "Timestamp",
+          "Timestamp",
+          "Timestamp",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "5d39960e48f65a3e6a915d12d4e50c38e9a132551cdf4efbaffc89605ee9735e": {
     "query": "DELETE FROM oauth_authorizations WHERE valid_until < NOW()",
     "describe": {
@@ -548,8 +655,8 @@
       ]
     }
   },
-  "708ecddc1fbbfc4019348593cacbe917cbdb91d800dc855af80ae4e74607f673": {
-    "query": "\n            INSERT INTO oauth_authorizations\n            ( application_id, actor_id, code, valid_until )\n            VALUES\n            ( $1, $2, $3, $4 )\n            RETURNING *\n        ",
+  "5fb738546b066a5916ae5d799d69154aea771f958a6a0185c1dc9fe66645a9bc": {
+    "query": "SELECT id, owner_id, data, created_at, updated_at FROM objects WHERE id = $1",
     "describe": {
       "columns": [
         {
@@ -559,31 +666,50 @@
         },
         {
           "ordinal": 1,
-          "name": "application_id",
+          "name": "owner_id",
           "type_info": "Uuid"
         },
         {
           "ordinal": 2,
-          "name": "actor_id",
-          "type_info": "Uuid"
+          "name": "data",
+          "type_info": "Jsonb"
         },
         {
           "ordinal": 3,
-          "name": "code",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "valid_until",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
           "name": "created_at",
           "type_info": "Timestamp"
         },
         {
-          "ordinal": 6,
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "6f1e5d6f4ff10793b6b3311118870b26a6d780bb3248a838d53d799d2831822e": {
+    "query": "INSERT INTO objects (id, owner_id, data) VALUES ($1, $2, $3) RETURNING created_at, updated_at",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 1,
           "name": "updated_at",
           "type_info": "Timestamp"
         }
@@ -592,16 +718,10 @@
         "Left": [
           "Uuid",
           "Uuid",
-          "Text",
-          "Timestamp"
+          "Jsonb"
         ]
       },
       "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
         false,
         false
       ]
@@ -627,22 +747,8 @@
       ]
     }
   },
-  "781fb9d81eef14d5cef48f53eb36d662989047aad2ce68fd446659d56731f93b": {
-    "query": "\n            INSERT INTO objects \n            ( id, owner_id, data ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Jsonb"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "816ea34615b11311477a7fd33e7f34336892453189c756d1edcde49547d527e5": {
-    "query": "\n                DELETE FROM objects\n                WHERE id = $1\n            ",
+  "773245cd6d8043fee06118ab4b40d9816a1539642c027354569c130710fdd44b": {
+    "query": "DELETE FROM actors WHERE id = $1",
     "describe": {
       "columns": [],
       "parameters": {
@@ -651,6 +757,166 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "7c47c607f32395d9b5b5382b19268c4687b49c48cee05b073ab35eb08c8fa6a3": {
+    "query": "DELETE FROM objects WHERE id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "7fbe449d281c0fb6bb5215e20c08afb195f6335d31698825af99a0408d4fadae": {
+    "query": "SELECT id, client_name, client_id, client_secret, redirect_uris, scopes, website, created_at, updated_at FROM oauth_applications LIMIT $1 OFFSET $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "client_secret",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "redirect_uris",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "scopes",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "website",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "83ab8cc3f9281605cababc539106a0eb296ed441db98eda6cbabe165bc83e974": {
+    "query": "SELECT id, owner_id, data, created_at, updated_at FROM objects",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "9922cfd972f906174a85e745aea24bc2b82c1de2313d9bb102542e6179dccaba": {
+    "query": "INSERT INTO oauth_applications (client_name, client_id, client_secret, redirect_uris, scopes, website) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at, updated_at",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 2,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
     }
   },
   "9e4de8956a213126dcfd1d9f2641545928510c6a2cbcd9286202a05e7fa89d74": {
@@ -663,6 +929,131 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "9fe5dff2e71362aca0360782625d7f452dde0dac5bc4f90b86de1c8281d16768": {
+    "query": "DELETE FROM oauth_authorizations WHERE id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "a6fc90ede9ce41d33b89c32844bb530105461df2a3449f2d44bc2a888dd2b4da": {
+    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "aa5cc21150e6b1e5c52fd2a4f3880d6ce379f51edc38b1e5c0c981f5c8433950": {
+    "query": "SELECT id, owner_id, data, created_at, updated_at FROM objects LIMIT $1 OFFSET $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
     }
   },
   "b0d198bb0ec49b5d9b47f3451c0ecf5898091c63206b1bcb2249c702bb4eefc0": {
@@ -733,8 +1124,136 @@
       ]
     }
   },
-  "bbfa2a6e918060d0f6b78d36b63010e303a0bcf75e831e2e023cbcc0f5c8b7fb": {
-    "query": "\n                SELECT * FROM oauth_applications\n                WHERE client_id = $1\n            ",
+  "b0f627f857aa8253e2c3e4dec8ab5531959b255b0f0a9fb75d3c46efb16eb8b0": {
+    "query": "SELECT id, client_name, client_id, client_secret, redirect_uris, scopes, website, created_at, updated_at FROM oauth_applications",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "client_secret",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "redirect_uris",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "scopes",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "website",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "b5aa7e63fab3ccebfd8a2b2fd6b3d2831c5cfb9864d510d19d36581563ebda38": {
+    "query": "SELECT id, application_id, actor_id, access_token, refresh_token, valid_until, created_at, updated_at FROM oauth_tokens WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "access_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "refresh_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "c08a48d5751f04647c8413c838907db5e134064b4bb0c1f760d120eb214758d9": {
+    "query": "SELECT id, client_name, client_id, client_secret, redirect_uris, scopes, website, created_at, updated_at FROM oauth_applications WHERE client_id = $1",
     "describe": {
       "columns": [
         {
@@ -847,6 +1366,69 @@
       ]
     }
   },
+  "c234e003fe6a05ba265bd731afc9c8ff9d77c006e616ac8003bfc454fe2c1220": {
+    "query": "SELECT id, application_id, actor_id, access_token, refresh_token, valid_until, created_at, updated_at FROM oauth_tokens LIMIT $1 OFFSET $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "access_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "refresh_token",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "c2fa60bf03793ed03709a01c04975c755cd0219be26d460dbd332816b741c793": {
     "query": "\n                SELECT * FROM objects\n                WHERE owner_id = $1\n                AND data->>'type' = $2\n\n                ORDER BY created_at DESC\n                LIMIT $3\n                OFFSET $4\n            ",
     "describe": {
@@ -938,72 +1520,16 @@
       ]
     }
   },
-  "cbd18f929fc7a9d022ea1bb8bff1c88322cd86750bc333393f9b6553e5a75cf4": {
-    "query": "\n                SELECT * FROM actors\n                WHERE id = $1\n            ",
+  "c5b1716962eafe408d710133ad0464ae0fa95f517250e59642f16ccf996f9dbc": {
+    "query": "DELETE FROM oauth_tokens WHERE id = $1",
     "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 7,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 8,
-          "name": "remote",
-          "type_info": "Bool"
-        }
-      ],
+      "columns": [],
       "parameters": {
         "Left": [
           "Uuid"
         ]
       },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false
-      ]
+      "nullable": []
     }
   },
   "cc6b4a9f05e8a42b768e900af17153bcd8e0ee07e94637bc86940e28818bd871": {
@@ -1050,25 +1576,245 @@
       ]
     }
   },
-  "ccced91f033c47b0e2c7506c1f0d27be2d052f3b8d9be5abccb70eb3c4165910": {
-    "query": "\n                INSERT INTO actors\n                ( id, username, email, password_hash, private_key, actor ) \n                VALUES \n                ( $1, $2, $3, $4, $5, $6 )\n            ",
+  "d60adcc0f4b55752a6843fdb4224f81968decac60174293ffddd2e792d14cf3d": {
+    "query": "UPDATE oauth_tokens SET application_id = $1, actor_id = $2, access_token = $3, refresh_token = $4, valid_until = $5, created_at = $6, updated_at = $7 WHERE id = $8",
     "describe": {
       "columns": [],
       "parameters": {
         "Left": [
           "Uuid",
+          "Uuid",
           "Text",
           "Text",
-          "Text",
-          "Text",
-          "Jsonb"
+          "Timestamp",
+          "Timestamp",
+          "Timestamp",
+          "Uuid"
         ]
       },
       "nullable": []
     }
   },
-  "e63b5931efd1a85178617cfb31222e9d81718e0d7c51f186298a8691ae5f0aa9": {
-    "query": "\n                SELECT * FROM oauth_tokens\n                WHERE access_token = $1\n            ",
+  "dad03da72aa43f6db8ca4bf5ec79309c36c31845260d3214b0228704aedfa723": {
+    "query": "INSERT INTO oauth_tokens (application_id, actor_id, access_token, refresh_token, valid_until) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 2,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text",
+          "Text",
+          "Timestamp"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "dd38cebac68c758e8da2cc053e240d6cb857b37ce160c673e3bd5542e3f3f48e": {
+    "query": "SELECT id, client_name, client_id, client_secret, redirect_uris, scopes, website, created_at, updated_at FROM oauth_applications WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "client_name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "client_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "client_secret",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "redirect_uris",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "scopes",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "website",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "e0669da02e2c25eb8569c5d3f92af5a4efc498601a62c975b730ea353b48d9c5": {
+    "query": "SELECT id, application_id, actor_id, code, valid_until, created_at, updated_at FROM oauth_authorizations WHERE code = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "eb3cc3c4ece39daf1d7cd390e1084144d7a52ace5fd6e6610812fb3c9da5f8a0": {
+    "query": "DELETE FROM oauth_applications WHERE id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "ed88d14fd85a8951a723b720ffe17911588e7f0166f3b1ede1ecbe11e4e1757a": {
+    "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND data->>'object' = (\n                SELECT actor->>'id' FROM actors\n                WHERE id = $1\n            )\n            AND created_at < $2\n            LIMIT $3\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "owner_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 4,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Timestamp",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "f1c152bb1057ea2aa01b53066020055478409865ba3d390f8fc2664318d50717": {
+    "query": "SELECT id, application_id, actor_id, access_token, refresh_token, valid_until, created_at, updated_at FROM oauth_tokens WHERE access_token = $1",
     "describe": {
       "columns": [
         {
@@ -1129,8 +1875,8 @@
       ]
     }
   },
-  "ed88d14fd85a8951a723b720ffe17911588e7f0166f3b1ede1ecbe11e4e1757a": {
-    "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND data->>'object' = (\n                SELECT actor->>'id' FROM actors\n                WHERE id = $1\n            )\n            AND created_at < $2\n            LIMIT $3\n        ",
+  "f48d350fbac37d466552ab13cd4bb9b3ecd3c1162c4d87d15011cdc5050919ae": {
+    "query": "SELECT id, application_id, actor_id, code, valid_until, created_at, updated_at FROM oauth_authorizations",
     "describe": {
       "columns": [
         {
@@ -1140,29 +1886,161 @@
         },
         {
           "ordinal": 1,
-          "name": "owner_id",
+          "name": "application_id",
           "type_info": "Uuid"
         },
         {
           "ordinal": 2,
-          "name": "data",
-          "type_info": "Jsonb"
+          "name": "actor_id",
+          "type_info": "Uuid"
         },
         {
           "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
           "name": "created_at",
           "type_info": "Timestamp"
         },
         {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "fb06195fdd1e6c2682b1a4ee04b88d65b5711acd43d906f623d3378d92701c9d": {
+    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors LIMIT $1 OFFSET $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
           "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 7,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 8,
           "name": "updated_at",
           "type_info": "Timestamp"
         }
       ],
       "parameters": {
         "Left": [
-          "Uuid",
-          "Timestamp",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "fce63cd96eded0bfc83855c86d0faf7877a2fb4fa0fa6bb47191efc275e79197": {
+    "query": "SELECT id, application_id, actor_id, code, valid_until, created_at, updated_at FROM oauth_authorizations LIMIT $1 OFFSET $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "application_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "actor_id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "valid_until",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 5,
+          "name": "created_at",
+          "type_info": "Timestamp"
+        },
+        {
+          "ordinal": 6,
+          "name": "updated_at",
+          "type_info": "Timestamp"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
           "Int8"
         ]
       },
@@ -1171,8 +2049,30 @@
         false,
         false,
         false,
+        false,
+        false,
         false
       ]
+    }
+  },
+  "fda3c1f0dca517085eabfaf2508ed22472920b886f5046db97f4e35e2b013129": {
+    "query": "UPDATE actors SET username = $1, email = $2, password_hash = $3, private_key = $4, actor = $5, remote = $6, created_at = $7, updated_at = $8 WHERE id = $9",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Jsonb",
+          "Bool",
+          "Timestamp",
+          "Timestamp",
+          "Uuid"
+        ]
+      },
+      "nullable": []
     }
   }
 }

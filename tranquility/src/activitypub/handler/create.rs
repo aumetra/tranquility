@@ -1,5 +1,10 @@
 use {
-    crate::{activitypub::fetcher, error::Error, state::ArcState},
+    crate::{
+        activitypub::fetcher,
+        database::{InsertExt, InsertObject},
+        error::Error,
+        state::ArcState,
+    },
     tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
     uuid::Uuid,
     warp::http::StatusCode,
@@ -13,8 +18,13 @@ async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, 
 
     let object_value = serde_json::to_value(&object)?;
 
-    crate::database::object::insert(&state.db_pool, Uuid::new_v4(), owner_db.id, object_value)
-        .await?;
+    InsertObject {
+        id: Uuid::new_v4(),
+        owner_id: owner_db.id,
+        data: object_value,
+    }
+    .insert(&state.db_pool)
+    .await?;
 
     Ok(object)
 }

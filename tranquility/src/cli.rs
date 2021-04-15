@@ -8,8 +8,14 @@ use {
     },
     argh::FromArgs,
     std::process,
-    tracing_subscriber::filter::LevelFilter,
+    tracing_subscriber::{
+        filter::LevelFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
+        Registry,
+    },
 };
+
+#[cfg(feature = "jaeger")]
+use tracing_opentelemetry::OpenTelemetryLayer;
 
 #[derive(FromArgs)]
 #[argh(description = "An ActivityPub server ^_^")]
@@ -25,6 +31,25 @@ pub struct Opts {
     #[argh(switch, short = 'V')]
     /// print the version
     version: bool,
+}
+
+/// Initialise the tracing subscriber
+fn init_tracing(level: LevelFilter) {
+    let subscriber = Registry::default()
+        .with(EnvFilter::default().add_directive(level.into()))
+        .with(fmt::layer());
+
+    #[cfg(feature = "jaeger")]
+    let subscriber = {
+        let jaeger_tracer = opentelemetry_jaeger::new_pipeline()
+            .with_service_name(env!("CARGO_PKG_NAME"))
+            .install_batch(opentelemetry::runtime::Tokio)
+            .unwrap();
+
+        subscriber.with(OpenTelemetryLayer::new(jaeger_tracer))
+    };
+
+    subscriber.init();
 }
 
 /// - Initialises the tracing verbosity levels  
@@ -43,7 +68,8 @@ pub async fn run() -> ArcState {
         1 => LevelFilter::DEBUG,
         _ => LevelFilter::TRACE,
     };
-    tracing_subscriber::fmt().with_max_level(level).init();
+
+    init_tracing(level);
 
     let config = crate::config::load(options.config).await;
     let db_pool = crate::database::connection::init_pool(&config.server.database_url)

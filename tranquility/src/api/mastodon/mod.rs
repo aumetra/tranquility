@@ -1,10 +1,15 @@
 use {
     crate::{
-        consts::cors::API_ALLOWED_METHODS, database::model::Actor, error::Error, state::ArcState,
+        consts::cors::API_ALLOWED_METHODS,
+        database::{Actor, OAuthToken},
+        error::Error,
+        map_err,
+        state::ArcState,
         util::construct_cors,
     },
     headers::authorization::{Bearer, Credentials},
     once_cell::sync::Lazy,
+    ormx::Table,
     serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
     warp::{
@@ -48,10 +53,8 @@ async fn authorise_user(
     let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
     let token = credentials.token();
 
-    let access_token =
-        crate::database::oauth::token::select::by_token(&state.db_pool, token).await?;
-    let actor =
-        crate::database::actor::select::by_id(&state.db_pool, access_token.actor_id).await?;
+    let access_token = map_err!(OAuthToken::by_access_token(&state.db_pool, token).await)?;
+    let actor = map_err!(Actor::get(&state.db_pool, access_token.actor_id).await)?;
 
     Ok(actor)
 }

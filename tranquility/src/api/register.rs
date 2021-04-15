@@ -1,5 +1,10 @@
 use {
-    crate::{activitypub, error::Error, state::ArcState},
+    crate::{
+        activitypub,
+        database::{InsertActor, InsertExt},
+        map_err,
+        state::ArcState,
+    },
     once_cell::sync::Lazy,
     regex::Regex,
     serde::Deserialize,
@@ -36,7 +41,7 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         return Ok(StatusCode::FORBIDDEN.into_response());
     }
 
-    form.validate().map_err(Error::from)?;
+    map_err!(form.validate())?;
 
     let user_id = Uuid::new_v4();
     let password_hash = crate::crypto::password::hash(form.password).await?;
@@ -50,15 +55,18 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         &form.username,
         public_key_pem,
     );
+    let actor = map_err!(serde_json::to_value(&actor))?;
 
-    crate::database::actor::insert::local(
-        &state.db_pool,
-        user_id,
+    InsertActor {
+        id: user_id,
+        username: form.username,
         actor,
-        form.email,
-        password_hash,
-        private_key_pem,
-    )
+        email: Some(form.email),
+        password_hash: Some(password_hash),
+        private_key: Some(private_key_pem),
+        remote: false,
+    }
+    .insert(&state.db_pool)
     .await?;
 
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())

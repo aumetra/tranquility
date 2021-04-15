@@ -1,68 +1,24 @@
-use {crate::error::Error, serde_json::Value, sqlx::PgPool, uuid::Uuid};
+use {
+    crate::error::Error, chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool,
+    uuid::Uuid,
+};
 
-pub async fn insert(
-    conn_pool: &PgPool,
-    id: Uuid,
-    owner_id: Uuid,
-    object: Value,
-) -> Result<(), Error> {
-    sqlx::query!(
-        r#"
-            INSERT INTO objects 
-            ( id, owner_id, data ) 
-            VALUES 
-            ( $1, $2, $3 )
-        "#,
-        id,
-        owner_id,
-        object,
-    )
-    .execute(conn_pool)
-    .await?;
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "objects", insertable)]
+pub struct Object {
+    pub id: Uuid,
 
-    Ok(())
+    pub owner_id: Uuid,
+    pub data: Value,
+
+    #[ormx(default)]
+    pub created_at: NaiveDateTime,
+    #[ormx(default)]
+    pub updated_at: NaiveDateTime,
 }
 
-pub mod delete {
-    use {crate::error::Error, sqlx::PgPool, uuid::Uuid};
-
-    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<(), Error> {
-        sqlx::query!(
-            r#"
-                DELETE FROM objects
-                WHERE id = $1
-            "#,
-            id
-        )
-        .execute(conn_pool)
-        .await?;
-
-        Ok(())
-    }
-
-    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<(), Error> {
-        sqlx::query!(
-            r#"
-                DELETE FROM objects
-                WHERE data->>'id' = $1
-            "#,
-            url
-        )
-        .execute(conn_pool)
-        .await?;
-
-        Ok(())
-    }
-}
-
-pub mod select {
-    use {
-        crate::{database::model::Object, error::Error},
-        sqlx::{Error as SqlxError, PgPool},
-        uuid::Uuid,
-    };
-
-    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Object, Error> {
+impl Object {
+    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Self, Error> {
         let object = sqlx::query_as!(
             Object,
             r#"
@@ -83,7 +39,7 @@ pub mod select {
         object_url: &str,
         limit: i64,
         offset: i64,
-    ) -> Result<Vec<Object>, Error> {
+    ) -> Result<Vec<Self>, Error> {
         let objects = sqlx::query_as!(
             Object,
             r#"
@@ -112,7 +68,7 @@ pub mod select {
         owner_id: &Uuid,
         limit: i64,
         offset: i64,
-    ) -> Result<Vec<Object>, Error> {
+    ) -> Result<Vec<Self>, Error> {
         let objects = sqlx::query_as!(
             Object,
             r#"
@@ -140,7 +96,7 @@ pub mod select {
         r#type: &str,
         owner_id: &Uuid,
         object_url: &str,
-    ) -> Result<Object, Error> {
+    ) -> Result<Self, Error> {
         let object_result = sqlx::query_as!(
             Object,
             r#"
@@ -160,12 +116,12 @@ pub mod select {
 
         match object_result {
             Ok(obj) => Ok(obj),
-            Err(SqlxError::RowNotFound) => Err(Error::InvalidRequest),
+            Err(sqlx::Error::RowNotFound) => Err(Error::InvalidRequest),
             Err(e) => Err(e.into()),
         }
     }
 
-    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Object, Error> {
+    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Self, Error> {
         let object = sqlx::query_as!(
             Object,
             r#"
@@ -179,20 +135,18 @@ pub mod select {
 
         Ok(object)
     }
-}
 
-pub async fn update(conn_pool: &PgPool, id: Uuid, object: Value) -> Result<(), Error> {
-    sqlx::query!(
-        r#"
-            UPDATE objects
-            SET data = $1
-            WHERE id = $2
-        "#,
-        object,
-        id,
-    )
-    .execute(conn_pool)
-    .await?;
+    pub async fn delete_by_url(conn_pool: &PgPool, url: &str) -> Result<(), Error> {
+        sqlx::query!(
+            r#"
+                DELETE FROM objects
+                WHERE data->>'id' = $1
+            "#,
+            url
+        )
+        .execute(conn_pool)
+        .await?;
 
-    Ok(())
+        Ok(())
+    }
 }

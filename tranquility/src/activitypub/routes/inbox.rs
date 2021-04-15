@@ -6,7 +6,7 @@ use {
         },
         crypto,
         error::Error,
-        match_handler,
+        map_err, match_handler,
         state::ArcState,
     },
     core::ops::Not,
@@ -60,9 +60,8 @@ async fn verify_signature(
     headers: HeaderMap,
     activity: Activity,
 ) -> Result<(ArcState, Activity), Rejection> {
-    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(&state, &activity.actor)
-        .await
-        .map_err(Error::from)?;
+    let (remote_actor, _remote_actor_db) =
+        map_err!(fetcher::fetch_actor(&state, &activity.actor).await)?;
 
     let public_key = remote_actor.public_key.public_key_pem;
     let query = query.is_empty().not().then(|| query);

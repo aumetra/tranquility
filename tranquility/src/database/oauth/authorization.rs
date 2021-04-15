@@ -1,67 +1,30 @@
-use {
-    crate::{database::model::OAuthAuthorization, error::Error},
-    chrono::NaiveDateTime,
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use {crate::error::Error, chrono::NaiveDateTime, ormx::Table, sqlx::PgPool, uuid::Uuid};
 
-pub mod delete {
-    use {crate::error::Error, sqlx::PgPool};
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "oauth_authorizations", insertable)]
+pub struct OAuthAuthorization {
+    #[ormx(default)]
+    pub id: Uuid,
 
-    pub async fn expired(conn_pool: &PgPool) -> Result<(), Error> {
+    pub application_id: Uuid,
+    pub actor_id: Uuid,
+
+    #[ormx(get_one(&str))]
+    pub code: String,
+    pub valid_until: NaiveDateTime,
+
+    #[ormx(default)]
+    pub created_at: NaiveDateTime,
+    #[ormx(default)]
+    pub updated_at: NaiveDateTime,
+}
+
+impl OAuthAuthorization {
+    pub async fn delete_expired(conn_pool: &PgPool) -> Result<(), Error> {
         sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
             .execute(conn_pool)
             .await?;
 
         Ok(())
     }
-}
-
-pub mod select {
-    use {
-        crate::{database::model::OAuthAuthorization, error::Error},
-        sqlx::PgPool,
-    };
-
-    pub async fn by_code(conn_pool: &PgPool, code: &str) -> Result<OAuthAuthorization, Error> {
-        let authorization = sqlx::query_as!(
-            OAuthAuthorization,
-            r#"
-                SELECT * FROM oauth_authorizations
-                WHERE code = $1
-            "#,
-            code
-        )
-        .fetch_one(conn_pool)
-        .await?;
-
-        Ok(authorization)
-    }
-}
-
-pub async fn insert(
-    conn_pool: &PgPool,
-    application_id: Uuid,
-    actor_id: Uuid,
-    code: String,
-    valid_until: NaiveDateTime,
-) -> Result<OAuthAuthorization, Error> {
-    let authorization = sqlx::query_as!(
-        OAuthAuthorization,
-        r#"
-            INSERT INTO oauth_authorizations
-            ( application_id, actor_id, code, valid_until )
-            VALUES
-            ( $1, $2, $3, $4 )
-            RETURNING *
-        "#,
-        application_id,
-        actor_id,
-        code,
-        valid_until
-    )
-    .fetch_one(conn_pool)
-    .await?;
-
-    Ok(authorization)
 }

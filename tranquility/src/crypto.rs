@@ -4,6 +4,7 @@ use rand::{
     Rng,
 };
 
+/// Generate a type that supports being generated via `rand::Rng::gen()` using `OsRng`
 pub fn gen_secure_rand<T>() -> T
 where
     Standard: Distribution<T>,
@@ -18,6 +19,7 @@ pub mod digest {
         sha2::{Digest, Sha256},
     };
 
+    /// Calculate the digest HTTP header
     pub async fn http_header(data: Vec<u8>) -> Result<HeaderValue, Error> {
         cpu_intensive_task(move || {
             let sha_hash = Sha256::digest(&data);
@@ -38,6 +40,7 @@ pub mod password {
         argon2::Config,
     };
 
+    /// Hash the password using the standard rust-argon2 config
     pub async fn hash(password: String) -> Result<String, Error> {
         cpu_intensive_task(move || {
             let salt = crate::crypto::gen_secure_rand::<[u8; 32]>();
@@ -48,6 +51,7 @@ pub mod password {
         .await
     }
 
+    /// Verify an encoded password
     pub async fn verify(password: String, hash: String) -> bool {
         cpu_intensive_task(move || {
             argon2::verify_encoded(hash.as_str(), password.as_bytes()).unwrap_or(false)
@@ -63,10 +67,12 @@ pub mod rsa {
         rsa::{PrivateKeyPemEncoding, PublicKeyPemEncoding, RSAPrivateKey},
     };
 
+    /// Generate an RSA key pair (key size defined in the `consts` file)
     pub async fn generate() -> Result<RSAPrivateKey, Error> {
         cpu_intensive_task(|| Ok(RSAPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
     }
 
+    /// Get the public key from the private key and encode both in the PKCS#8 PEM format
     pub fn to_pem(rsa_key: &RSAPrivateKey) -> Result<(String, String), Error> {
         let public_key = PublicKeyPemEncoding::to_pem_pkcs8(&rsa_key.to_public_key())?;
         let private_key = PrivateKeyPemEncoding::to_pem_pkcs8(rsa_key)?;
@@ -78,6 +84,7 @@ pub mod rsa {
 pub mod token {
     use crate::{consts::crypto::TOKEN_LENGTH, error::Error};
 
+    /// Generate a cryptographically random token (length defined in the `consts` file)
     pub fn generate() -> Result<String, Error> {
         // Two characters are needed to encode one byte as hex
         let token = crate::crypto::gen_secure_rand::<[u8; TOKEN_LENGTH / 2]>();
@@ -88,7 +95,7 @@ pub mod token {
 
 pub mod request {
     use {
-        crate::{error::Error, util::cpu_intensive_task},
+        crate::{error::Error, map_err, util::cpu_intensive_task},
         std::future::Future,
         tranquility_http_signatures::Request,
         warp::{
@@ -100,6 +107,7 @@ pub mod request {
         },
     };
 
+    /// Sign a reqwest HTTP request
     pub fn sign(
         request: reqwest::Request,
         key_id: String,
@@ -112,15 +120,15 @@ pub mod request {
             let key_id = key_id.as_str();
             let private_key = private_key.as_bytes();
 
-            tranquility_http_signatures::sign(
+            map_err!(tranquility_http_signatures::sign(
                 request,
                 &["(request-target)", "date", "digest"],
                 (key_id, private_key),
-            )
-            .map_err(Error::from)
+            ))
         })
     }
 
+    /// Verify an HTTP request using parameters obtained from warp
     pub fn verify(
         method: Method,
         path: FullPath,
@@ -139,7 +147,7 @@ pub mod request {
 
             let request = Request::new(method, path, query, headers);
 
-            tranquility_http_signatures::verify(request, public_key).map_err(Error::from)
+            map_err!(tranquility_http_signatures::verify(request, public_key))
         })
     }
 }

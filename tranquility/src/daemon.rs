@@ -1,5 +1,5 @@
 use {
-    crate::{consts::daemon::DELETE_INTERVAL, state::ArcState},
+    crate::{consts::daemon::DELETE_INTERVAL, database::OAuthAuthorization, state::ArcState},
     std::future::Future,
     tokio::time,
 };
@@ -16,7 +16,7 @@ async fn delete_expired_authorization_codes(state: ArcState) {
     let mut query_interval = time::interval(DELETE_INTERVAL);
 
     loop {
-        match crate::database::oauth::authorization::delete::expired(&state.db_pool).await {
+        match OAuthAuthorization::delete_expired(&state.db_pool).await {
             Ok(_) => (),
             Err(err) => warn!(error = ?err, "Couldn't delete expired tokens"),
         }
