@@ -1,12 +1,12 @@
 use {
     crate::{
         activitypub::fetcher,
-        database::{Actor, InsertExt, InsertObject},
+        database::{Actor, InsertObject, InsertExt},
         error::Error,
         state::ArcState,
     },
-    tranquility_types::activitypub::Activity,
     uuid::Uuid,
+    tranquility_types::activitypub::Activity,
     warp::http::StatusCode,
 };
 
@@ -17,8 +17,8 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
     fetcher::fetch_object(&state, &object_url).await?;
     // Fetch the actor (just in case)
     fetcher::fetch_actor(&state, &activity.actor).await?;
-    let actor = Actor::by_url(&state.db_pool, &activity.actor).await?;
 
+    let actor = Actor::by_url(&state.db_pool, &activity.actor).await?;
     let activity_value = serde_json::to_value(&activity)?;
 
     InsertObject {

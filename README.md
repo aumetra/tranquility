@@ -49,9 +49,9 @@ To enable this feature, compile Tranquility with the `jaeger` feature flag
         - [x] Outbox
         - [x] Following collection
         - [x] Followers collection
-    - [ ] Activities (incoming)
+    - [x] Activities (incoming)
         - [x] Accept
-        - [ ] Announce
+        - [x] Announce
         - [x] Create
         - [x] Delete
         - [x] Follow

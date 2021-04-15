@@ -83,6 +83,7 @@ pub async fn inbox(
         (state, activity);
 
         Accept,
+        Announce,
         Create,
         Delete,
         Follow,
