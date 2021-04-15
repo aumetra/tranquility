@@ -1,7 +1,7 @@
 use {
     crate::{
         activitypub::fetcher,
-        database::{model::InsertObject, Actor, InsertExt},
+        database::{Actor, InsertExt, InsertObject},
         error::Error,
         state::ArcState,
     },

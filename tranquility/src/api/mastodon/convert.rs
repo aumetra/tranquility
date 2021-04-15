@@ -2,10 +2,7 @@
 
 use {
     crate::{
-        database::{
-            model::{OAuthApplication, Object as DbObject},
-            Actor as DbActor,
-        },
+        database::{model::OAuthApplication, Actor as DbActor, Object as DbObject},
         error::Error,
         format_uuid,
         state::ArcState,
@@ -182,8 +179,7 @@ impl IntoMastodon<Status> for Object {
     type Error = Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
-        let db_object =
-            crate::database::object::select::by_url(&state.db_pool, self.id.as_str()).await?;
+        let db_object = DbObject::by_url(&state.db_pool, self.id.as_str()).await?;
         let (_actor, db_actor) =
             crate::activitypub::fetcher::fetch_actor(state, self.attributed_to.as_str()).await?;
 

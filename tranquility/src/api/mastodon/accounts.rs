@@ -1,7 +1,9 @@
 use {
     super::{authorisation_optional, authorisation_required, convert::IntoMastodon},
     crate::{
-        activitypub::interactions, database::Actor as DbActor, format_uuid, map_err,
+        activitypub::interactions,
+        database::{Actor as DbActor, Object as DbObject},
+        format_uuid, map_err,
         state::ArcState,
     },
     ormx::Table,
@@ -54,8 +56,7 @@ async fn follow(
 
 async fn following(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
     let follow_activities =
-        crate::database::object::select::by_type_and_owner(&state.db_pool, "Follow", &id, 10, 0)
-            .await?;
+        DbObject::by_type_and_owner(&state.db_pool, "Follow", &id, 10, 0).await?;
     let followed_accounts: Vec<Account> = follow_activities.into_mastodon(&state).await?;
 
     Ok(warp::reply::json(&followed_accounts))
@@ -65,14 +66,9 @@ async fn followers(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
     let db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
     let actor: Actor = map_err!(serde_json::from_value(db_actor.actor))?;
 
-    let followed_activities = crate::database::object::select::by_type_and_object_url(
-        &state.db_pool,
-        "Follow",
-        actor.id.as_str(),
-        10,
-        0,
-    )
-    .await?;
+    let followed_activities =
+        DbObject::by_type_and_object_url(&state.db_pool, "Follow", actor.id.as_str(), 10, 0)
+            .await?;
     let follower_accounts: Vec<Account> = followed_activities.into_mastodon(&state).await?;
 
     Ok(warp::reply::json(&follower_accounts))

@@ -1,5 +1,5 @@
 use {
-    crate::{activitypub::fetcher, error::Error, state::ArcState},
+    crate::{activitypub::fetcher, database::Object, error::Error, state::ArcState},
     tranquility_types::activitypub::{activity::ObjectField, Activity},
     warp::http::StatusCode,
 };
@@ -18,7 +18,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
 
     let object = activity.object.as_object().unwrap();
 
-    crate::database::object::delete::by_url(&state.db_pool, &object.id).await?;
+    Object::delete_by_url(&state.db_pool, &object.id).await?;
 
     Ok(StatusCode::CREATED)
 }
