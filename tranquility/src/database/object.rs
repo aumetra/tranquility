@@ -1,21 +1,7 @@
 use {crate::error::Error, serde_json::Value, sqlx::PgPool, uuid::Uuid};
 
 pub mod delete {
-    use {crate::error::Error, sqlx::PgPool, uuid::Uuid};
-
-    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<(), Error> {
-        sqlx::query!(
-            r#"
-                DELETE FROM objects
-                WHERE id = $1
-            "#,
-            id
-        )
-        .execute(conn_pool)
-        .await?;
-
-        Ok(())
-    }
+    use {crate::error::Error, sqlx::PgPool};
 
     pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<(), Error> {
         sqlx::query!(
