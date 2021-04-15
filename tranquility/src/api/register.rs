@@ -1,7 +1,7 @@
 use {
     crate::{
         activitypub,
-        database::{model::InsertActor, InsertExt},
+        database::{InsertActor, InsertExt},
         map_err,
         state::ArcState,
     },

@@ -1,29 +1,29 @@
-use {crate::error::Error, sqlx::PgPool, tranquility_types::activitypub::Actor};
+use {
+    crate::error::Error, chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool,
+    uuid::Uuid,
+};
 
-pub async fn update(conn_pool: &PgPool, actor: &Actor) -> Result<(), Error> {
-    let actor_value = serde_json::to_value(actor)?;
-    sqlx::query!(
-        r#"
-            UPDATE actors
-            SET actor = $1, username = $2
-            WHERE actor->>'id' = $3
-        "#,
-        actor_value,
-        actor.username,
-        actor.id
-    )
-    .execute(conn_pool)
-    .await?;
+#[derive(Clone, Table)]
+#[ormx(id = id, table = "actors", insertable)]
+pub struct Actor {
+    pub id: Uuid,
 
-    Ok(())
+    pub username: String,
+    #[ormx(get_optional(&str))]
+    pub email: Option<String>,
+    pub password_hash: Option<String>,
+    pub private_key: Option<String>,
+
+    pub actor: Value,
+    pub remote: bool,
+
+    #[ormx(default)]
+    pub created_at: NaiveDateTime,
+    #[ormx(default)]
+    pub updated_at: NaiveDateTime,
 }
 
-pub mod select {
-    use {
-        crate::{database::model::Actor, error::Error},
-        sqlx::PgPool,
-    };
-
+impl Actor {
     pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Actor, Error> {
         let actor = sqlx::query_as!(
             Actor,

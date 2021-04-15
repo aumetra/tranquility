@@ -1,8 +1,8 @@
 use {
     crate::{
         database::{
-            model::{Actor as DbActor, InsertObject, Object as DbObject},
-            InsertExt,
+            model::{InsertObject, Object as DbObject},
+            Actor as DbActor, InsertExt,
         },
         error::Error,
         state::ArcState,

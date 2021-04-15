@@ -2,7 +2,10 @@
 
 use {
     crate::{
-        database::model::{Actor as DbActor, OAuthApplication, Object as DbObject},
+        database::{
+            model::{OAuthApplication, Object as DbObject},
+            Actor as DbActor,
+        },
         error::Error,
         format_uuid,
         state::ArcState,
@@ -129,8 +132,7 @@ impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
         };
 
         let fetch_account_fn = |url: String| async move {
-            let account =
-                crate::database::actor::select::by_url(&state.db_pool, url.as_str()).await?;
+            let account = DbActor::by_url(&state.db_pool, url.as_str()).await?;
             let account: Account = account.into_mastodon(state).await?;
 
             Ok::<_, Error>(account)

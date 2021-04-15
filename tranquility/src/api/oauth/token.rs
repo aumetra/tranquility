@@ -4,7 +4,7 @@ use {
         crypto::password,
         database::{
             model::{InsertOAuthToken, OAuthApplication, OAuthAuthorization},
-            InsertExt,
+            Actor, InsertExt,
         },
         error::Error,
         map_err,
@@ -144,9 +144,7 @@ async fn password_grant(
         username, password, ..
     }: FormPasswordGrant,
 ) -> Result<impl Reply, Rejection> {
-    let actor =
-        crate::database::actor::select::by_username_local(&state.db_pool, username.as_str())
-            .await?;
+    let actor = Actor::by_username_local(&state.db_pool, username.as_str()).await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
     }

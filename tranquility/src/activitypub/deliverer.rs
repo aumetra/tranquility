@@ -1,5 +1,5 @@
 use {
-    crate::{crypto, database::model::Actor as DbActor, error::Error, map_err, state::ArcState},
+    crate::{crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{

@@ -1,7 +1,7 @@
 use {
     crate::{
         activitypub::fetcher,
-        database::{model::InsertObject, InsertExt},
+        database::{model::InsertObject, Actor, InsertExt},
         error::Error,
         state::ArcState,
     },
@@ -17,7 +17,7 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
     fetcher::fetch_activity(&state, &activity_url).await?;
     // Fetch the actor (just in case)
     fetcher::fetch_actor(&state, &activity.actor).await?;
-    let actor = crate::database::actor::select::by_url(&state.db_pool, &activity.actor).await?;
+    let actor = Actor::by_url(&state.db_pool, &activity.actor).await?;
 
     let activity_value = serde_json::to_value(&activity)?;
 
