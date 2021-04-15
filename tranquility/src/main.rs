@@ -1,5 +1,6 @@
-#![deny(clippy::all, clippy::pedantic, rust_2018_idioms)]
 #![forbid(unsafe_code)]
+#![deny(clippy::all, clippy::pedantic, rust_2018_idioms)]
+#![allow(clippy::module_name_repetitions)]
 
 #[macro_use]
 extern crate tracing;

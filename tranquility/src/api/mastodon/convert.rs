@@ -2,7 +2,7 @@
 
 use {
     crate::{
-        database::{model::OAuthApplication, Actor as DbActor, Object as DbObject},
+        database::{Actor as DbActor, OAuthApplication, Object as DbObject},
         error::Error,
         format_uuid,
         state::ArcState,

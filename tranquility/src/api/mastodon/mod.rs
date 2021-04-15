@@ -1,7 +1,7 @@
 use {
     crate::{
         consts::cors::API_ALLOWED_METHODS,
-        database::{model::OAuthToken, Actor},
+        database::{Actor, OAuthToken},
         error::Error,
         map_err,
         state::ArcState,

@@ -2,10 +2,7 @@ use {
     super::TokenTemplate,
     crate::{
         crypto::password,
-        database::{
-            model::{InsertOAuthToken, OAuthApplication, OAuthAuthorization},
-            Actor, InsertExt,
-        },
+        database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
         map_err,
         state::ArcState,

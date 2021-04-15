@@ -76,10 +76,10 @@ pub async fn migrate(conn_pool: &PgPool) -> Result<(), Error> {
 pub mod actor;
 pub mod follow;
 pub mod inbox_urls;
-pub mod model;
 pub mod oauth;
 pub mod object;
 pub mod outbox;
 
 pub use actor::*;
+pub use oauth::*;
 pub use object::*;

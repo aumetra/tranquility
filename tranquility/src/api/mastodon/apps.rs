@@ -1,7 +1,7 @@
 use {
     super::{convert::IntoMastodon, urlencoded_or_json},
     crate::{
-        database::{model::InsertOAuthApplication, InsertExt},
+        database::{InsertExt, InsertOAuthApplication},
         state::ArcState,
     },
     serde::Deserialize,
