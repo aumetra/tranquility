@@ -36,7 +36,7 @@ pub struct Opts {
 /// Initialise the tracing subscriber
 fn init_tracing(level: LevelFilter) {
     let subscriber = Registry::default()
-        .with(EnvFilter::default().add_directive(level.into()))
+        .with(EnvFilter::from_default_env().add_directive(level.into()))
         .with(fmt::layer());
 
     #[cfg(feature = "jaeger")]
