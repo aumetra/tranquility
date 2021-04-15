@@ -1,5 +1,6 @@
 use {
     crate::{error::Error, state::ArcState},
+    ormx::Table,
     tranquility_types::activitypub::Activity,
     warp::http::StatusCode,
 };
@@ -8,7 +9,7 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
     let follow_activity_url = activity.object.as_url().ok_or(Error::UnknownActivity)?;
     let follow_activity_db =
         crate::database::object::select::by_url(&state.db_pool, follow_activity_url).await?;
-    let follow_activity: Activity = serde_json::from_value(follow_activity_db.data)?;
+    let follow_activity: Activity = serde_json::from_value(follow_activity_db.data.clone())?;
     // Check if the person rejecting the follow is actually the followed person
     if &activity.actor != follow_activity.object.as_url().unwrap() {
         return Err(Error::Unauthorized);
@@ -18,7 +19,7 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
         return Err(Error::UnknownActivity);
     }
 
-    crate::database::object::delete::by_id(&state.db_pool, follow_activity_db.id).await?;
+    follow_activity_db.delete(&state.db_pool).await?;
 
     Ok(StatusCode::OK)
 }
