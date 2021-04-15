@@ -1,26 +1,6 @@
 use {chrono::NaiveDateTime, ormx::Table, serde_json::Value, uuid::Uuid};
 
 #[derive(Clone, Table)]
-#[ormx(id = id, table = "actors", insertable)]
-pub struct Actor {
-    pub id: Uuid,
-
-    pub username: String,
-    #[ormx(get_optional(&str))]
-    pub email: Option<String>,
-    pub password_hash: Option<String>,
-    pub private_key: Option<String>,
-
-    pub actor: Value,
-    pub remote: bool,
-
-    #[ormx(default)]
-    pub created_at: NaiveDateTime,
-    #[ormx(default)]
-    pub updated_at: NaiveDateTime,
-}
-
-#[derive(Clone, Table)]
 #[ormx(id = id, table = "objects", insertable)]
 pub struct Object {
     pub id: Uuid,

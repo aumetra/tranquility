@@ -1,10 +1,7 @@
 use {
     super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
     crate::{
-        database::{
-            model::{Actor as DbActor, InsertObject},
-            InsertExt,
-        },
+        database::{model::InsertObject, Actor as DbActor, InsertExt},
         map_err,
         state::ArcState,
     },

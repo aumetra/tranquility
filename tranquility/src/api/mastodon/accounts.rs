@@ -1,7 +1,7 @@
 use {
     super::{authorisation_optional, authorisation_required, convert::IntoMastodon},
     crate::{
-        activitypub::interactions, database::model::Actor as DbActor, format_uuid, map_err,
+        activitypub::interactions, database::Actor as DbActor, format_uuid, map_err,
         state::ArcState,
     },
     ormx::Table,

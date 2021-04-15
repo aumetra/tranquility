@@ -1,8 +1,8 @@
 use {
     super::CollectionQuery,
     crate::{
-        consts::activitypub::ACTIVITIES_PER_PAGE, database::model::Actor as DbActor, format_uuid,
-        map_err, state::ArcState,
+        consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, format_uuid, map_err,
+        state::ArcState,
     },
     itertools::Itertools,
     ormx::Table,

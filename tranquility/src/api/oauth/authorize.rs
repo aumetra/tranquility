@@ -4,7 +4,7 @@ use {
         crypto::password,
         database::{
             model::{InsertOAuthAuthorization, OAuthApplication},
-            InsertExt,
+            Actor, InsertExt,
         },
         error::Error,
         map_err,
@@ -42,8 +42,7 @@ pub async fn get() -> Result<impl Reply, Rejection> {
 }
 
 pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response, Rejection> {
-    let actor =
-        crate::database::actor::select::by_username_local(&state.db_pool, &form.username).await?;
+    let actor = Actor::by_username_local(&state.db_pool, &form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
     }

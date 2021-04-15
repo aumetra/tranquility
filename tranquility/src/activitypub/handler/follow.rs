@@ -1,7 +1,7 @@
 use {
     crate::{
         activitypub::{self, deliverer, fetcher, FollowActivity},
-        database::{model::InsertObject, InsertExt},
+        database::{model::InsertObject, Actor, InsertExt},
         error::Error,
         state::ArcState,
     },
@@ -42,8 +42,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     .await?;
 
     let followed_url = follow_activity.activity.object.as_url().unwrap();
-    let followed_actor =
-        crate::database::actor::select::by_url(&state.db_pool, followed_url).await?;
+    let followed_actor = Actor::by_url(&state.db_pool, followed_url).await?;
 
     // Send out an accept activity if the followed actor is local
     if follow_activity.approved {

@@ -1,5 +1,5 @@
 use {
-    crate::{database::model::Actor, map_err, state::ArcState},
+    crate::{database::Actor, map_err, state::ArcState},
     ormx::Table,
     uuid::Uuid,
     warp::{Rejection, Reply},

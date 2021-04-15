@@ -1,88 +1,5 @@
 {
   "db": "PostgreSQL",
-  "014b2aa30a3da006a89718db65a3c9d6a8514affd371ade8eaac18c296807a16": {
-    "query": "\n                INSERT INTO actors\n                ( username, actor, remote )\n                VALUES \n                ( $1, $2, TRUE )\n                RETURNING *\n            ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 7,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 8,
-          "name": "remote",
-          "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Jsonb"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
-  "079ce9654063b1edb6751e98f90529b1b232b18d0f0e09ec327852bfec71a956": {
-    "query": "\n            UPDATE actors\n            SET actor = $1, username = $2\n            WHERE actor->>'id' = $3\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "0b65b47aadbb3375bf04a73e311cc456040dc3351c1b9ab4aee67acff702cc35": {
     "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND owner_id = $1\n            AND created_at < $2\n            LIMIT $3\n        ",
     "describe": {
@@ -127,6 +44,20 @@
         false,
         false
       ]
+    }
+  },
+  "0d92ecaf0a459e35dfb1d8e5617f7ffe4f19e74558b5c97920c89ace24c5d76b": {
+    "query": "\n                UPDATE actors\n                SET actor = $1, username = $2\n                WHERE actor->>'id' = $3\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
     }
   },
   "0db67a3667c10583d3a68255e2b205c948ba9ac5a0ee143ba9f4629ace7cf3fc": {
@@ -465,72 +396,6 @@
       ]
     }
   },
-  "3c50e1b4edd7c6fe9a073e140df1b2d0f009bbfefbe5fe920b632a87a74bae6e": {
-    "query": "\n            INSERT INTO oauth_tokens\n            ( application_id, actor_id, access_token, refresh_token, valid_until )\n            VALUES\n            ( $1, $2, $3, $4, $5 )\n            RETURNING *\n        ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "application_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 2,
-          "name": "actor_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 3,
-          "name": "access_token",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "refresh_token",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "valid_until",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 6,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 7,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Text",
-          "Text",
-          "Timestamp"
-        ]
-      },
-      "nullable": [
-        false,
-        true,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "431387a061e8678576a4c1a8df69205ad7f3b9f574a2542828ebb7678a7eccdf": {
     "query": "UPDATE objects SET owner_id = $1, data = $2, created_at = $3, updated_at = $4 WHERE id = $5",
     "describe": {
@@ -545,79 +410,6 @@
         ]
       },
       "nullable": []
-    }
-  },
-  "4467a6aee265a780c75b257f65014a4f240bafc85cbf06bf071db8c69b09c7fe": {
-    "query": "\n            INSERT INTO oauth_applications\n            ( client_name, client_id, client_secret, redirect_uris, scopes, website )\n            VALUES\n            ( $1, $2, $3, $4, $5, $6 )\n            RETURNING *\n        ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "client_name",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "client_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 3,
-          "name": "client_secret",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "redirect_uris",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "scopes",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 6,
-          "name": "website",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 7,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 8,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid",
-          "Text",
-          "Text",
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
     }
   },
   "448d89b8ce4d702b5def6d21680a100b150dd69bf47c119073e317cd74ccf29c": {
@@ -935,65 +727,6 @@
       ]
     }
   },
-  "708ecddc1fbbfc4019348593cacbe917cbdb91d800dc855af80ae4e74607f673": {
-    "query": "\n            INSERT INTO oauth_authorizations\n            ( application_id, actor_id, code, valid_until )\n            VALUES\n            ( $1, $2, $3, $4 )\n            RETURNING *\n        ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "application_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 2,
-          "name": "actor_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 3,
-          "name": "code",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "valid_until",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 5,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 6,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Text",
-          "Timestamp"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "73ecdf4e9ca43bdc42f5ab8e3d8325f739c0f4b040d1ac464d0baa0b7cc02151": {
     "query": "\n            SELECT created_at as \"timestamp!\" FROM objects\n            WHERE id = $1\n        ",
     "describe": {
@@ -1021,20 +754,6 @@
       "parameters": {
         "Left": [
           "Uuid"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "781fb9d81eef14d5cef48f53eb36d662989047aad2ce68fd446659d56731f93b": {
-    "query": "\n            INSERT INTO objects \n            ( id, owner_id, data ) \n            VALUES \n            ( $1, $2, $3 )\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Jsonb"
         ]
       },
       "nullable": []
@@ -1119,18 +838,6 @@
         false,
         false
       ]
-    }
-  },
-  "816ea34615b11311477a7fd33e7f34336892453189c756d1edcde49547d527e5": {
-    "query": "\n                DELETE FROM objects\n                WHERE id = $1\n            ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      },
-      "nullable": []
     }
   },
   "83ab8cc3f9281605cababc539106a0eb296ed441db98eda6cbabe165bc83e974": {
@@ -1867,23 +1574,6 @@
         false,
         false
       ]
-    }
-  },
-  "ccced91f033c47b0e2c7506c1f0d27be2d052f3b8d9be5abccb70eb3c4165910": {
-    "query": "\n                INSERT INTO actors\n                ( id, username, email, password_hash, private_key, actor ) \n                VALUES \n                ( $1, $2, $3, $4, $5, $6 )\n            ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Jsonb"
-        ]
-      },
-      "nullable": []
     }
   },
   "d60adcc0f4b55752a6843fdb4224f81968decac60174293ffddd2e792d14cf3d": {

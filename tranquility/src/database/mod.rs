@@ -80,3 +80,5 @@ pub mod model;
 pub mod oauth;
 pub mod object;
 pub mod outbox;
+
+pub use actor::*;

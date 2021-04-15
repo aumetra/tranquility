@@ -2,7 +2,7 @@ use {
     super::CollectionQuery,
     crate::{
         activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE,
-        database::model::Actor as DbActor, format_uuid, map_err, state::ArcState,
+        database::Actor as DbActor, format_uuid, map_err, state::ArcState,
     },
     itertools::Itertools,
     ormx::Table,
