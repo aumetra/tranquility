@@ -8,10 +8,7 @@ use {
     },
     argh::FromArgs,
     std::process,
-    tracing_subscriber::{
-        filter::LevelFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
-        Registry,
-    },
+    tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry},
 };
 
 #[cfg(feature = "jaeger")]
@@ -24,19 +21,15 @@ pub struct Opts {
     /// path to the configuration file (defaults to `config.toml`)
     config: String,
 
-    #[argh(switch, short = 'v')]
-    /// verbosity of the tracing output
-    verbose: u8,
-
     #[argh(switch, short = 'V')]
     /// print the version
     version: bool,
 }
 
 /// Initialise the tracing subscriber
-fn init_tracing(level: LevelFilter) {
+fn init_tracing() {
     let subscriber = Registry::default()
-        .with(EnvFilter::from_default_env().add_directive(level.into()))
+        .with(EnvFilter::from_default_env())
         .with(fmt::layer());
 
     #[cfg(feature = "jaeger")]
@@ -63,13 +56,7 @@ pub async fn run() -> ArcState {
         process::exit(0);
     }
 
-    let level = match options.verbose {
-        0 => LevelFilter::INFO,
-        1 => LevelFilter::DEBUG,
-        _ => LevelFilter::TRACE,
-    };
-
-    init_tracing(level);
+    init_tracing();
 
     let config = crate::config::load(options.config).await;
     let db_pool = crate::database::connection::init_pool(&config.server.database_url)
