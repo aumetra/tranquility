@@ -1,5 +1,5 @@
 use {
-    crate::{error::Error, map_err, state::ArcState},
+    crate::{consts::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -27,15 +27,16 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
 // The standard "warp::body::json()" filter only decodes content from requests
 // that have the header "Content-Type: application/json" but the inbox
 // requests have the types of either "application/ld+json" or "application/activity+json"
-fn custom_json_parser<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
-{
+fn ap_json<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
     let custom_json_parser_fn = |body: Bytes| async move {
         let value = map_err!(serde_json::from_slice(&body))?;
 
         Ok::<T, Rejection>(value)
     };
 
-    warp::body::bytes().and_then(custom_json_parser_fn)
+    warp::body::content_length_limit(MAX_BODY_SIZE)
+        .and(warp::body::bytes())
+        .and_then(custom_json_parser_fn)
 }
 
 fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {

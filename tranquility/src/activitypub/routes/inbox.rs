@@ -2,7 +2,7 @@ use {
     crate::{
         activitypub::{
             fetcher,
-            routes::{custom_json_parser, optional_raw_query},
+            routes::{ap_json, optional_raw_query},
         },
         crypto,
         error::Error,
@@ -26,7 +26,7 @@ pub fn validate_request(
         .and(warp::path::full())
         .and(optional_raw_query())
         .and(warp::header::headers_cloned())
-        .and(custom_json_parser())
+        .and(ap_json())
         .and_then(verify_signature)
         .untuple_one()
         .and_then(verify_ownership)
