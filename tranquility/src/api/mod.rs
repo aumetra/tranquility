@@ -1,5 +1,8 @@
 use {
-    crate::{consts::{MB_BYTES, MAX_BODY_SIZE}, state::ArcState},
+    crate::{
+        consts::{MAX_BODY_SIZE, MB_BYTES},
+        state::ArcState,
+    },
     warp::{Filter, Rejection, Reply},
 };
 
