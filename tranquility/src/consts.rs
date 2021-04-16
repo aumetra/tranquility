@@ -1,8 +1,5 @@
 pub mod activitypub {
     pub const ACTIVITIES_PER_PAGE: i64 = 10;
-
-    // Default to 5MB
-    pub const MAX_BODY_SIZE: u64 = 5 * 1024_u64.pow(2);
 }
 
 pub mod cors {
@@ -21,6 +18,10 @@ pub mod daemon {
 
     pub const DELETE_INTERVAL: Duration = Duration::from_secs(60);
 }
+
+// Default to 5MB
+pub const MAX_BODY_SIZE: u64 = 5 * MB_BYTES;
+pub const MB_BYTES: u64 = 1024_u64.pow(2);
 
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 pub const PROPER_VERSION: &str = concat!(
