@@ -1,5 +1,5 @@
 use {
-    crate::{consts::activitypub::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
+    crate::{consts::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
