@@ -1,5 +1,8 @@
 pub mod activitypub {
     pub const ACTIVITIES_PER_PAGE: i64 = 10;
+
+    // Default to 5MB
+    pub const MAX_BODY_SIZE: u64 = 5 * 1024_u64.pow(2);
 }
 
 pub mod cors {

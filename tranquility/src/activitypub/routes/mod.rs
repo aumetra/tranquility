@@ -1,5 +1,5 @@
 use {
-    crate::{error::Error, map_err, state::ArcState},
+    crate::{consts::activitypub::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -35,7 +35,9 @@ fn custom_json_parser<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Erro
         Ok::<T, Rejection>(value)
     };
 
-    warp::body::bytes().and_then(custom_json_parser_fn)
+    warp::body::content_length_limit(MAX_BODY_SIZE)
+        .and(warp::body::bytes())
+        .and_then(custom_json_parser_fn)
 }
 
 fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
