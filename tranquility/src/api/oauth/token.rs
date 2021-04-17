@@ -18,36 +18,36 @@ use {
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
 /// Form for password grant authorisation flows
-#[derive(Deserialize)]
-struct FormPasswordGrant {
-    username: String,
-    password: String,
+#[derive(Deserialize, Serialize)]
+pub struct FormPasswordGrant {
+    pub username: String,
+    pub password: String,
 }
 
 /// Form for code grant authorisation flows
-#[derive(Deserialize)]
-struct FormCodeGrant {
-    client_id: Uuid,
-    client_secret: String,
-    redirect_uri: String,
-    // scope: Option<String>,
-    code: String,
+#[derive(Deserialize, Serialize)]
+pub struct FormCodeGrant {
+    pub client_id: Uuid,
+    pub client_secret: String,
+    pub redirect_uri: String,
+    // pub scope: Option<String>,
+    pub code: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
-enum FormData {
+pub enum FormData {
     CodeGrant(FormCodeGrant),
     PasswordGrant(FormPasswordGrant),
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Form {
-    grant_type: String,
+    pub grant_type: String,
 
     #[serde(flatten)]
-    data: FormData,
+    pub data: FormData,
 }
 
 impl FormData {
@@ -71,10 +71,10 @@ impl FormData {
 /// Serialisable struct for responding to an access token request
 #[derive(Serialize)]
 struct AccessTokenResponse {
-    access_token: String,
-    token_type: String,
-    scope: String,
-    created_at: i64,
+    pub access_token: String,
+    pub token_type: String,
+    pub scope: String,
+    pub created_at: i64,
 }
 
 impl Default for AccessTokenResponse {
