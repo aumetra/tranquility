@@ -1,4 +1,4 @@
-use {crate::state::ArcState, warp::Filter};
+use {crate::state::ArcState, std::net::IpAddr, warp::Filter};
 
 pub async fn run(state: ArcState) {
     let logging = warp::trace::request();
@@ -16,14 +16,18 @@ pub async fn run(state: ArcState) {
     let server = warp::serve(routes);
 
     let config = &state.config;
+
+    let interface = config.server.interface.parse::<IpAddr>().unwrap();
+    let addr = (interface, config.server.port);
+
     if config.tls.serve_tls_directly {
         server
             .tls()
             .cert_path(&config.tls.certificate)
             .key_path(&config.tls.secret_key)
-            .run(([0, 0, 0, 0], config.server.port))
+            .run(addr)
             .await
     } else {
-        server.run(([0, 0, 0, 0], config.server.port)).await
+        server.run(addr).await
     }
 }

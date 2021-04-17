@@ -32,6 +32,7 @@ pub struct ConfigurationRatelimit {
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ConfigurationServer {
+    pub interface: String,
     pub port: u16,
 
     pub database_url: String,

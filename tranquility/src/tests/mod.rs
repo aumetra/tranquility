@@ -43,6 +43,7 @@ fn test_config() -> Configuration {
         },
         server: ConfigurationServer {
             database_url: String::new(),
+            interface: "127.0.0.1".into(),
             port: 8080,
         },
         tls: ConfigurationTls {

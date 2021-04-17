@@ -33,6 +33,7 @@ authentication-quota = 50
 registration-quota = 10
 
 [server]
+interface = "127.0.0.1"
 port = 8080
 database-url = "postgres://localhost/tranquility"
 
