@@ -21,6 +21,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -35,6 +44,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -50,6 +68,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -61,16 +88,13 @@ jobs:
 
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:alpine
         env:
           POSTGRES_USER: tranquility
           POSTGRES_PASSWORD: tranquility
           POSTGRES_DB: tests
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v2
@@ -79,7 +103,18 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
+        env:
+          TEST_DB_URL: postgres://tranquility:tranquility@localhost:5432/tests
         with:
           command: test
           args: -- --show-output
@@ -110,6 +145,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - run: rustup component add clippy
       - uses: actions-rs/cargo@v1
         with:

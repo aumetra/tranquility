@@ -54,40 +54,10 @@ fn test_config() -> Configuration {
     }
 }
 
-macro_rules! possibly_failing_test {
-    {
-        name => $name:ident,
-        body => $body:block
-    } => {
-        #[test]
-        fn $name() {
-            let result = ::std::panic::catch_unwind(|| {
-                ::tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap()
-                    .block_on(async {
-                        $body
-                    })
-            });
-
-            if let Err(err) = result {
-                #[allow(clippy::let_underscore_drop)]
-                let _ = ::tracing::subscriber::set_default(::tracing_subscriber::fmt().with_test_writer().finish());
-
-                ::tracing::error!(error = ?err);
-            }
-        }
-    }
-}
-
 async fn init_db() -> PgPool {
-    let conn_url = env::var("TEST_DB_URL")
-        .unwrap_or_else(|_| "postgres://tranquility:tranquility@localhost:5432/tests".into());
+    let conn_url = env::var("TEST_DB_URL").unwrap();
 
-    let conn_pool = crate::database::connection::init_pool(&conn_url)
-        .await
-        .unwrap();
+    let conn_pool = PgPool::connect(&conn_url).await.unwrap();
     crate::database::migrate(&conn_pool).await.ok();
 
     conn_pool
