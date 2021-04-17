@@ -9,14 +9,14 @@ use {
 async fn password_grant() {
     let state = Arc::new(test_state().await);
 
-    let register_response = register_user(&state, "oauth_password_grant", "1234.").await;
+    let register_response = register_user(&state, "oauth_password_grant", "1234567.").await;
     assert!(register_response.status().is_success());
 
     let oauth_request = Form {
         grant_type: "password".into(),
         data: FormData::PasswordGrant(FormPasswordGrant {
             username: "oauth_password_grant".into(),
-            password: "1234.".into(),
+            password: "1234567.".into(),
         }),
     };
 
