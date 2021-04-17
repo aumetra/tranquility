@@ -21,6 +21,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -35,6 +44,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -50,6 +68,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -61,7 +88,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:alpine
+        image: postgres:12-alpine
         env:
           POSTGRES_USER: tranquility
           POSTGRES_PASSWORD: tranquility
@@ -74,6 +101,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
         env:
           TEST_DB_URL: postgres://tranquility:tranquility@localhost:5432/tests
@@ -107,6 +143,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - run: rustup component add clippy
       - uses: actions-rs/cargo@v1
         with:
