@@ -177,15 +177,21 @@ pub fn ratelimit(
 ///
 #[macro_export]
 macro_rules! ratelimit {
+    // Create a `WrapFn` using `ratelimit!(fn_from_config: )`
+    // Input: [ratelimit configuration]
     (from_config: $config:expr) => {{
         $crate::ratelimit!(fn_from_config: $config).map($crate::warp::wrap_fn)
     }};
 
+    // Create a function that can be used for the `warp::wrap_fn` function
+    // Input: [ratelimit configuration]
     (fn_from_config: $config:expr) => {{
         $crate::ratelimit($config)
             .map(|ratelimit_filter| $crate::ratelimit!(fn_from_filter: ratelimit_filter))
     }};
 
+    // Create a `warp::wrap_fn` compatible function that uses the `__recover_fn` for recovering
+    // Input: [warp filter]
     (fn_from_filter: $ratelimit_filter:expr) => {{
         let ratelimit_filter = $ratelimit_filter;
 
@@ -197,6 +203,8 @@ macro_rules! ratelimit {
         }
     }};
 
+    // Create a `WrapFn` from the given filter using `ratelimit!(fn_from_filter: )`
+    // Input: [warp filter]
     (from_filter: $ratelimit_filter:expr) => {{
         warp::wrap_fn($crate::ratelimit!(fn_from_filter: $ratelimit_filter))
     }};

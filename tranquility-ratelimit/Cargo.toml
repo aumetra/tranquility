@@ -5,8 +5,6 @@ authors = ["Glitch <smallglitch@cryptolab.net>"]
 edition = "2018"
 license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 governor = "0.3"
 thiserror = "1"
