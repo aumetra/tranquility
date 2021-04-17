@@ -88,11 +88,13 @@ jobs:
 
     services:
       postgres:
-        image: postgres:12-alpine
+        image: postgres:alpine
         env:
           POSTGRES_USER: tranquility
           POSTGRES_PASSWORD: tranquility
           POSTGRES_DB: tests
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v2

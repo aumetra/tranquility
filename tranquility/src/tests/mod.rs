@@ -54,33 +54,6 @@ fn test_config() -> Configuration {
     }
 }
 
-macro_rules! possibly_failing_test {
-    {
-        name => $name:ident,
-        body => $body:block
-    } => {
-        #[test]
-        fn $name() {
-            let result = ::std::panic::catch_unwind(|| {
-                ::tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap()
-                    .block_on(async {
-                        $body
-                    })
-            });
-
-            if let Err(err) = result {
-                #[allow(clippy::let_underscore_drop)]
-                let _ = ::tracing::subscriber::set_default(::tracing_subscriber::fmt().with_test_writer().finish());
-
-                ::tracing::error!(error = ?err);
-            }
-        }
-    }
-}
-
 async fn init_db() -> PgPool {
     let conn_url = env::var("TEST_DB_URL").unwrap();
 
