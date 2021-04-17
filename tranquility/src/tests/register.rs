@@ -33,7 +33,7 @@ async fn closed_registrations() {
     state.config.instance.closed_registrations = true;
     let state = Arc::new(state);
 
-    let test_response = register_user(&state, "test_closed_register", "1234.").await;
+    let test_response = register_user(&state, "test_closed_register", "1234567.").await;
     assert_eq!(test_response.status(), StatusCode::FORBIDDEN);
 }
 
@@ -41,7 +41,7 @@ async fn closed_registrations() {
 async fn register_endpoint() {
     let state = Arc::new(test_state().await);
 
-    let test_response = register_user(&state, "test_register", "1234.").await;
+    let test_response = register_user(&state, "test_register", "1234567.").await;
     assert_eq!(test_response.status(), StatusCode::CREATED);
 
     let body_data = body::to_bytes(test_response.into_body()).await.unwrap();
