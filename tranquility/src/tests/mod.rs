@@ -82,7 +82,7 @@ macro_rules! possibly_failing_test {
 }
 
 async fn init_db() -> PgPool {
-    let conn_url = env::var("DATABASE_URL").unwrap();
+    let conn_url = env::var("TEST_DB_URL").unwrap();
 
     let conn_pool = PoolOptions::new()
         .min_connections(0)

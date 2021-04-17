@@ -76,7 +76,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         env:
-          DATABASE_URL: postgres://tranquility:tranquility@localhost:5432/tests
+          TEST_DB_URL: postgres://tranquility:tranquility@localhost:5432/tests
         with:
           command: test
           args: -- --show-output
