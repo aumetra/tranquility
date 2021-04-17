@@ -12,19 +12,13 @@ async fn password_grant() {
     let register_response = register_user(&state, "oauth_password_grant", "1234567.").await;
     assert!(register_response.status().is_success());
 
-    let oauth_request = Form {
-        grant_type: "password".into(),
-        data: FormData::PasswordGrant(FormPasswordGrant {
-            username: "oauth_password_grant".into(),
-            password: "1234567.".into(),
-        }),
-    };
-
+    let oauth_request = "grant_type=password&username=oauth_password_grant&password=1234567.";
     let oauth_routes = crate::api::oauth::routes(&state);
+    
     let response = warp::test::request()
         .method("POST")
         .path("/oauth/token")
-        .json(&oauth_request)
+        .body(&oauth_request)
         .filter(&oauth_routes)
         .await
         .expect("Unsuccessful request")
