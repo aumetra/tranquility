@@ -66,11 +66,6 @@ jobs:
           POSTGRES_USER: tranquility
           POSTGRES_PASSWORD: tranquility
           POSTGRES_DB: tests
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -80,6 +75,8 @@ jobs:
           toolchain: stable
           override: true
       - uses: actions-rs/cargo@v1
+        env:
+          DATABASE_URL: postgres://tranquility:tranquility@localhost:5432/tests
         with:
           command: test
           args: -- --show-output
