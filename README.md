@@ -1,4 +1,7 @@
-# Tranquility [![Checks](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml/badge.svg)](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml)
+# Tranquility 
+
+[![Checks](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml/badge.svg)](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml)
+[![dependency status](https://deps.rs/repo/github/smallglitch/tranquility/status.svg)](https://deps.rs/repo/github/smallglitch/tranquility)
 
 Small ActivityPub server written in Rust
 
