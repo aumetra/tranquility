@@ -21,6 +21,14 @@ jobs:
           toolchain: stable
           override: true
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Run cargo build
         uses: actions-rs/cargo@v1
         with:
@@ -49,6 +57,15 @@ jobs:
           toolchain: stable
           target: armv7-unknown-linux-gnueabihf
           override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
