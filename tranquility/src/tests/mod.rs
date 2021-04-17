@@ -7,7 +7,7 @@ use {
         },
         state::State,
     },
-    sqlx::{pool::PoolOptions, PgPool},
+    sqlx::PgPool,
     std::env,
 };
 
@@ -84,13 +84,7 @@ macro_rules! possibly_failing_test {
 async fn init_db() -> PgPool {
     let conn_url = env::var("TEST_DB_URL").unwrap();
 
-    let conn_pool = PoolOptions::new()
-        .min_connections(0)
-        .max_connections(5)
-        .test_before_acquire(true)
-        .connect(&conn_url)
-        .await
-        .unwrap();
+    let conn_pool = PgPool::connect(&conn_url).await.unwrap();
     crate::database::migrate(&conn_pool).await.ok();
 
     conn_pool

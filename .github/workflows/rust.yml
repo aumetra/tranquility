@@ -61,7 +61,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:alpine
         env:
           POSTGRES_USER: tranquility
           POSTGRES_PASSWORD: tranquility
