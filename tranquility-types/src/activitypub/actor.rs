@@ -14,6 +14,7 @@ pub struct PublicKey {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+/// Struct representing an [`ActivityStreams` actor](https://www.w3.org/TR/activitypub/#actor-objects) with `ActivityPub` specific extensions
 pub struct Actor {
     #[serde(default = "super::context_field", rename = "@context")]
     pub context: Value,
