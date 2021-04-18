@@ -5,7 +5,7 @@ use {
         limit_body_size,
         state::ArcState,
     },
-    serde::Deserialize,
+    serde::{Deserialize, Serialize},
     uuid::Uuid,
     warp::{Filter, Rejection, Reply},
 };
@@ -14,14 +14,14 @@ fn default_scopes() -> String {
     "read".into()
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct RegisterForm {
-    client_name: String,
-    redirect_uris: String,
+    pub client_name: String,
+    pub redirect_uris: String,
     #[serde(default = "default_scopes")]
-    scopes: String,
+    pub scopes: String,
     #[serde(default)]
-    website: String,
+    pub website: String,
 }
 
 async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejection> {

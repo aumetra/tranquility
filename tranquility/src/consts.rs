@@ -33,6 +33,11 @@ pub mod regex {
     );
 }
 
+pub mod oauth {
+    /// Display the OAuth code to the user if this is the redirect URI
+    pub const DISPLAY_REDIRECT_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
+}
+
 // Default to 5MB
 pub const MAX_BODY_SIZE: u64 = 5 * MB_BYTES;
 pub const MB_BYTES: u64 = 1024_u64.pow(2);
