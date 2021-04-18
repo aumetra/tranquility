@@ -1,6 +1,6 @@
 use {
     crate::{
-        consts::cors::API_ALLOWED_METHODS,
+        consts::{cors::API_ALLOWED_METHODS, MB_BYTES},
         database::{Actor, OAuthToken},
         error::Error,
         map_err,
@@ -65,6 +65,13 @@ pub fn authorisation_required(
     crate::state::filter(state)
         .and(warp::header::value(AUTHORIZATION.as_ref()))
         .and_then(authorise_user)
+}
+
+/// Filter that rejects if the body is too large
+pub fn restrict_body_size(state: &ArcState) -> impl Filter<Extract = (), Error = Rejection> + Copy {
+    let limit = (state.config.instance.upload_limit as u64) * MB_BYTES;
+
+    warp::body::content_length_limit(limit)
 }
 
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {

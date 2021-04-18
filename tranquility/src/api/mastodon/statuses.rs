@@ -1,5 +1,7 @@
 use {
-    super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
+    super::{
+        authorisation_required, convert::IntoMastodon, restrict_body_size, urlencoded_or_json,
+    },
     crate::{
         database::{Actor as DbActor, InsertExt, InsertObject},
         map_err,
@@ -77,6 +79,8 @@ pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = 
     let state_filter = crate::state::filter(state);
 
     warp::path!("statuses")
+        .and(warp::post())
+        .and(restrict_body_size(state))
         .and(state_filter)
         .and(authorisation_required(state))
         .and(urlencoded_or_json())

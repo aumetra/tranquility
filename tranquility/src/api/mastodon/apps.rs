@@ -1,5 +1,5 @@
 use {
-    super::{convert::IntoMastodon, urlencoded_or_json},
+    super::{convert::IntoMastodon, restrict_body_size, urlencoded_or_json},
     crate::{
         database::{InsertExt, InsertOAuthApplication},
         state::ArcState,
@@ -43,11 +43,12 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
 }
 
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
+    let state_filter = crate::state::filter(state);
 
     warp::path!("apps")
         .and(warp::post())
-        .and(state)
+        .and(restrict_body_size(state))
+        .and(state_filter)
         .and(urlencoded_or_json())
         .and_then(create)
 }
