@@ -4,16 +4,17 @@ use {
 };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+/// Struct representing an [`ActivityStreams` activity](https://www.w3.org/TR/activitystreams-core/#activities)
 pub struct Activity {
     #[serde(default = "super::context_field", rename = "@context")]
     pub context: Value,
 
     pub id: String,
     pub r#type: String,
-    // Link to the actor this activity belongs to
+    /// Link to the actor this activity belongs to
     pub actor: String,
 
-    // This can either be an "Actor", "Object" or an URL to either of those
+    /// This can either be an "Actor", "Object" or an URL to either of those
     pub object: ObjectField,
     #[serde(default)]
     pub published: String,
