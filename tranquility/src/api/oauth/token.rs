@@ -71,7 +71,7 @@ impl FormData {
 
 /// Serialisable struct for responding to an access token request
 #[derive(Serialize)]
-struct AccessTokenResponse {
+pub struct AccessTokenResponse {
     pub access_token: String,
     pub token_type: String,
     pub scope: String,

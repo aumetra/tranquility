@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing a [Mastodon tag](https://docs.joinmastodon.org/entities/tag/)
 pub struct Tag {
     pub name: String,
@@ -9,7 +9,7 @@ pub struct Tag {
     pub history: Option<History>,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing a [Mastodon history](https://docs.joinmastodon.org/entities/history/)
 pub struct History {
     pub day: String,

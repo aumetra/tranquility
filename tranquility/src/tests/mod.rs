@@ -10,6 +10,8 @@ use {
     std::env,
 };
 
+const TEST_PASSWORD: &str = "1234567.";
+
 /// Create a test configuration
 fn test_config() -> Configuration {
     Configuration {

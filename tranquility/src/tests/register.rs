@@ -1,5 +1,5 @@
 use {
-    super::test_state,
+    super::{test_state, TEST_PASSWORD},
     crate::state::ArcState,
     std::sync::Arc,
     warp::{
@@ -10,22 +10,24 @@ use {
 };
 
 /// Register a new user via the register API endpoint (panics on failure)
-pub async fn register_user(state: &ArcState, username: &str, password: &str) -> Response {
+pub async fn register_user(state: &ArcState, username: &str) -> Response {
     let body = format!(
         "username={username}&email={username}@example.com&password={password}",
         username = username,
-        password = password,
+        password = TEST_PASSWORD,
     );
 
     let register_endpoint = crate::api::register::routes(state);
-    warp::test::request()
+    let response = warp::test::request()
         .method("POST")
         .path("/api/tranquility/v1/register")
         .body(body)
         .filter(&register_endpoint)
         .await
         .expect("Unsuccessful request")
-        .into_response()
+        .into_response();
+
+    response
 }
 
 #[tokio::test]
@@ -35,7 +37,7 @@ async fn closed_registrations() {
     state.config.instance.closed_registrations = true;
     let state = Arc::new(state);
 
-    let test_response = register_user(&state, "test_closed_register", "1234567.").await;
+    let test_response = register_user(&state, "test_closed_register").await;
     assert_eq!(test_response.status(), StatusCode::FORBIDDEN);
 }
 
@@ -44,7 +46,7 @@ async fn closed_registrations() {
 async fn register_endpoint() {
     let state = Arc::new(test_state().await);
 
-    let test_response = register_user(&state, "test_register", "1234567.").await;
+    let test_response = register_user(&state, "test_register").await;
     assert_eq!(test_response.status(), StatusCode::CREATED);
 
     let body_data = body::to_bytes(test_response.into_body()).await.unwrap();

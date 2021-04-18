@@ -4,7 +4,7 @@ use {
     serde_json::Value,
 };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing an [ActivityStreams object](https://www.w3.org/TR/activitystreams-core/#object)
 pub struct Object {

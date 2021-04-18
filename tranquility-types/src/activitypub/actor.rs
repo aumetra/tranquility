@@ -4,7 +4,7 @@ use {
     serde_json::Value,
 };
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing the inofficial `publicKey` field of an ActivityPub actor
 pub struct PublicKey {
@@ -13,7 +13,7 @@ pub struct PublicKey {
     pub public_key_pem: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing an [ActivityStreams actor](https://www.w3.org/TR/activitypub/#actor-objects) with ActivityPub specific extensions
 pub struct Actor {

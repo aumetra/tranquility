@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing an [Mastodon attachment](https://docs.joinmastodon.org/entities/attachment/)
 pub struct Attachment {
     pub id: String,
@@ -14,7 +14,7 @@ pub struct Attachment {
     pub blurhash: String,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing the meta field of an [Attachment] struct
 pub struct Meta {
     pub original: MetaSize,
@@ -22,7 +22,7 @@ pub struct Meta {
     pub focus: MetaFocus,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing the different sizes of a [Meta] struct
 pub struct MetaSize {
     pub width: i64,
@@ -31,7 +31,7 @@ pub struct MetaSize {
     pub aspect: f64,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing the [focal points](https://docs.joinmastodon.org/methods/statuses/media/#focal-points)
 pub struct MetaFocus {
     pub x: f64,
