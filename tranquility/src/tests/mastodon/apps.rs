@@ -19,6 +19,7 @@ async fn create_app(state: &ArcState) -> App {
         website: String::new(),
     };
     let response = warp::test::request()
+        .method("POST")
         .path("/api/v1/apps")
         .json(&register_form)
         .filter(&mastodon_api)
