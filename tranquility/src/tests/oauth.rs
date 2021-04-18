@@ -1,6 +1,6 @@
 use {
     super::{register::register_user, test_state},
-    crate::api::oauth::token::{AccessTokenResponse, Form, FormData, FormPasswordGrant},
+    crate::api::oauth::token::AccessTokenResponse,
     std::sync::Arc,
     warp::{hyper::body, Reply},
 };
@@ -14,7 +14,7 @@ async fn password_grant() {
 
     let oauth_request = "grant_type=password&username=oauth_password_grant&password=1234567.";
     let oauth_routes = crate::api::oauth::routes(&state);
-    
+
     let response = warp::test::request()
         .method("POST")
         .path("/oauth/token")
