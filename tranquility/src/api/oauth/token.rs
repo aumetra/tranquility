@@ -18,34 +18,34 @@ use {
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
 #[derive(Deserialize, Serialize)]
-pub struct FormPasswordGrant {
-    pub username: String,
-    pub password: String,
+struct FormPasswordGrant {
+    username: String,
+    password: String,
 }
 
 #[derive(Deserialize, Serialize)]
-pub struct FormCodeGrant {
-    pub client_id: Uuid,
-    pub client_secret: String,
-    pub redirect_uri: String,
-    // pub scope: Option<String>,
-    pub code: String,
+struct FormCodeGrant {
+    client_id: Uuid,
+    client_secret: String,
+    redirect_uri: String,
+    // scope: Option<String>,
+    code: String,
 }
 
 #[derive(Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
-pub enum FormData {
+enum FormData {
     CodeGrant(FormCodeGrant),
     PasswordGrant(FormPasswordGrant),
 }
 
 #[derive(Deserialize, Serialize)]
 pub struct Form {
-    pub grant_type: String,
+    grant_type: String,
 
     #[serde(flatten)]
-    pub data: FormData,
+    data: FormData,
 }
 
 impl FormData {
