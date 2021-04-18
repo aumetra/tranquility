@@ -46,33 +46,6 @@
       ]
     }
   },
-  "0d92ecaf0a459e35dfb1d8e5617f7ffe4f19e74558b5c97920c89ace24c5d76b": {
-    "query": "\n                UPDATE actors\n                SET actor = $1, username = $2\n                WHERE actor->>'id' = $3\n            ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "0db67a3667c10583d3a68255e2b205c948ba9ac5a0ee143ba9f4629ace7cf3fc": {
-    "query": "\n            UPDATE objects\n            SET data = $1\n            WHERE id = $2\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Uuid"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "11d3f3540d7d667af4c08036c7bc2c624bb5cc23619cbae6f05b04561421af39": {
     "query": "\n                SELECT * FROM objects\n                WHERE data->>'type' = $1\n                AND owner_id = $2\n                AND data->>'object' = $3\n\n                ORDER BY created_at DESC\n            ",
     "describe": {

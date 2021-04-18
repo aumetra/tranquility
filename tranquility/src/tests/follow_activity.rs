@@ -16,6 +16,7 @@ const FOLLOW_ACTIVITY: &str = r#"
 "#;
 
 #[test]
+/// Test that the follow activity decodes correctly
 fn decode() {
     let follow_activity: FollowActivity = serde_json::from_str(FOLLOW_ACTIVITY).unwrap();
 

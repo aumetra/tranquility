@@ -10,6 +10,7 @@ use {
     std::env,
 };
 
+/// Create a test configuration
 fn test_config() -> Configuration {
     Configuration {
         instance: ConfigurationInstance {
@@ -38,6 +39,7 @@ fn test_config() -> Configuration {
     }
 }
 
+/// Migrate the database
 async fn init_db() -> PgPool {
     let conn_url = env::var("TEST_DB_URL").unwrap();
 
@@ -47,6 +49,7 @@ async fn init_db() -> PgPool {
     conn_pool
 }
 
+/// Migrate the database and construct a state (without an `Arc` so the values can be adjusted as needed)
 async fn test_state() -> State {
     let config = test_config();
     let db_pool = init_db().await;
@@ -57,3 +60,6 @@ async fn test_state() -> State {
 mod follow_activity;
 mod oauth;
 mod register;
+
+#[cfg(feature = "mastodon-api")]
+mod mastodon;

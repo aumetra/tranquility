@@ -6,6 +6,7 @@ use {
 };
 
 #[tokio::test]
+/// Test that requesting an OAuth access token by using the password grant (authenticate via username/password directly)
 async fn password_grant() {
     let state = Arc::new(test_state().await);
 

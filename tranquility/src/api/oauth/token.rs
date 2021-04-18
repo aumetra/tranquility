@@ -1,6 +1,7 @@
 use {
     super::TokenTemplate,
     crate::{
+        consts::oauth::DISPLAY_REDIRECT_URI,
         crypto::password,
         database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
@@ -116,8 +117,7 @@ async fn code_grant(
     .insert(&state.db_pool)
     .await?;
 
-    // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
-    if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
+    if redirect_uri == DISPLAY_REDIRECT_URI {
         let page = map_err!(TokenTemplate {
             token: access_token.access_token,
         }

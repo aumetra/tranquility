@@ -9,6 +9,7 @@ use {
     },
 };
 
+/// Register a new user via the register API endpoint (panics on failure)
 pub async fn register_user(state: &ArcState, username: &str, password: &str) -> Response {
     let body = format!(
         "username={username}&email={username}@example.com&password={password}",
@@ -28,6 +29,7 @@ pub async fn register_user(state: &ArcState, username: &str, password: &str) -> 
 }
 
 #[tokio::test]
+/// Test that the `closed_registrations` config option works
 async fn closed_registrations() {
     let mut state = test_state().await;
     state.config.instance.closed_registrations = true;
@@ -38,6 +40,7 @@ async fn closed_registrations() {
 }
 
 #[tokio::test]
+/// Test that the registration endpoint works
 async fn register_endpoint() {
     let state = Arc::new(test_state().await);
 
