@@ -5,6 +5,7 @@ use {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+/// Struct representing an [`ActivityStreams` collection](https://www.w3.org/TR/activitystreams-core/#collections)
 pub struct Collection {
     #[serde(default = "super::context_field", rename = "@context")]
     pub context: Value,

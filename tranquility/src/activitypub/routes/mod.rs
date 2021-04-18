@@ -5,9 +5,9 @@ use {
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
 };
 
-// I wish I could use "warp::header::exact()" or something like it but the "Accept" header.
-// But the value can change for every implementation, for example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
-// So I'll just use ".contains()" on the header value
+/// `warp::header::exact()` can't be used here because the value can look different for every implementation  
+///
+/// For example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
 fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy {
     let header_requirements_fn = |accept_header_value: String| async move {
         if accept_header_value.contains("application/activity+json")
@@ -24,11 +24,11 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
         .untuple_one()
 }
 
-// The standard "warp::body::json()" filter only decodes content from requests
-// that have the header "Content-Type: application/json" but the inbox
-// requests have the types of either "application/ld+json" or "application/activity+json"
+/// The standard `warp::body::json()` filter only decodes content from requests
+/// that have the header "Content-Type: application/json" but the inbox
+/// requests have the types of either "application/ld+json" or "application/activity+json"
 fn ap_json<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
-    let custom_json_parser_fn = |body: Bytes| async move {
+    let json_parser_fn = |body: Bytes| async move {
         let value = map_err!(serde_json::from_slice(&body))?;
 
         Ok::<T, Rejection>(value)
@@ -36,9 +36,11 @@ fn ap_json<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejecti
 
     warp::body::content_length_limit(MAX_BODY_SIZE)
         .and(warp::body::bytes())
-        .and_then(custom_json_parser_fn)
+        .and_then(json_parser_fn)
 }
 
+/// Filter returning a query if there's one
+/// Warp's standard behaviour is to reject
 fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
     warp::query::raw().or_else(|_| async { Ok::<_, Rejection>((String::new(),)) })
 }
