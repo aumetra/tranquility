@@ -2,8 +2,8 @@ use {
     super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
     crate::{
         database::{Actor as DbActor, InsertExt, InsertObject},
-        map_err,
         state::ArcState,
+        unrejectable_err,
     },
     serde::Deserialize,
     std::sync::Arc,
@@ -32,7 +32,7 @@ async fn create(
         );
     }
 
-    let author: Actor = map_err!(serde_json::from_value(author_db.actor))?;
+    let author: Actor = unrejectable_err!(serde_json::from_value(author_db.actor));
 
     let (object_id, mut object) = crate::activitypub::instantiate::object(
         &state.config,
@@ -48,15 +48,17 @@ async fn create(
     // Clean the summary and status from any malicious HTML
     crate::activitypub::clean_object(&mut object);
 
-    let object_value = map_err!(serde_json::to_value(&object))?;
+    let object_value = unrejectable_err!(serde_json::to_value(&object));
 
-    InsertObject {
-        id: object_id,
-        owner_id: author_db.id,
-        data: object_value,
-    }
-    .insert(&state.db_pool)
-    .await?;
+    unrejectable_err!(
+        InsertObject {
+            id: object_id,
+            owner_id: author_db.id,
+            data: object_value,
+        }
+        .insert(&state.db_pool)
+        .await
+    );
 
     let (_create_activity_id, create_activity) = crate::activitypub::instantiate::activity(
         &state.config,
@@ -67,9 +69,11 @@ async fn create(
         object.cc.clone(),
     );
 
-    crate::activitypub::deliverer::deliver(create_activity, Arc::clone(&state)).await?;
+    unrejectable_err!(
+        crate::activitypub::deliverer::deliver(create_activity, Arc::clone(&state)).await
+    );
 
-    let mastodon_status = object.into_mastodon(&state).await?;
+    let mastodon_status = unrejectable_err!(object.into_mastodon(&state).await);
     Ok(warp::reply::json(&mastodon_status).into_response())
 }
 

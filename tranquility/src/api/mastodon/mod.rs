@@ -2,8 +2,7 @@ use {
     crate::{
         consts::cors::API_ALLOWED_METHODS,
         database::{Actor, OAuthToken},
-        error::Error,
-        map_err,
+        error::{Error, IntoRejection},
         state::ArcState,
         util::construct_cors,
     },
@@ -53,8 +52,12 @@ async fn authorise_user(
     let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
     let token = credentials.token();
 
-    let access_token = map_err!(OAuthToken::by_access_token(&state.db_pool, token).await)?;
-    let actor = map_err!(Actor::get(&state.db_pool, access_token.actor_id).await)?;
+    let access_token = OAuthToken::by_access_token(&state.db_pool, token)
+        .await
+        .into_rejection()?;
+    let actor = Actor::get(&state.db_pool, access_token.actor_id)
+        .await
+        .into_rejection()?;
 
     Ok(actor)
 }

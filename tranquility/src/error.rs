@@ -1,15 +1,9 @@
 use {
-    crate::map_err,
-    argon2::Error as Argon2Error,
-    askama::Error as AskamaError,
-    reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
-    rsa::errors::Error as RsaError,
     serde_json::Error as SerdeJsonError,
-    sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
+    std::fmt,
     tranquility_http_signatures::Error as HttpSignaturesError,
     url::ParseError as UrlParseError,
     uuid::Error as UuidError,
-    validator::ValidationErrors,
     warp::{
         http::StatusCode,
         reject::{Reject, Rejection},
@@ -20,11 +14,8 @@ use {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("argon2 operation failed")]
-    Argon2(#[from] Argon2Error),
-
-    #[error("Template formatting failed")]
-    Askama(#[from] AskamaError),
+    #[error("{0}")]
+    Custom(String),
 
     #[error("Remote content fetch failed")]
     Fetch,
@@ -41,21 +32,6 @@ pub enum Error {
     #[error("Unauthorized")]
     Unauthorized,
 
-    #[error("reqwest operation failed")]
-    Reqwest(#[from] ReqwestError),
-
-    #[error("Invalid reqwest HeaderValue")]
-    ReqwestInvalidHeaderValue(#[from] ReqwestInvalidHeaderValue),
-
-    #[error("RSA operation failed")]
-    Rsa(#[from] RsaError),
-
-    #[error("Database operation failed")]
-    Sqlx(#[from] SqlxError),
-
-    #[error("Database migration failed")]
-    SqlxMigration(#[from] SqlxMigrationError),
-
     #[error("serde-json operation failed")]
     SerdeJson(#[from] SerdeJsonError),
 
@@ -70,12 +46,27 @@ pub enum Error {
 
     #[error("UUID operation failed")]
     Uuid(#[from] UuidError),
-
-    #[error("Validation error")]
-    Validation(#[from] ValidationErrors),
 }
 
 impl Reject for Error {}
+
+pub trait IntoRejection<T> {
+    /// Convert a `Result<T, E>` into an `Result<T, Rejection>`
+    fn into_rejection(self) -> Result<T, Rejection>;
+}
+
+impl<T, E> IntoRejection<T> for Result<T, E>
+where
+    E: fmt::Display + Sized,
+{
+    fn into_rejection(self) -> Result<T, Rejection> {
+        self.map_err(|e| {
+            let msg = format!("{}", e);
+
+            Error::Custom(msg).into()
+        })
+    }
+}
 
 pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
     if let Some(error) = rejection.find::<Error>() {
@@ -89,23 +80,8 @@ pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
                 Ok(warp::reply::with_status(error_text, StatusCode::BAD_REQUEST).into_response())
             }
 
-            // Add special case to send the previously defined error messages
-            Error::Validation(err) => {
-                let response_payload = map_err!(serde_json::to_string(err))?;
-                let response = warp::reply::with_status(response_payload, StatusCode::BAD_REQUEST)
-                    .into_response();
-
-                Ok(response)
-            }
-
             Error::Unauthorized => {
                 Ok(warp::reply::with_status(error_text, StatusCode::UNAUTHORIZED).into_response())
-            }
-
-            Error::Argon2(..) | Error::Sqlx(..) | Error::SqlxMigration(..) | Error::Rsa(..) => {
-                error!(?error, "Internal error occurred");
-
-                Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response())
             }
 
             _ => Err(rejection),

@@ -3,8 +3,9 @@ use {
     crate::{
         activitypub::interactions,
         database::{Actor as DbActor, Object as DbObject},
-        format_uuid, map_err,
+        format_uuid,
         state::ArcState,
+        unrejectable_err,
     },
     ormx::Table,
     tranquility_types::{
@@ -12,38 +13,38 @@ use {
         mastodon::{Account, FollowResponse, Source},
     },
     uuid::Uuid,
-    warp::{Filter, Rejection, Reply},
+    warp::{reply::Response, Filter, Rejection, Reply},
 };
 
 async fn accounts(
     id: Uuid,
     state: ArcState,
     authorized_db_actor: Option<DbActor>,
-) -> Result<impl Reply, Rejection> {
-    let db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
-    let mut mastodon_account: Account = db_actor.into_mastodon(&state).await?;
+) -> Result<Response, Rejection> {
+    let db_actor = unrejectable_err!(DbActor::get(&state.db_pool, id).await);
+    let mut mastodon_account: Account = unrejectable_err!(db_actor.into_mastodon(&state).await);
 
     // Add the source field to the returned account if the requested account
     // is the account that has authorized itself
     if let Some(authorized_db_actor) = authorized_db_actor {
         if id == authorized_db_actor.id {
-            let source: Source = authorized_db_actor.into_mastodon(&state).await?;
+            let source: Source = unrejectable_err!(authorized_db_actor.into_mastodon(&state).await);
             mastodon_account.source = Some(source);
         }
     }
 
-    Ok(warp::reply::json(&mastodon_account))
+    Ok(warp::reply::json(&mastodon_account).into_response())
 }
 
 async fn follow(
     id: Uuid,
     state: ArcState,
     authorized_db_actor: DbActor,
-) -> Result<impl Reply, Rejection> {
-    let followed_db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
-    let followed_actor: Actor = map_err!(serde_json::from_value(followed_db_actor.actor))?;
+) -> Result<Response, Rejection> {
+    let followed_db_actor = unrejectable_err!(DbActor::get(&state.db_pool, id).await);
+    let followed_actor: Actor = unrejectable_err!(serde_json::from_value(followed_db_actor.actor));
 
-    interactions::follow(&state, authorized_db_actor, &followed_actor).await?;
+    unrejectable_err!(interactions::follow(&state, authorized_db_actor, &followed_actor).await);
 
     // TODO: Fill in information dynamically (followed by, blocked by, blocking, etc.)
     let follow_response = FollowResponse {
@@ -51,27 +52,29 @@ async fn follow(
         following: true,
         ..FollowResponse::default()
     };
-    Ok(warp::reply::json(&follow_response))
+    Ok(warp::reply::json(&follow_response).into_response())
 }
 
-async fn following(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
+async fn following(id: Uuid, state: ArcState) -> Result<Response, Rejection> {
     let follow_activities =
-        DbObject::by_type_and_owner(&state.db_pool, "Follow", &id, 10, 0).await?;
-    let followed_accounts: Vec<Account> = follow_activities.into_mastodon(&state).await?;
+        unrejectable_err!(DbObject::by_type_and_owner(&state.db_pool, "Follow", &id, 10, 0).await);
+    let followed_accounts: Vec<Account> =
+        unrejectable_err!(follow_activities.into_mastodon(&state).await);
 
-    Ok(warp::reply::json(&followed_accounts))
+    Ok(warp::reply::json(&followed_accounts).into_response())
 }
 
-async fn followers(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
-    let db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
-    let actor: Actor = map_err!(serde_json::from_value(db_actor.actor))?;
+async fn followers(id: Uuid, state: ArcState) -> Result<Response, Rejection> {
+    let db_actor = unrejectable_err!(DbActor::get(&state.db_pool, id).await);
+    let actor: Actor = unrejectable_err!(serde_json::from_value(db_actor.actor));
 
-    let followed_activities =
-        DbObject::by_type_and_object_url(&state.db_pool, "Follow", actor.id.as_str(), 10, 0)
-            .await?;
-    let follower_accounts: Vec<Account> = followed_activities.into_mastodon(&state).await?;
+    let followed_activities = unrejectable_err!(
+        DbObject::by_type_and_object_url(&state.db_pool, "Follow", actor.id.as_str(), 10, 0).await
+    );
+    let follower_accounts: Vec<Account> =
+        unrejectable_err!(followed_activities.into_mastodon(&state).await);
 
-    Ok(warp::reply::json(&follower_accounts))
+    Ok(warp::reply::json(&follower_accounts).into_response())
 }
 
 // TODO: Implement `/api/v1/accounts/:id/statuses` endpoint
@@ -82,28 +85,29 @@ async fn unfollow(
     id: Uuid,
     state: ArcState,
     authorized_db_actor: DbActor,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
     // Fetch the follow activity
-    let followed_db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
+    let followed_db_actor = unrejectable_err!(DbActor::get(&state.db_pool, id).await);
     let followed_actor_id = format_uuid!(followed_db_actor.id);
 
-    interactions::unfollow(&state, authorized_db_actor, followed_db_actor).await?;
+    unrejectable_err!(interactions::unfollow(&state, authorized_db_actor, followed_db_actor).await);
 
     // TODO: Fill in information dynamically (followed by, blocked by, blocking, etc.)
     let unfollow_response = FollowResponse {
         id: followed_actor_id,
         ..FollowResponse::default()
     };
-    Ok(warp::reply::json(&unfollow_response))
+    Ok(warp::reply::json(&unfollow_response).into_response())
 }
 
-async fn verify_credentials(state: ArcState, db_actor: DbActor) -> Result<impl Reply, Rejection> {
-    let mut mastodon_account: Account = db_actor.clone().into_mastodon(&state).await?;
-    let mastodon_account_source: Source = db_actor.into_mastodon(&state).await?;
+async fn verify_credentials(state: ArcState, db_actor: DbActor) -> Result<Response, Rejection> {
+    let mut mastodon_account: Account =
+        unrejectable_err!(db_actor.clone().into_mastodon(&state).await);
+    let mastodon_account_source: Source = unrejectable_err!(db_actor.into_mastodon(&state).await);
 
     mastodon_account.source = Some(mastodon_account_source);
 
-    Ok(warp::reply::json(&mastodon_account))
+    Ok(warp::reply::json(&mastodon_account).into_response())
 }
 
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {

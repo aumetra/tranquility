@@ -1,5 +1,9 @@
 use {
-    crate::{consts::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
+    crate::{
+        consts::MAX_BODY_SIZE,
+        error::{Error, IntoRejection},
+        state::ArcState,
+    },
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -29,7 +33,7 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
 // requests have the types of either "application/ld+json" or "application/activity+json"
 fn ap_json<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
     let custom_json_parser_fn = |body: Bytes| async move {
-        let value = map_err!(serde_json::from_slice(&body))?;
+        let value = serde_json::from_slice(&body).into_rejection()?;
 
         Ok::<T, Rejection>(value)
     };

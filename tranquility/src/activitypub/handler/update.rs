@@ -4,13 +4,14 @@ use {
         database::Actor,
         error::Error,
         state::ArcState,
+        unrejectable_err,
     },
     ormx::Table,
     tranquility_types::activitypub::Activity,
-    warp::http::StatusCode,
+    warp::{http::StatusCode, reply::Response, Reply},
 };
 
-pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<Response, Error> {
     // Update activities are usually only used to update the actor
     // (For example, when the user changes their bio or display name)
     let ap_actor = activity
@@ -21,15 +22,15 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     activitypub::clean_actor(ap_actor);
 
     // Fetch the actor (just in case)
-    fetcher::fetch_actor(state, ap_actor.id.as_str()).await?;
+    unrejectable_err!(fetcher::fetch_actor(state, ap_actor.id.as_str()).await);
 
-    let mut actor = Actor::by_url(&state.db_pool, ap_actor.id.as_str()).await?;
+    let mut actor = unrejectable_err!(Actor::by_url(&state.db_pool, ap_actor.id.as_str()).await);
 
     // Update the actor value
     let ap_actor = serde_json::to_value(ap_actor)?;
     actor.actor = ap_actor;
 
-    actor.update(&state.db_pool).await?;
+    unrejectable_err!(actor.update(&state.db_pool).await);
 
-    Ok(StatusCode::CREATED)
+    Ok(StatusCode::CREATED.into_response())
 }

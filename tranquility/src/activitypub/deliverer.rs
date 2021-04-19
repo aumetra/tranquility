@@ -1,5 +1,5 @@
 use {
-    crate::{crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState},
+    crate::{crypto, database::Actor as DbActor, state::ArcState},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -19,7 +19,7 @@ struct DeliveryData {
 }
 
 impl DeliveryData {
-    async fn new(activity: Activity, state: ArcState) -> Result<Arc<Self>, Error> {
+    async fn new(activity: Activity, state: ArcState) -> anyhow::Result<Arc<Self>> {
         let (author, author_db) =
             crate::activitypub::fetcher::fetch_actor(&state, activity.actor.as_str()).await?;
 
@@ -42,7 +42,7 @@ impl DeliveryData {
 fn construct_deliver_future<'a>(
     delivery_data: &Arc<DeliveryData>,
     url: String,
-) -> impl Future<Output = Result<Response, Error>> + Send {
+) -> impl Future<Output = anyhow::Result<Response>> + Send {
     let delivery_data = Arc::clone(delivery_data);
 
     async move {
@@ -51,7 +51,7 @@ fn construct_deliver_future<'a>(
         let client = &crate::util::HTTP_CLIENT;
         let request = prepare_request(client, &url, delivery_data).await?;
 
-        map_err!(client.execute(request).await)
+        Ok(client.execute(request).await?)
     }
 }
 
@@ -64,7 +64,7 @@ async fn prepare_request(
     client: &Client,
     url: &str,
     delivery_data: Arc<DeliveryData>,
-) -> Result<Request, Error> {
+) -> anyhow::Result<Request> {
     let DeliveryData {
         ref activity,
         ref author,
@@ -102,7 +102,7 @@ async fn prepare_request(
 }
 
 /// Resolve the follow collections and the actor URL to inbox URLs
-async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<String>, Error> {
+async fn resolve_url(delivery_data: &DeliveryData, url: String) -> anyhow::Result<Vec<String>> {
     // Check if the current URL is the user's follower collection
     if delivery_data.author.followers == url {
         // Get the inbox URLs of all the followers
@@ -124,7 +124,7 @@ async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<St
 }
 
 /// De-duplicate the recipients and resolve the follow collections  
-async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>, Error> {
+async fn get_recipient_list(delivery_data: &DeliveryData) -> anyhow::Result<Vec<String>> {
     // Merge the to and cc arrays, deduplicate them, remove the public identifier
     // and construct futures that resolve the URLs
     let recipient_futures = delivery_data
@@ -154,7 +154,7 @@ async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>,
 }
 
 /// Deliver an activity to the specified user (groups)
-pub async fn deliver(activity: Activity, state: ArcState) -> Result<(), Error> {
+pub async fn deliver(activity: Activity, state: ArcState) -> anyhow::Result<()> {
     let delivery_data = DeliveryData::new(activity, state).await?;
 
     tokio::spawn(async move {

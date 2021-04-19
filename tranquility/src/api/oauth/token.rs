@@ -4,8 +4,8 @@ use {
         crypto::password,
         database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
-        map_err,
         state::ArcState,
+        unrejectable_err,
     },
     askama::Template,
     chrono::Duration,
@@ -94,34 +94,38 @@ async fn code_grant(
         ..
     }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
-    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &client_id).await)?;
+    let client =
+        unrejectable_err!(OAuthApplication::by_client_id(&state.db_pool, &client_id).await);
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
     }
 
-    let authorization_code = map_err!(OAuthAuthorization::by_code(&state.db_pool, &code).await)?;
+    let authorization_code =
+        unrejectable_err!(OAuthAuthorization::by_code(&state.db_pool, &code).await);
 
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
 
     let access_token = crate::crypto::token::generate()?;
 
-    let access_token = InsertOAuthToken {
-        application_id: Some(client.id),
-        actor_id: authorization_code.actor_id,
-        access_token,
-        refresh_token: None,
-        valid_until: valid_until.naive_utc(),
-    }
-    .insert(&state.db_pool)
-    .await?;
+    let access_token = unrejectable_err!(
+        InsertOAuthToken {
+            application_id: Some(client.id),
+            actor_id: authorization_code.actor_id,
+            access_token,
+            refresh_token: None,
+            valid_until: valid_until.naive_utc(),
+        }
+        .insert(&state.db_pool)
+        .await
+    );
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = map_err!(TokenTemplate {
+        let page = unrejectable_err!(TokenTemplate {
             token: access_token.access_token,
         }
-        .render())?;
+        .render());
 
         Ok(warp::reply::html(page).into_response())
     } else {
@@ -140,8 +144,9 @@ async fn password_grant(
     FormPasswordGrant {
         username, password, ..
     }: FormPasswordGrant,
-) -> Result<impl Reply, Rejection> {
-    let actor = Actor::by_username_local(&state.db_pool, username.as_str()).await?;
+) -> Result<Response, Rejection> {
+    let actor =
+        unrejectable_err!(Actor::by_username_local(&state.db_pool, username.as_str()).await);
     if !password::verify(password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
     }
@@ -151,15 +156,17 @@ async fn password_grant(
 
     let access_token = crate::crypto::token::generate()?;
 
-    let access_token = InsertOAuthToken {
-        application_id: None,
-        actor_id: actor.id,
-        access_token,
-        refresh_token: None,
-        valid_until: valid_until.naive_utc(),
-    }
-    .insert(&state.db_pool)
-    .await?;
+    let access_token = unrejectable_err!(
+        InsertOAuthToken {
+            application_id: None,
+            actor_id: actor.id,
+            access_token,
+            refresh_token: None,
+            valid_until: valid_until.naive_utc(),
+        }
+        .insert(&state.db_pool)
+        .await
+    );
 
     let response = AccessTokenResponse {
         access_token: access_token.access_token,
@@ -167,7 +174,7 @@ async fn password_grant(
         ..AccessTokenResponse::default()
     };
 
-    Ok(warp::reply::json(&response))
+    Ok(warp::reply::json(&response).into_response())
 }
 
 pub async fn token(state: ArcState, form: Form) -> Result<Response, Rejection> {

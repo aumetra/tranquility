@@ -2,8 +2,8 @@ use {
     crate::{
         activitypub,
         database::{InsertActor, InsertExt},
-        map_err,
         state::ArcState,
+        unrejectable_err,
     },
     once_cell::sync::Lazy,
     regex::Regex,
@@ -41,13 +41,14 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         return Ok(StatusCode::FORBIDDEN.into_response());
     }
 
-    map_err!(form.validate())?;
+    unrejectable_err!(form.validate());
 
     let user_id = Uuid::new_v4();
-    let password_hash = crate::crypto::password::hash(form.password).await?;
+    let password_hash = unrejectable_err!(crate::crypto::password::hash(form.password).await);
 
-    let rsa_private_key = crate::crypto::rsa::generate().await?;
-    let (public_key_pem, private_key_pem) = crate::crypto::rsa::to_pem(&rsa_private_key)?;
+    let rsa_private_key = unrejectable_err!(crate::crypto::rsa::generate().await);
+    let (public_key_pem, private_key_pem) =
+        unrejectable_err!(crate::crypto::rsa::to_pem(&rsa_private_key));
 
     let actor = activitypub::instantiate::actor(
         &state.config,
@@ -55,19 +56,21 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         &form.username,
         public_key_pem,
     );
-    let actor = map_err!(serde_json::to_value(&actor))?;
+    let actor = unrejectable_err!(serde_json::to_value(&actor));
 
-    InsertActor {
-        id: user_id,
-        username: form.username,
-        actor,
-        email: Some(form.email),
-        password_hash: Some(password_hash),
-        private_key: Some(private_key_pem),
-        remote: false,
-    }
-    .insert(&state.db_pool)
-    .await?;
+    unrejectable_err!(
+        InsertActor {
+            id: user_id,
+            username: form.username,
+            actor,
+            email: Some(form.email),
+            password_hash: Some(password_hash),
+            private_key: Some(private_key_pem),
+            remote: false,
+        }
+        .insert(&state.db_pool)
+        .await
+    );
 
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }

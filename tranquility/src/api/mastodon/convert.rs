@@ -15,7 +15,6 @@ use {
         mastodon::{Account, App, Source, Status},
     },
     url::Url,
-    warp::Rejection,
 };
 
 #[async_trait]
@@ -23,14 +22,14 @@ pub trait IntoMastodon<ApiEntity>: Send + Sync
 where
     ApiEntity: Serialize + 'static,
 {
-    type Error: Into<Rejection>;
+    type Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<ApiEntity, Self::Error>;
 }
 
 #[async_trait]
 impl IntoMastodon<Account> for DbActor {
-    type Error = Error;
+    type Error = anyhow::Error;
 
     async fn into_mastodon(self, _state: &ArcState) -> Result<Account, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
@@ -82,7 +81,7 @@ impl IntoMastodon<Account> for DbActor {
 
 #[async_trait]
 impl IntoMastodon<Source> for DbActor {
-    type Error = Error;
+    type Error = anyhow::Error;
 
     async fn into_mastodon(self, _state: &ArcState) -> Result<Source, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
@@ -102,7 +101,7 @@ impl IntoMastodon<Source> for DbActor {
 
 #[async_trait]
 impl IntoMastodon<Status> for DbObject {
-    type Error = Error;
+    type Error = anyhow::Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
         let activity_or_object: Object = serde_json::from_value(self.data)?;
@@ -113,7 +112,7 @@ impl IntoMastodon<Status> for DbObject {
 
 #[async_trait]
 impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
-    type Error = Error;
+    type Error = anyhow::Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<Vec<Account>, Self::Error> {
         let db_to_url = |object: DbObject| {
@@ -132,7 +131,7 @@ impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
             let account = DbActor::by_url(&state.db_pool, url.as_str()).await?;
             let account: Account = account.into_mastodon(state).await?;
 
-            Ok::<_, Error>(account)
+            Ok::<_, anyhow::Error>(account)
         };
         let account_futures = self.into_iter().filter_map(db_to_url).map(fetch_account_fn);
 
@@ -149,7 +148,7 @@ impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
 
 #[async_trait]
 impl IntoMastodon<App> for OAuthApplication {
-    type Error = Error;
+    type Error = anyhow::Error;
 
     async fn into_mastodon(self, _state: &ArcState) -> Result<App, Self::Error> {
         let id = format_uuid!(self.id);
@@ -176,7 +175,7 @@ impl IntoMastodon<App> for OAuthApplication {
 
 #[async_trait]
 impl IntoMastodon<Status> for Object {
-    type Error = Error;
+    type Error = anyhow::Error;
 
     async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
         let db_object = DbObject::by_url(&state.db_pool, self.id.as_str()).await?;

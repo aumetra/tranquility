@@ -1,5 +1,4 @@
 use {
-    crate::error::Error,
     futures_util::stream::{StreamExt, TryStreamExt},
     sqlx::PgPool,
 };
@@ -19,7 +18,7 @@ impl From<InboxUrl> for String {
 pub async fn resolve_followers(
     conn_pool: &PgPool,
     followed_url: &str,
-) -> Result<Vec<String>, Error> {
+) -> anyhow::Result<Vec<String>> {
     let inbox_urls = sqlx::query_as!(
         InboxUrl,
         r#"
@@ -39,7 +38,7 @@ pub async fn resolve_followers(
     Ok(inbox_urls)
 }
 
-pub async fn resolve_one(conn_pool: &PgPool, url: &str) -> Result<String, Error> {
+pub async fn resolve_one(conn_pool: &PgPool, url: &str) -> anyhow::Result<String> {
     let inbox_url = sqlx::query_as!(
         InboxUrl,
         // The `as "inbox_url!"` is needed here for the `query_as` macro to be

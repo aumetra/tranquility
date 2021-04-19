@@ -1,7 +1,4 @@
-use {
-    crate::error::Error, chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool,
-    uuid::Uuid,
-};
+use {chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool, uuid::Uuid};
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "actors", insertable)]
@@ -24,7 +21,7 @@ pub struct Actor {
 }
 
 impl Actor {
-    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Self, Error> {
+    pub async fn by_url(conn_pool: &PgPool, url: &str) -> anyhow::Result<Self> {
         let actor = sqlx::query_as!(
             Actor,
             r#"
@@ -39,7 +36,7 @@ impl Actor {
         Ok(actor)
     }
 
-    pub async fn by_username_local(conn_pool: &PgPool, username: &str) -> Result<Self, Error> {
+    pub async fn by_username_local(conn_pool: &PgPool, username: &str) -> anyhow::Result<Self> {
         let actor = sqlx::query_as!(
             Actor,
             r#"

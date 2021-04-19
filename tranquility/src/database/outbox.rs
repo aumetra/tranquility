@@ -1,8 +1,5 @@
 use {
-    crate::{
-        database::{last_activity_timestamp, Object},
-        error::Error,
-    },
+    crate::database::{last_activity_timestamp, Object},
     sqlx::PgPool,
     uuid::Uuid,
 };
@@ -12,7 +9,7 @@ pub async fn activities(
     user_id: Uuid,
     last_activity_id: Option<Uuid>,
     limit: i64,
-) -> Result<Vec<Object>, Error> {
+) -> anyhow::Result<Vec<Object>> {
     let last_activity_timestamp = last_activity_timestamp(conn_pool, last_activity_id).await?;
     let create_activities = sqlx::query_as!(
         Object,

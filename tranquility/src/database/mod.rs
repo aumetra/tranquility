@@ -2,7 +2,6 @@
 #![allow(clippy::used_underscore_binding, clippy::similar_names)]
 
 use {
-    crate::{error::Error, map_err},
     async_trait::async_trait,
     chrono::{NaiveDateTime, Utc},
     sqlx::PgPool,
@@ -24,11 +23,11 @@ pub trait InsertExt: ormx::Insert {
     async fn insert(
         self,
         conn_pool: &sqlx::Pool<ormx::Db>,
-    ) -> Result<<Self as ormx::Insert>::Table, Error> {
+    ) -> anyhow::Result<<Self as ormx::Insert>::Table> {
         // Acquire a connection from the database pool
-        let mut db_conn = map_err!(conn_pool.acquire().await)?;
+        let mut db_conn = conn_pool.acquire().await?;
 
-        map_err!(ormx::Insert::insert(self, &mut db_conn).await)
+        Ok(ormx::Insert::insert(self, &mut db_conn).await?)
     }
 }
 
@@ -49,7 +48,7 @@ impl From<ObjectTimestamp> for NaiveDateTime {
 async fn last_activity_timestamp(
     conn_pool: &PgPool,
     last_activity_id: Option<Uuid>,
-) -> Result<NaiveDateTime, Error> {
+) -> anyhow::Result<NaiveDateTime> {
     let last_timestamp = sqlx::query_as!(
         ObjectTimestamp,
         r#"
@@ -67,7 +66,7 @@ async fn last_activity_timestamp(
 }
 
 /// Execute the embedded database migrations
-pub async fn migrate(conn_pool: &PgPool) -> Result<(), Error> {
+pub async fn migrate(conn_pool: &PgPool) -> anyhow::Result<()> {
     sqlx::migrate!("../migrations").run(conn_pool).await?;
 
     Ok(())

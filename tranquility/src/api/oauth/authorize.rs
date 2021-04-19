@@ -4,8 +4,8 @@ use {
         crypto::password,
         database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
         error::Error,
-        map_err,
         state::ArcState,
+        unrejectable_err,
     },
     askama::Template,
     chrono::Duration,
@@ -39,7 +39,7 @@ pub async fn get() -> Result<impl Reply, Rejection> {
 }
 
 pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response, Rejection> {
-    let actor = Actor::by_username_local(&state.db_pool, &form.username).await?;
+    let actor = unrejectable_err!(Actor::by_username_local(&state.db_pool, &form.username).await);
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
     }
@@ -53,7 +53,8 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         return Err(Error::InvalidRequest.into());
     }
 
-    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &query.client_id).await)?;
+    let client =
+        unrejectable_err!(OAuthApplication::by_client_id(&state.db_pool, &query.client_id).await);
     if client.redirect_uris != query.redirect_uri {
         return Err(Error::InvalidRequest.into());
     }
@@ -63,21 +64,23 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
     let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
     let valid_until = chrono::Utc::now() + validity_duration;
 
-    let authorization_code = InsertOAuthAuthorization {
-        application_id: client.id,
-        actor_id: actor.id,
-        code: authorization_code,
-        valid_until: valid_until.naive_utc(),
-    }
-    .insert(&state.db_pool)
-    .await?;
+    let authorization_code = unrejectable_err!(
+        InsertOAuthAuthorization {
+            application_id: client.id,
+            actor_id: actor.id,
+            code: authorization_code,
+            valid_until: valid_until.naive_utc(),
+        }
+        .insert(&state.db_pool)
+        .await
+    );
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if query.redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = map_err!(TokenTemplate {
+        let page = unrejectable_err!(TokenTemplate {
             token: authorization_code.code,
         }
-        .render())?;
+        .render());
 
         Ok(warp::reply::html(page).into_response())
     } else {

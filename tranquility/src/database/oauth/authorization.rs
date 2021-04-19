@@ -1,4 +1,4 @@
-use {crate::error::Error, chrono::NaiveDateTime, ormx::Table, sqlx::PgPool, uuid::Uuid};
+use {chrono::NaiveDateTime, ormx::Table, sqlx::PgPool, uuid::Uuid};
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_authorizations", insertable)]
@@ -20,7 +20,7 @@ pub struct OAuthAuthorization {
 }
 
 impl OAuthAuthorization {
-    pub async fn delete_expired(conn_pool: &PgPool) -> Result<(), Error> {
+    pub async fn delete_expired(conn_pool: &PgPool) -> anyhow::Result<()> {
         sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
             .execute(conn_pool)
             .await?;

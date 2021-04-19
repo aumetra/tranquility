@@ -5,8 +5,8 @@ use {
             routes::{ap_json, optional_raw_query},
         },
         crypto,
-        error::Error,
-        map_err, match_handler,
+        error::{Error, IntoRejection},
+        match_handler,
         state::ArcState,
     },
     core::ops::Not,
@@ -14,7 +14,8 @@ use {
     warp::{
         http::{HeaderMap, Method},
         path::FullPath,
-        Filter, Rejection, Reply,
+        reply::Response,
+        Filter, Rejection,
     },
 };
 
@@ -42,7 +43,7 @@ async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activit
         ObjectField::Actor(ref actor) => actor.id == activity.actor,
         ObjectField::Object(ref object) => object.attributed_to == activity.actor,
         ObjectField::Url(ref url) => {
-            let entity = fetcher::fetch_any(&state, url).await?;
+            let entity = fetcher::fetch_any(&state, url).await.into_rejection()?;
             entity.is_owned_by(activity.actor.as_str())
         }
     };
@@ -60,14 +61,16 @@ async fn verify_signature(
     headers: HeaderMap,
     activity: Activity,
 ) -> Result<(ArcState, Activity), Rejection> {
-    let (remote_actor, _remote_actor_db) =
-        map_err!(fetcher::fetch_actor(&state, &activity.actor).await)?;
+    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(&state, &activity.actor)
+        .await
+        .into_rejection()?;
 
     let public_key = remote_actor.public_key.public_key_pem;
     let query = query.is_empty().not().then(|| query);
 
     crypto::request::verify(method, path, query, headers, public_key)
-        .await?
+        .await
+        .into_rejection()?
         .then(|| (state, activity))
         .ok_or_else(|| Error::Unauthorized.into())
 }
@@ -78,7 +81,7 @@ pub async fn inbox(
     _user_id: uuid::Uuid,
     state: ArcState,
     activity: Activity,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
     let response = match_handler! {
         (state, activity);
 

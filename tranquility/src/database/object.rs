@@ -1,7 +1,4 @@
-use {
-    crate::error::Error, chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool,
-    uuid::Uuid,
-};
+use {chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool, uuid::Uuid};
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "objects", insertable)]
@@ -18,7 +15,7 @@ pub struct Object {
 }
 
 impl Object {
-    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Self, Error> {
+    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> anyhow::Result<Self> {
         let object = sqlx::query_as!(
             Object,
             r#"
@@ -39,7 +36,7 @@ impl Object {
         object_url: &str,
         limit: i64,
         offset: i64,
-    ) -> Result<Vec<Self>, Error> {
+    ) -> anyhow::Result<Vec<Self>> {
         let objects = sqlx::query_as!(
             Object,
             r#"
@@ -68,7 +65,7 @@ impl Object {
         owner_id: &Uuid,
         limit: i64,
         offset: i64,
-    ) -> Result<Vec<Self>, Error> {
+    ) -> anyhow::Result<Vec<Self>> {
         let objects = sqlx::query_as!(
             Object,
             r#"
@@ -96,8 +93,8 @@ impl Object {
         r#type: &str,
         owner_id: &Uuid,
         object_url: &str,
-    ) -> Result<Self, Error> {
-        let object_result = sqlx::query_as!(
+    ) -> anyhow::Result<Self> {
+        let object = sqlx::query_as!(
             Object,
             r#"
                 SELECT * FROM objects
@@ -112,16 +109,12 @@ impl Object {
             object_url,
         )
         .fetch_one(conn_pool)
-        .await;
+        .await?;
 
-        match object_result {
-            Ok(obj) => Ok(obj),
-            Err(sqlx::Error::RowNotFound) => Err(Error::InvalidRequest),
-            Err(e) => Err(e.into()),
-        }
+        Ok(object)
     }
 
-    pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Self, Error> {
+    pub async fn by_url(conn_pool: &PgPool, url: &str) -> anyhow::Result<Self> {
         let object = sqlx::query_as!(
             Object,
             r#"
@@ -136,7 +129,7 @@ impl Object {
         Ok(object)
     }
 
-    pub async fn delete_by_url(conn_pool: &PgPool, url: &str) -> Result<(), Error> {
+    pub async fn delete_by_url(conn_pool: &PgPool, url: &str) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
                 DELETE FROM objects

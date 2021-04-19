@@ -100,7 +100,7 @@ macro_rules! impl_is_owned_by {
     }
 }
 
-/// Something like `map_err!(Err::<(), ()>(()))` expands to
+/// Something like `unrejectable_err!(Err::<(), ()>(()))` expands to
 ///
 /// ```rust
 /// Err::<(), ()>(()).map_err(crate::error::Error::from)
@@ -134,4 +134,26 @@ macro_rules! match_handler {
             }
         }
     }
+}
+
+/// Respond directly in the case of an error instead of rejecting
+///
+/// This is how rejections are supposed to be used. [See](https://github.com/seanmonstar/warp/issues/712#issuecomment-697031645)
+#[macro_export]
+macro_rules! unrejectable_err {
+    ($result:expr) => {
+        unrejectable_err!($result; warp::http::StatusCode::INTERNAL_SERVER_ERROR)
+    };
+
+    ($result:expr; $status_code:expr) => {{
+        use warp::Reply;
+
+        match $result {
+            Ok(val) => val,
+            Err(err) => {
+                let err = format!("{}", err);
+                return Ok(warp::reply::with_status(err, $status_code).into_response());
+            }
+        }
+    }};
 }

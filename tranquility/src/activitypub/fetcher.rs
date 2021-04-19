@@ -3,7 +3,7 @@ use {
         attempt_fetch,
         database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
-        impl_from, impl_into, impl_is_owned_by, map_err,
+        impl_from, impl_into, impl_is_owned_by,
         state::ArcState,
     },
     reqwest::IntoUrl,
@@ -33,7 +33,7 @@ impl_is_owned_by!(
 /// It makes multiple attempts to fetch the entity and decode it into different normalized forms.
 /// If none of the attempts succeed, a `Fetch` error is returned
 #[instrument(skip(state))]
-pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {
+pub async fn fetch_any(state: &ArcState, url: &str) -> anyhow::Result<Entity> {
     // Create a custom closure around the `fetch_actor` function
     // Otherwise the pattern in the macro won't match
     let fetch_actor_fn = |state, url| async move {
@@ -44,12 +44,12 @@ pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {
 
     attempt_fetch!(state, url, [fetch_activity, fetch_actor_fn, fetch_object]);
 
-    Err(Error::Fetch)
+    Err(Error::Fetch.into())
 }
 
 /// Attempt to deserialize the data from the given URL as an ActivityPub activity
 #[instrument(skip(state))]
-pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Error> {
+pub async fn fetch_activity(state: &ArcState, url: &str) -> anyhow::Result<Activity> {
     debug!("Fetching remote actor...");
 
     match DbObject::by_url(&state.db_pool, url).await {
@@ -77,7 +77,7 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
 
             activity.object = ObjectField::Url(object.id.to_owned());
         } else if activity.object.as_actor().is_some() {
-            return Err(Error::UnknownActivity);
+            return Err(Error::UnknownActivity.into());
         }
 
         let activity_value = serde_json::to_value(&activity)?;
@@ -94,13 +94,13 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
     } else {
         debug!("Remote server returned content we can't interpret");
 
-        Err(Error::Fetch)
+        Err(Error::Fetch.into())
     }
 }
 
 /// Attempt to deserialize the data from the given URL as an ActivityPub actor
 #[instrument(skip(state))]
-pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor), Error> {
+pub async fn fetch_actor(state: &ArcState, url: &str) -> anyhow::Result<(Actor, DbActor)> {
     debug!("Fetching remote actor...");
 
     match DbActor::by_url(&state.db_pool, url).await {
@@ -114,7 +114,7 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     if let Entity::Actor(mut actor) = fetch_entity(url).await? {
         crate::activitypub::clean_actor(&mut actor);
 
-        let actor_value = map_err!(serde_json::to_value(&actor))?;
+        let actor_value = serde_json::to_value(&actor)?;
         let db_actor = InsertActor {
             id: Uuid::new_v4(),
             username: actor.username.clone(),
@@ -131,13 +131,13 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     } else {
         debug!("Remote server returned content we can't interpret");
 
-        Err(Error::Fetch)
+        Err(Error::Fetch.into())
     }
 }
 
 /// Attempt to deserialize the data from the given URL as an ActivityPub object
 #[instrument(skip(state))]
-pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> {
+pub async fn fetch_object(state: &ArcState, url: &str) -> anyhow::Result<Object> {
     debug!("Fetching remote object...");
 
     match DbObject::by_url(&state.db_pool, url).await {
@@ -167,12 +167,12 @@ pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> 
     } else {
         debug!("Remote server returned content we can't interpret");
 
-        Err(Error::Fetch)
+        Err(Error::Fetch.into())
     }
 }
 
 #[instrument]
-async fn fetch_entity<T: Debug + IntoUrl + Send>(url: T) -> Result<Entity, Error> {
+async fn fetch_entity<T: Debug + IntoUrl + Send>(url: T) -> anyhow::Result<Entity> {
     let client = &crate::util::HTTP_CLIENT;
     let request = client
         .get(url)

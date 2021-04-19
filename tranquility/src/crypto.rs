@@ -14,13 +14,13 @@ where
 
 pub mod digest {
     use {
-        crate::{error::Error, util::cpu_intensive_task},
+        crate::util::cpu_intensive_task,
         reqwest::header::HeaderValue,
         sha2::{Digest, Sha256},
     };
 
     /// Calculate the digest HTTP header
-    pub async fn http_header(data: Vec<u8>) -> Result<HeaderValue, Error> {
+    pub async fn http_header(data: Vec<u8>) -> anyhow::Result<HeaderValue> {
         cpu_intensive_task(move || {
             let sha_hash = Sha256::digest(&data);
             let base64_encoded_hash = base64::encode(&sha_hash);
@@ -35,13 +35,10 @@ pub mod digest {
 }
 
 pub mod password {
-    use {
-        crate::{error::Error, util::cpu_intensive_task},
-        argon2::Config,
-    };
+    use {crate::util::cpu_intensive_task, argon2::Config};
 
     /// Hash the password using the standard rust-argon2 config
-    pub async fn hash(password: String) -> Result<String, Error> {
+    pub async fn hash(password: String) -> anyhow::Result<String> {
         cpu_intensive_task(move || {
             let salt = crate::crypto::gen_secure_rand::<[u8; 32]>();
             let config = Config::default();
@@ -62,18 +59,18 @@ pub mod password {
 
 pub mod rsa {
     use {
-        crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_task},
+        crate::{consts::crypto::KEY_SIZE, util::cpu_intensive_task},
         rand::rngs::OsRng,
         rsa::{PrivateKeyPemEncoding, PublicKeyPemEncoding, RSAPrivateKey},
     };
 
     /// Generate an RSA key pair (key size defined in the `consts` file)
-    pub async fn generate() -> Result<RSAPrivateKey, Error> {
+    pub async fn generate() -> anyhow::Result<RSAPrivateKey> {
         cpu_intensive_task(|| Ok(RSAPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
     }
 
     /// Get the public key from the private key and encode both in the PKCS#8 PEM format
-    pub fn to_pem(rsa_key: &RSAPrivateKey) -> Result<(String, String), Error> {
+    pub fn to_pem(rsa_key: &RSAPrivateKey) -> anyhow::Result<(String, String)> {
         let public_key = PublicKeyPemEncoding::to_pem_pkcs8(&rsa_key.to_public_key())?;
         let private_key = PrivateKeyPemEncoding::to_pem_pkcs8(rsa_key)?;
 
@@ -95,7 +92,7 @@ pub mod token {
 
 pub mod request {
     use {
-        crate::{error::Error, map_err, util::cpu_intensive_task},
+        crate::util::cpu_intensive_task,
         std::future::Future,
         tranquility_http_signatures::Request,
         warp::{
@@ -114,17 +111,17 @@ pub mod request {
         // The public key is provided in the PEM format
         // That's why the function takes a `String`
         private_key: String,
-    ) -> impl Future<Output = Result<(HeaderName, HeaderValue), Error>> + Send {
+    ) -> impl Future<Output = anyhow::Result<(HeaderName, HeaderValue)>> + Send {
         cpu_intensive_task(move || {
             let request = &request;
             let key_id = key_id.as_str();
             let private_key = private_key.as_bytes();
 
-            map_err!(tranquility_http_signatures::sign(
+            Ok(tranquility_http_signatures::sign(
                 request,
                 &["(request-target)", "date", "digest"],
                 (key_id, private_key),
-            ))
+            )?)
         })
     }
 
@@ -137,7 +134,7 @@ pub mod request {
         // The public key is provided in the PEM format
         // That's why the function takes a `String`
         public_key: String,
-    ) -> impl Future<Output = Result<bool, Error>> + Send {
+    ) -> impl Future<Output = anyhow::Result<bool>> + Send {
         cpu_intensive_task(move || {
             let method = method.as_str();
             let path = path.as_str();
@@ -147,7 +144,7 @@ pub mod request {
 
             let request = Request::new(method, path, query, headers);
 
-            map_err!(tranquility_http_signatures::verify(request, public_key))
+            Ok(tranquility_http_signatures::verify(request, public_key)?)
         })
     }
 }

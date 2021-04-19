@@ -1,8 +1,8 @@
 use {
     super::CollectionQuery,
     crate::{
-        consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, format_uuid, map_err,
-        state::ArcState,
+        consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, format_uuid,
+        state::ArcState, unrejectable_err,
     },
     itertools::Itertools,
     ormx::Table,
@@ -12,21 +12,23 @@ use {
         OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
     },
     uuid::Uuid,
-    warp::{Rejection, Reply},
+    warp::{reply::Response, Rejection, Reply},
 };
 
 pub async fn outbox(
     user_id: Uuid,
     state: ArcState,
     query: CollectionQuery,
-) -> Result<impl Reply, Rejection> {
-    let latest_activities = crate::database::outbox::activities(
-        &state.db_pool,
-        user_id,
-        query.last_id,
-        ACTIVITIES_PER_PAGE,
-    )
-    .await?;
+) -> Result<Response, Rejection> {
+    let latest_activities = unrejectable_err!(
+        crate::database::outbox::activities(
+            &state.db_pool,
+            user_id,
+            query.last_id,
+            ACTIVITIES_PER_PAGE,
+        )
+        .await
+    );
     let last_id = latest_activities
         .last()
         .map(|activity| format_uuid!(activity.id))
@@ -44,8 +46,8 @@ pub async fn outbox(
         })
         .collect_vec();
 
-    let user_db = map_err!(DbActor::get(&state.db_pool, user_id).await)?;
-    let user: Actor = map_err!(serde_json::from_value(user_db.actor))?;
+    let user_db = unrejectable_err!(DbActor::get(&state.db_pool, user_id).await);
+    let user: Actor = unrejectable_err!(serde_json::from_value(user_db.actor));
 
     let next = format!("{}?last_id={}", user.outbox, last_id);
 
@@ -61,5 +63,5 @@ pub async fn outbox(
         ..Collection::default()
     };
 
-    Ok(warp::reply::json(&outbox_collection))
+    Ok(warp::reply::json(&outbox_collection).into_response())
 }

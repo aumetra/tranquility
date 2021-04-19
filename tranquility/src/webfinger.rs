@@ -1,7 +1,7 @@
 use {
     crate::{
-        consts::cors::GENERAL_ALLOWED_METHODS, database::Actor as DbActor, error::Error, map_err,
-        state::ArcState, util::construct_cors,
+        consts::cors::GENERAL_ALLOWED_METHODS, database::Actor as DbActor, error::Error,
+        state::ArcState, unrejectable_err, util::construct_cors,
     },
     serde::Deserialize,
     tranquility_types::{
@@ -17,7 +17,7 @@ pub async fn fetch_actor(
     state: &ArcState,
     username: &str,
     domain: &str,
-) -> Result<(Actor, DbActor), Error> {
+) -> anyhow::Result<(Actor, DbActor)> {
     let resource = format!("acct:{}@{}", username, domain);
     let url = format!(
         "https://{}/.well-known/webfinger?resource={}",
@@ -37,7 +37,7 @@ pub async fn fetch_actor(
         .find(|link| link.rel == "self")
         .ok_or(Error::UnexpectedWebfingerResource)?;
 
-    crate::activitypub::fetcher::fetch_actor(state, &actor_url.href).await
+    Ok(crate::activitypub::fetcher::fetch_actor(state, &actor_url.href).await?)
 }
 
 #[derive(Deserialize)]
@@ -55,8 +55,8 @@ pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Reject
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    let actor_db = DbActor::by_username_local(&state.db_pool, username).await?;
-    let actor: Actor = map_err!(serde_json::from_value(actor_db.actor))?;
+    let actor_db = unrejectable_err!(DbActor::by_username_local(&state.db_pool, username).await);
+    let actor: Actor = unrejectable_err!(serde_json::from_value(actor_db.actor));
 
     let link = Link {
         rel: "self".into(),

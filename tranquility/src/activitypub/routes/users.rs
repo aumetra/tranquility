@@ -1,12 +1,12 @@
 use {
-    crate::{database::Actor, map_err, state::ArcState},
+    crate::{database::Actor, state::ArcState, unrejectable_err},
     ormx::Table,
     uuid::Uuid,
-    warp::{Rejection, Reply},
+    warp::{reply::Response, Rejection, Reply},
 };
 
-pub async fn users(uuid: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
-    let actor = map_err!(Actor::get(&state.db_pool, uuid).await)?;
+pub async fn users(uuid: Uuid, state: ArcState) -> Result<Response, Rejection> {
+    let actor = unrejectable_err!(Actor::get(&state.db_pool, uuid).await);
 
-    Ok(warp::reply::json(&actor.actor))
+    Ok(warp::reply::json(&actor.actor).into_response())
 }

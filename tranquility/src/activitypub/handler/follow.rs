@@ -4,14 +4,15 @@ use {
         database::{Actor, InsertExt, InsertObject},
         error::Error,
         state::ArcState,
+        unrejectable_err,
     },
     std::sync::Arc,
     tranquility_types::activitypub::{activity::ObjectField, Activity},
     uuid::Uuid,
-    warp::http::StatusCode,
+    warp::{http::StatusCode, reply::Response, Reply},
 };
 
-pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<Response, Error> {
     let actor_url = match activity.object {
         ObjectField::Actor(ref actor) => actor.id.as_str(),
         ObjectField::Url(ref url) => url.as_str(),
@@ -19,7 +20,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     };
 
     // Fetch the actor (just in case)
-    let (actor, actor_db) = fetcher::fetch_actor(state, actor_url).await?;
+    let (actor, actor_db) = unrejectable_err!(fetcher::fetch_actor(state, actor_url).await);
 
     // Normalize the activity
     if let ObjectField::Actor(actor) = activity.object {
@@ -33,16 +34,18 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     };
     let activity = serde_json::to_value(&follow_activity)?;
 
-    InsertObject {
-        id: Uuid::new_v4(),
-        owner_id: actor_db.id,
-        data: activity,
-    }
-    .insert(&state.db_pool)
-    .await?;
+    unrejectable_err!(
+        InsertObject {
+            id: Uuid::new_v4(),
+            owner_id: actor_db.id,
+            data: activity,
+        }
+        .insert(&state.db_pool)
+        .await
+    );
 
     let followed_url = follow_activity.activity.object.as_url().unwrap();
-    let followed_actor = Actor::by_url(&state.db_pool, followed_url).await?;
+    let followed_actor = unrejectable_err!(Actor::by_url(&state.db_pool, followed_url).await);
 
     // Send out an accept activity if the followed actor is local
     if follow_activity.approved {
@@ -56,16 +59,18 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
         );
         let accept_activity_value = serde_json::to_value(&accept_activity)?;
 
-        InsertObject {
-            id: accept_activity_id,
-            owner_id: followed_actor.id,
-            data: accept_activity_value,
-        }
-        .insert(&state.db_pool)
-        .await?;
+        unrejectable_err!(
+            InsertObject {
+                id: accept_activity_id,
+                owner_id: followed_actor.id,
+                data: accept_activity_value,
+            }
+            .insert(&state.db_pool)
+            .await
+        );
 
-        deliverer::deliver(accept_activity, Arc::clone(state)).await?;
+        unrejectable_err!(deliverer::deliver(accept_activity, Arc::clone(state)).await);
     }
 
-    Ok(StatusCode::CREATED)
+    Ok(StatusCode::CREATED.into_response())
 }
