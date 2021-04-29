@@ -38,3 +38,8 @@ If more than one is activated, all selected allocators are compiled in the binar
 
 Tranquility supports exporting the data logged via tracing to a jaeger instance  
 To enable this feature, compile Tranquility with the `jaeger` feature flag
+
+## Progress
+
+Implementation progress is being tracked [here](https://github.com/smallglitch/tranquility/issues/17)
+
