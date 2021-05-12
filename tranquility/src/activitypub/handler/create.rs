@@ -13,7 +13,7 @@ use {
 async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, Error> {
     let (_owner, owner_db) = fetcher::fetch_actor(state, &activity.actor).await?;
 
-    let mut object = activity.object.as_object().unwrap().to_owned();
+    let mut object = activity.object.as_object().unwrap().clone();
     crate::activitypub::clean_object(&mut object);
 
     let object_value = serde_json::to_value(&object)?;

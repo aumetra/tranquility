@@ -34,7 +34,7 @@ pub async fn following(
         .into_iter()
         .filter_map(|activity| {
             let follow_activity: FollowActivity = serde_json::from_value(activity.data).ok()?;
-            let followed_url = follow_activity.activity.object.as_url()?.to_owned();
+            let followed_url = follow_activity.activity.object.as_url()?.clone();
 
             Some(Item::Url(followed_url))
         })
