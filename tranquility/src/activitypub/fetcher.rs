@@ -75,7 +75,7 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
             .insert(&state.db_pool)
             .await?;
 
-            activity.object = ObjectField::Url(object.id.to_owned());
+            activity.object = ObjectField::Url(object.id.clone());
         } else if activity.object.as_actor().is_some() {
             return Err(Error::UnknownActivity);
         }
