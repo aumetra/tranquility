@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing an [Mastodon account](https://docs.joinmastodon.org/entities/account/)
 pub struct Account {
     pub id: String,
 
@@ -35,6 +36,7 @@ pub struct Account {
 }
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing the answer to a successful follow
 pub struct FollowResponse {
     pub id: String,
 

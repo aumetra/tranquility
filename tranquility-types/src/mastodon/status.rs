@@ -4,6 +4,7 @@ use {
 };
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing a [Mastodon status](https://docs.joinmastodon.org/entities/status/)
 pub struct Status {
     pub id: String,
     pub created_at: String,
