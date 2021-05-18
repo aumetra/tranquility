@@ -171,6 +171,8 @@ pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> 
     }
 }
 
+/// Fetch the contents from the URL and attempt to parse them as different ActivityPub types
+/// until either some type works or none of them work
 #[instrument]
 async fn fetch_entity<T: Debug + IntoUrl + Send>(url: T) -> Result<Entity, Error> {
     let client = &crate::util::HTTP_CLIENT;

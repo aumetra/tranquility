@@ -19,12 +19,15 @@ use {
 };
 
 #[async_trait]
+/// Trait for converting any object into an Mastodon API entity
 pub trait IntoMastodon<ApiEntity>: Send + Sync
 where
     ApiEntity: Serialize + 'static,
 {
+    /// Possible error that can occur
     type Error: Into<Rejection>;
 
+    /// Convert the object into an Mastodon API entity
     async fn into_mastodon(self, state: &ArcState) -> Result<ApiEntity, Self::Error>;
 }
 

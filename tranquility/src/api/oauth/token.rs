@@ -17,12 +17,14 @@ use {
 
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
+/// Form for password grant authorisation flows
 #[derive(Deserialize)]
 struct FormPasswordGrant {
     username: String,
     password: String,
 }
 
+/// Form for code grant authorisation flows
 #[derive(Deserialize)]
 struct FormCodeGrant {
     client_id: Uuid,
@@ -49,6 +51,7 @@ pub struct Form {
 }
 
 impl FormData {
+    /// If the form is a code grant form, return it otherwise return a rejection
     pub fn code_grant(self) -> Result<FormCodeGrant, Rejection> {
         match self {
             Self::CodeGrant(form) => Ok(form),
@@ -56,6 +59,7 @@ impl FormData {
         }
     }
 
+    /// If the form is a password grant form, return it otherwise return a rejection
     pub fn password_grant(self) -> Result<FormPasswordGrant, Rejection> {
         match self {
             Self::PasswordGrant(form) => Ok(form),
@@ -64,6 +68,7 @@ impl FormData {
     }
 }
 
+/// Serialisable struct for responding to an access token request
 #[derive(Serialize)]
 struct AccessTokenResponse {
     access_token: String,

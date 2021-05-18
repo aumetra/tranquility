@@ -24,6 +24,7 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
     ..App::default()
 });
 
+/// Filter that can decode the body as an URL-encoded or an JSON-encoded form
 pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
 ) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
     let urlencoded_filter = warp::body::form();
@@ -32,6 +33,7 @@ pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
     urlencoded_filter.or(json_filter).unify()
 }
 
+/// Same as [`authorise_user`] but makes the bearer token optional
 pub fn authorisation_optional(
     state: &ArcState,
 ) -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Clone {
@@ -46,6 +48,8 @@ pub fn authorisation_optional(
     authorisation_required(state).map(Some).or_else(or_none_fn)
 }
 
+/// Parses a `HeaderValue` as the contents of an authorization header with bearer token contents
+/// and attempts to fetch the user from the database
 async fn authorise_user(
     state: ArcState,
     authorization_header: HeaderValue,
@@ -59,6 +63,9 @@ async fn authorise_user(
     Ok(actor)
 }
 
+/// Filter that gets the user associated with the bearer token from the database
+///
+/// Rejects if the user cannot be found
 pub fn authorisation_required(
     state: &ArcState,
 ) -> impl Filter<Extract = (Actor,), Error = Rejection> + Clone {
