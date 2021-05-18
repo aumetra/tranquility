@@ -1,6 +1,6 @@
 use {
     crate::{
-        activitypub::fetcher,
+        activitypub::{fetcher, Clean},
         database::{InsertExt, InsertObject},
         error::Error,
         state::ArcState,
@@ -14,7 +14,7 @@ async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, 
     let (_owner, owner_db) = fetcher::fetch_actor(state, &activity.actor).await?;
 
     let mut object = activity.object.as_object().unwrap().clone();
-    crate::activitypub::clean_object(&mut object);
+    object.clean();
 
     let object_value = serde_json::to_value(&object)?;
 

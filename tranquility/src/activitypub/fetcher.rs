@@ -1,10 +1,12 @@
 use {
     crate::{
+        activitypub::Clean,
         attempt_fetch,
         database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
         impl_from, impl_into, impl_is_owned_by, map_err,
         state::ArcState,
+        util::HTTP_CLIENT,
     },
     reqwest::IntoUrl,
     serde_json::Value,
@@ -64,7 +66,7 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
         let (_actor, actor_db) = fetch_actor(state, &activity.actor).await?;
         // Normalize the activity
         if let Some(object) = activity.object.as_mut_object() {
-            crate::activitypub::clean_object(object);
+            object.clean();
 
             let object_value = serde_json::to_value(&object)?;
             InsertObject {
@@ -112,7 +114,7 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     }
 
     if let Entity::Actor(mut actor) = fetch_entity(url).await? {
-        crate::activitypub::clean_actor(&mut actor);
+        actor.clean();
 
         let actor_value = map_err!(serde_json::to_value(&actor))?;
         let db_actor = InsertActor {
@@ -149,10 +151,9 @@ pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> 
     }
 
     if let Entity::Object(mut object) = fetch_entity(url).await? {
-        crate::activitypub::clean_object(&mut object);
+        object.clean();
 
         let (_actor, actor_db) = fetch_actor(state, &object.attributed_to).await?;
-
         let object_value = serde_json::to_value(&object)?;
 
         InsertObject {
@@ -175,8 +176,7 @@ pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> 
 /// until either some type works or none of them work
 #[instrument]
 async fn fetch_entity<T: Debug + IntoUrl + Send>(url: T) -> Result<Entity, Error> {
-    let client = &crate::util::HTTP_CLIENT;
-    let request = client
+    let request = HTTP_CLIENT
         .get(url)
         .header(
             "Accept",
@@ -184,7 +184,7 @@ async fn fetch_entity<T: Debug + IntoUrl + Send>(url: T) -> Result<Entity, Error
         )
         .build()?;
 
-    let entity: Value = client.execute(request).await?.json().await?;
+    let entity: Value = HTTP_CLIENT.execute(request).await?.json().await?;
 
     let entity = if entity["type"].as_str().unwrap() == "Person" {
         // This should be deserializable into an actor

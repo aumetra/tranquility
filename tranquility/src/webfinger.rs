@@ -1,7 +1,7 @@
 use {
     crate::{
         consts::cors::GENERAL_ALLOWED_METHODS, database::Actor as DbActor, error::Error, map_err,
-        state::ArcState, util::construct_cors,
+        state::ArcState, util::construct_cors, util::HTTP_CLIENT,
     },
     serde::Deserialize,
     tranquility_types::{
@@ -24,12 +24,11 @@ pub async fn fetch_actor(
         domain, resource
     );
 
-    let client = &crate::util::HTTP_CLIENT;
-    let request = client
+    let request = HTTP_CLIENT
         .get(&url)
         .header("Accept", "application/jrd+json")
         .build()?;
-    let resource: Resource = client.execute(request).await?.json().await?;
+    let resource: Resource = HTTP_CLIENT.execute(request).await?.json().await?;
 
     let actor_url = resource
         .links
