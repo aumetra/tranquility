@@ -7,6 +7,7 @@ use {
     uuid::Uuid,
 };
 
+/// Get follow activities addressed to the user
 pub async fn followers(
     conn_pool: &PgPool,
     user_id: Uuid,
@@ -36,6 +37,7 @@ pub async fn followers(
     Ok(follow_activities)
 }
 
+/// Get follow activities created by the user
 pub async fn following(
     conn_pool: &PgPool,
     user_id: Uuid,

@@ -20,6 +20,7 @@ pub struct OAuthAuthorization {
 }
 
 impl OAuthAuthorization {
+    /// Delete all expired authorisation codes
     pub async fn delete_expired(conn_pool: &PgPool) -> Result<(), Error> {
         sqlx::query!("DELETE FROM oauth_authorizations WHERE valid_until < NOW()")
             .execute(conn_pool)

@@ -41,6 +41,7 @@ pub async fn fetch_actor(
 }
 
 #[derive(Deserialize)]
+/// Query struct for a webfinger request
 pub struct Query {
     resource: String,
 }

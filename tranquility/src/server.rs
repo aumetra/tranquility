@@ -1,5 +1,6 @@
 use {crate::state::ArcState, std::net::IpAddr, warp::Filter};
 
+/// Combine all route filters and start a warp server
 pub async fn run(state: ArcState) {
     let logging = warp::trace::request();
 

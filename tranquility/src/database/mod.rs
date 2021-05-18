@@ -35,6 +35,7 @@ pub trait InsertExt: ormx::Insert {
 #[async_trait]
 impl<T> InsertExt for T where T: ormx::Insert {}
 
+/// Wrapper struct for the query of the [last_activity_timestamp] function
 struct ObjectTimestamp {
     timestamp: NaiveDateTime,
 }
@@ -46,6 +47,7 @@ impl From<ObjectTimestamp> for NaiveDateTime {
 }
 
 #[inline]
+/// Get the timestamp of the activity. If the activity doesn't exist, default to the current time
 async fn last_activity_timestamp(
     conn_pool: &PgPool,
     last_activity_id: Option<Uuid>,

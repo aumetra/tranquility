@@ -18,21 +18,7 @@ pub struct Object {
 }
 
 impl Object {
-    pub async fn by_id(conn_pool: &PgPool, id: Uuid) -> Result<Self, Error> {
-        let object = sqlx::query_as!(
-            Object,
-            r#"
-                SELECT * FROM objects
-                WHERE id = $1
-            "#,
-            id
-        )
-        .fetch_one(conn_pool)
-        .await?;
-
-        Ok(object)
-    }
-
+    /// Get activities by its type and object URL
     pub async fn by_type_and_object_url(
         conn_pool: &PgPool,
         r#type: &str,
@@ -62,6 +48,7 @@ impl Object {
         Ok(objects)
     }
 
+    /// Get objects by its type and owner
     pub async fn by_type_and_owner(
         conn_pool: &PgPool,
         r#type: &str,
@@ -91,6 +78,7 @@ impl Object {
         Ok(objects)
     }
 
+    /// Get an activity by its type, owner and object URL
     pub async fn by_type_owner_and_object_url(
         conn_pool: &PgPool,
         r#type: &str,
@@ -121,6 +109,7 @@ impl Object {
         }
     }
 
+    /// Get an object by its URL
     pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Self, Error> {
         let object = sqlx::query_as!(
             Object,
@@ -136,6 +125,7 @@ impl Object {
         Ok(object)
     }
 
+    /// Delete an object identified by its URL
     pub async fn delete_by_url(conn_pool: &PgPool, url: &str) -> Result<(), Error> {
         sqlx::query!(
             r#"
