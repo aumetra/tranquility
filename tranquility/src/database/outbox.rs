@@ -7,6 +7,7 @@ use {
     uuid::Uuid,
 };
 
+/// Get activities for displaying on the outbox
 pub async fn activities(
     conn_pool: &PgPool,
     user_id: Uuid,

@@ -1,5 +1,6 @@
 use {
     serde::Deserialize,
+    std::path::Path,
     tokio::{
         fs::File,
         io::{AsyncReadExt, BufReader},
@@ -8,6 +9,7 @@ use {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the instance specific configuration values
 pub struct ConfigurationInstance {
     pub closed_registrations: bool,
     pub domain: String,
@@ -22,6 +24,7 @@ pub struct ConfigurationInstance {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the ratelimit specific configuration values
 pub struct ConfigurationRatelimit {
     pub active: bool,
 
@@ -31,6 +34,7 @@ pub struct ConfigurationRatelimit {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the HTTP server specific configuration values
 pub struct ConfigurationServer {
     pub interface: String,
     pub port: u16,
@@ -40,6 +44,7 @@ pub struct ConfigurationServer {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the TLS specific configuration values
 pub struct ConfigurationTls {
     pub serve_tls_directly: bool,
 
@@ -49,6 +54,7 @@ pub struct ConfigurationTls {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the configuration values
 pub struct Configuration {
     pub instance: ConfigurationInstance,
     pub ratelimit: ConfigurationRatelimit,
@@ -56,7 +62,11 @@ pub struct Configuration {
     pub tls: ConfigurationTls,
 }
 
-pub async fn load(config_path: String) -> Configuration {
+/// Load the configuration from the path
+pub async fn load<P>(config_path: P) -> Configuration
+where
+    P: AsRef<Path>,
+{
     let config_file = File::open(config_path)
         .await
         .expect("Couldn't open configuration file");

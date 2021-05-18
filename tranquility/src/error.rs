@@ -19,6 +19,7 @@ use {
 };
 
 #[derive(Debug, thiserror::Error)]
+/// Combined error enum for converting errors into rejections
 pub enum Error {
     #[error("argon2 operation failed")]
     Argon2(#[from] Argon2Error),
@@ -77,6 +78,7 @@ pub enum Error {
 
 impl Reject for Error {}
 
+/// Recover function for recovering from some of the errors with a custom error status
 pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
     if let Some(error) = rejection.find::<Error>() {
         let error_text = error.to_string();
