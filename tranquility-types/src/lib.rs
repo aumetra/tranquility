@@ -1,5 +1,9 @@
 #![deny(clippy::all, clippy::pedantic)]
-#![allow(clippy::struct_excessive_bools, clippy::must_use_candidate)]
+#![allow(
+    clippy::doc_markdown,
+    clippy::struct_excessive_bools,
+    clippy::must_use_candidate
+)]
 
 #[cfg(feature = "activitypub")]
 pub mod activitypub;

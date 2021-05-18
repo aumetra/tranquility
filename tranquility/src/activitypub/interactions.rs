@@ -8,7 +8,7 @@ use {
     tranquility_types::activitypub::{Activity, Actor},
 };
 
-/// Create an Follow activity for a follow, save it and send it out 
+/// Create an Follow activity for a follow, save it and send it out
 pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
     let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
