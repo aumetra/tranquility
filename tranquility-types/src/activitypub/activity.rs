@@ -4,7 +4,7 @@ use {
 };
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-/// Struct representing an [`ActivityStreams` activity](https://www.w3.org/TR/activitystreams-core/#activities)
+/// Struct representing an [ActivityStreams activity](https://www.w3.org/TR/activitystreams-core/#activities)
 pub struct Activity {
     #[serde(default = "super::context_field", rename = "@context")]
     pub context: Value,

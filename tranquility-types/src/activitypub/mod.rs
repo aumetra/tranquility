@@ -6,6 +6,7 @@ pub const PUBLIC_IDENTIFIER: &str = "https://www.w3.org/ns/activitystreams#Publi
 pub const OUTBOX_FOLLOW_COLLECTIONS_TYPE: &str = "OrderedCollection";
 pub const OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE: &str = "OrderedCollectionPage";
 
+/// Get the `@context` field value
 pub fn context_field() -> Value {
     json!(["https://www.w3.org/ns/activitystreams"])
 }
@@ -16,6 +17,9 @@ fn contains(vec: &[String], value: &str) -> bool {
     vec.iter().any(|entry| entry == value)
 }
 
+/// Macro that implements the [IsPublic] and [IsUnlisted] trait for an struct
+///
+/// The struct has to have `to` and `cc` fields that can be implicitly converted to an `&[String]` when referenced
 macro_rules! is_public_unlisted_traits {
     ($($type:ty),+) => {
         $(
