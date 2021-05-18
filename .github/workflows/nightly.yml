@@ -6,6 +6,7 @@ name: Nightly build
 
 env:
   CARGO_TERM_COLOR: always
+  FEATURE_FLAGS: jaeger,markdown
 
 jobs:
   build:
@@ -33,7 +34,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --features jaeger
+          args: --release --features ${{ FEATURE_FLAGS }}
 
       - shell: bash
         run: strip target/release/tranquility
@@ -70,7 +71,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target armv7-unknown-linux-gnueabihf --features jaeger
+          args: --release --target armv7-unknown-linux-gnueabihf --features ${{ FEATURE_FLAGS }}
 
       - shell: bash
         run: mv target/armv7-unknown-linux-gnueabihf/release/tranquility target/armv7-unknown-linux-gnueabihf/release/tranquility-armv7
