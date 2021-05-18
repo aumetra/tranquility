@@ -24,6 +24,7 @@ pub struct Actor {
 }
 
 impl Actor {
+    /// Get an actor by their URL
     pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Self, Error> {
         let actor = sqlx::query_as!(
             Actor,
@@ -39,6 +40,7 @@ impl Actor {
         Ok(actor)
     }
 
+    /// Get an local actor by their username
     pub async fn by_username_local(conn_pool: &PgPool, username: &str) -> Result<Self, Error> {
         let actor = sqlx::query_as!(
             Actor,

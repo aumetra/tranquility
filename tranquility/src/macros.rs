@@ -21,6 +21,16 @@ macro_rules! format_uuid {
     }};
 }
 
+/// This macro is intended for enums like `Entity` whose arms have the same name as their containing type
+///
+/// Something like `impl_from!(Entity; Activity)` expands to
+/// ```
+/// impl From<Activity> for Entity {
+///     fn from(value: Activity) -> Entity {
+///         Self::Activity(value)
+///     }
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_from {
     ($enum:ty; $($type:ident),+) => {

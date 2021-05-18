@@ -110,6 +110,7 @@ impl TryInto<Quota> for Configuration {
     }
 }
 
+/// Check if the IP is ratelimited. If it is, reject the request
 async fn check_ratelimit(
     rate_limiter: ArcRatelimiter,
     ip_address: Option<SocketAddr>,
@@ -149,6 +150,7 @@ pub async fn __recover_fn(rejection: Rejection) -> Result<impl Reply, Rejection>
     }
 }
 
+/// Filter that ratelimits all logic that follows this filter
 pub fn ratelimit(
     config: Configuration,
 ) -> Result<impl Filter<Extract = (), Error = Rejection> + Clone, Error> {

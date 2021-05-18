@@ -16,6 +16,7 @@ impl From<InboxUrl> for String {
     }
 }
 
+/// Get the inbox URLs of the actors who are following the actor
 pub async fn resolve_followers(
     conn_pool: &PgPool,
     followed_url: &str,
@@ -39,6 +40,7 @@ pub async fn resolve_followers(
     Ok(inbox_urls)
 }
 
+/// Get the inbox URL of an actor
 pub async fn resolve_one(conn_pool: &PgPool, url: &str) -> Result<String, Error> {
     let inbox_url = sqlx::query_as!(
         InboxUrl,

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing a [Mastodon source](https://docs.joinmastodon.org/entities/source/)
 pub struct Source {
     pub privacy: String,
     pub sensitive: bool,

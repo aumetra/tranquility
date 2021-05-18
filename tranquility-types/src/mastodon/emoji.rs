@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing a [Mastodon emoji](https://docs.joinmastodon.org/entities/emoji/)
 pub struct Emoji {
     pub shortcode: String,
 

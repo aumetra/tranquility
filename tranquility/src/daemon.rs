@@ -12,7 +12,8 @@ fn bulk_spawn(futures: Vec<impl Future<Output = ()> + Send + Sync + 'static>) {
     }
 }
 
-async fn delete_expired_authorization_codes(state: ArcState) {
+/// Delete all expired authorisation codes from the database
+async fn delete_expired_authorisation_codes(state: ArcState) {
     let mut query_interval = time::interval(DELETE_INTERVAL);
 
     loop {
@@ -28,5 +29,5 @@ async fn delete_expired_authorization_codes(state: ArcState) {
 pub fn start(state: &ArcState) {
     let state = Arc::clone(state);
 
-    tokio::spawn(delete_expired_authorization_codes(state));
+    tokio::spawn(delete_expired_authorisation_codes(state));
 }

@@ -8,6 +8,7 @@ use {
     tranquility_types::activitypub::{Activity, Actor},
 };
 
+/// Create an Follow activity for a follow, save it and send it out
 pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
     let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
@@ -47,6 +48,7 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
     Ok(())
 }
 
+/// Create an Undo activity for the given activity, save it and send it out
 pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) -> Result<(), Error> {
     // Tried to delete someone else's activity
     if db_activity.owner_id != db_actor.id {
@@ -80,6 +82,7 @@ pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) ->
     Ok(())
 }
 
+/// Search the follow activity in the database and undo it
 pub async fn unfollow(
     state: &ArcState,
     db_actor: DbActor,

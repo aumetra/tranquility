@@ -18,6 +18,10 @@ use {
     },
 };
 
+/// Return a filter that
+/// - Decodes the activity
+/// - Verifies the HTTP signature
+/// - Checks if the activity/object contained/referenced in the activity actually belongs to the author of the activity
 pub fn validate_request(
     state: &ArcState,
 ) -> impl Filter<Extract = (Activity,), Error = Rejection> + Clone {
@@ -32,6 +36,7 @@ pub fn validate_request(
         .and_then(verify_ownership)
 }
 
+/// Checks if the activity/object contained/referenced in the activity actually belongs to the author of the activity
 async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activity, Rejection> {
     // It's fine if the objects or activities don't match in this case
     if activity.r#type == "Announce" || activity.r#type == "Follow" {
@@ -52,6 +57,7 @@ async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activit
         .ok_or_else(|| Error::Unauthorized.into())
 }
 
+/// Verifies the HTTP signature with the public key of the owner of the activity
 async fn verify_signature(
     state: ArcState,
     method: Method,
@@ -72,6 +78,7 @@ async fn verify_signature(
         .ok_or_else(|| Error::Unauthorized.into())
 }
 
+/// Inbox handler
 pub async fn inbox(
     // Do we even care about the user ID?
     // Theoretically we could just use one shared inbox and get rid of the unique inboxes
