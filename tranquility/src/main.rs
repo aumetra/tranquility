@@ -5,15 +5,15 @@
 #[macro_use]
 extern crate tracing;
 
-use std::sync::Arc;
-
-#[cfg(all(feature = "jemalloc", not(feature = "mimalloc"), not(test)))]
-#[global_allocator]
-static GLOBAL: jemalloc::Jemalloc = jemalloc::Jemalloc;
-
-#[cfg(all(feature = "mimalloc", not(feature = "jemalloc"), not(test)))]
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "jemalloc")] {
+        #[global_allocator]
+        static GLOBAL: jemalloc::Jemalloc = jemalloc::Jemalloc;
+    } else if #[cfg(feature = "mimalloc")] {
+        #[global_allocator]
+        static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -22,11 +22,7 @@ async fn main() {
     database::migrate(&state.db_pool)
         .await
         .expect("Database migration failed");
-
-    {
-        let state = Arc::clone(&state);
-        daemon::start(state);
-    }
+    daemon::start(&state);
 
     server::run(state).await;
 }

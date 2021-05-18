@@ -1,6 +1,6 @@
 use {
     crate::{
-        activitypub::{self, fetcher},
+        activitypub::{fetcher, Clean},
         database::Actor,
         error::Error,
         state::ArcState,
@@ -17,8 +17,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
         .object
         .as_mut_actor()
         .ok_or(Error::UnknownActivity)?;
-
-    activitypub::clean_actor(ap_actor);
+    ap_actor.clean();
 
     // Fetch the actor (just in case)
     fetcher::fetch_actor(state, ap_actor.id.as_str()).await?;

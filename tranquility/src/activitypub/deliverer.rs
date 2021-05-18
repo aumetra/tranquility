@@ -1,5 +1,8 @@
 use {
-    crate::{crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState},
+    crate::{
+        crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState,
+        util::HTTP_CLIENT,
+    },
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -48,10 +51,9 @@ fn construct_deliver_future<'a>(
     async move {
         debug!("Delivering activity...");
 
-        let client = &crate::util::HTTP_CLIENT;
-        let request = prepare_request(client, &url, delivery_data).await?;
+        let request = prepare_request(&HTTP_CLIENT, &url, delivery_data).await?;
 
-        map_err!(client.execute(request).await)
+        map_err!(HTTP_CLIENT.execute(request).await)
     }
 }
 

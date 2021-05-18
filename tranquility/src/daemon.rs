@@ -1,6 +1,6 @@
 use {
     crate::{consts::daemon::DELETE_INTERVAL, database::OAuthAuthorization, state::ArcState},
-    std::future::Future,
+    std::{future::Future, sync::Arc},
     tokio::time,
 };
 
@@ -25,6 +25,8 @@ async fn delete_expired_authorization_codes(state: ArcState) {
     }
 }
 
-pub fn start(state: ArcState) {
+pub fn start(state: &ArcState) {
+    let state = Arc::clone(state);
+
     tokio::spawn(delete_expired_authorization_codes(state));
 }
