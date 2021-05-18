@@ -22,6 +22,12 @@ Release binaries are built daily for Linux x86 and Linux ARMv7
 
 [**Nightly tag**](https://github.com/smallglitch/tranquility/releases/tag/nightly)
 
+## Markdown formatted statuses
+
+Tranquility supports posts formatted with Markdown (the posts are parsed via `pulldown-cmark` directly when submitted to the API)
+
+Compile with the `markdown` feature to enable it
+
 ## Custom memory allocators
 
 Tranquility currently supports two custom memory allocators  
