@@ -29,5 +29,5 @@ async fn delete_expired_authorisation_codes(state: ArcState) {
 pub fn start(state: &ArcState) {
     let state = Arc::clone(state);
 
-    tokio::spawn(delete_expired_authorization_codes(state));
+    tokio::spawn(delete_expired_authorisation_codes(state));
 }
