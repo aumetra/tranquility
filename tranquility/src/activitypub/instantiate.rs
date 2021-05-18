@@ -5,6 +5,7 @@ use {
     uuid::Uuid,
 };
 
+/// Instantiate an ActivityPub activity
 pub fn activity<T: Into<ObjectField>>(
     config: &Configuration,
     r#type: &str,
@@ -36,6 +37,7 @@ pub fn activity<T: Into<ObjectField>>(
     (uuid, activity)
 }
 
+/// Instantiate an ActivityPub actor
 pub fn actor(
     config: &Configuration,
     user_id: &str,
@@ -77,6 +79,7 @@ pub fn actor(
     }
 }
 
+/// Instantiate an ActivityPub object
 pub fn object(
     config: &Configuration,
     owner_url: &str,
