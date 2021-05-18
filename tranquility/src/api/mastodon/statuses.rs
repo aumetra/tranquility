@@ -1,6 +1,7 @@
 use {
     super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
     crate::{
+        activitypub::Clean,
         database::{Actor as DbActor, InsertExt, InsertObject},
         map_err,
         state::ArcState,
@@ -10,6 +11,9 @@ use {
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
     warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
 };
+
+#[cfg(feature = "markdown")]
+use crate::api::ParseMarkdown;
 
 #[derive(Deserialize)]
 struct CreateForm {
@@ -45,8 +49,11 @@ async fn create(
         vec![],
     );
 
-    // Clean the summary and status from any malicious HTML
-    crate::activitypub::clean_object(&mut object);
+    // Parse the markdown if the feature is enabled
+    #[cfg(feature = "markdown")]
+    object.parse_markdown();
+
+    object.clean();
 
     let object_value = map_err!(serde_json::to_value(&object))?;
 

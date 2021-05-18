@@ -11,7 +11,7 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
     let follow_activity: Activity = serde_json::from_value(follow_activity_db.data.clone())?;
     // Check if the person rejecting the follow is actually the followed person
     if &activity.actor != follow_activity.object.as_url().unwrap() {
-        return Err(Error::Unauthorized);
+        return Ok(StatusCode::UNAUTHORIZED);
     }
 
     if follow_activity.r#type != "Follow" {
