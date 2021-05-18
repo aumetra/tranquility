@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing a [Mastodon poll](https://docs.joinmastodon.org/entities/poll/)
 pub struct Poll {
     pub id: String,
 
@@ -21,6 +22,7 @@ pub struct Poll {
 }
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing on option of a [Poll]
 pub struct PollOption {
     pub title: String,
     pub votes_count: i64,

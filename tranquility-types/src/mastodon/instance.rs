@@ -4,6 +4,7 @@ use {
 };
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing the `stats` field of an [Instance]
 pub struct Stats {
     pub user_count: u64,
     pub status_count: u64,
@@ -11,11 +12,13 @@ pub struct Stats {
 }
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing the `urls` field of an [Instance]
 pub struct Urls {
     pub streaming_api: String,
 }
 
 #[derive(Default, Deserialize, Serialize)]
+/// Struct representing an [Mastodon instance](https://docs.joinmastodon.org/entities/instance/)
 pub struct Instance {
     pub uri: String,
     pub title: String,
