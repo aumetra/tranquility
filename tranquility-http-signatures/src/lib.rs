@@ -1,6 +1,13 @@
 #![forbid(rust_2018_idioms, unsafe_code)]
-#![deny(clippy::all, clippy::pedantic)]
+#![deny(clippy::all, clippy::pedantic, missing_docs)]
 #![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
+// Disable this clippy lint, otherwise clippy will complain when compiled in a test environment
+// (for example, with rust-analyzer)
+#![cfg_attr(test, allow(clippy::unnecessary_wraps))]
+
+//!
+//! Implementation of the HTTP signatures [spec](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12#appendix-C.1)
+//!
 
 use {
     crate::{alg::Algorithm, error::Result, signature::Signature, sigstr::SignatureString},
@@ -27,9 +34,8 @@ where
     let encoded_signature_string = signature_string.to_string();
     let signature_string_bytes = encoded_signature_string.as_bytes();
 
-    // Create an algorithm field
-    // Giving a "None" defaults to `rsa-sha256`
-    let algorithm = Algorithm::parse(None)?;
+    // Use the default algorithm for signing
+    let algorithm = Algorithm::default();
 
     // Decode the private key
     let decoded_priv_key = pem::decode(priv_key.data)?;

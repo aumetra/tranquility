@@ -29,14 +29,6 @@ pub trait IteratorExt: Iterator + Sized {
         self.collect()
     }
 
-    /// Convenience function. Is equivalent to `.collect::<String>()`
-    fn collect_string(self) -> String
-    where
-        String: FromIterator<<Self as Iterator>::Item>,
-    {
-        self.collect()
-    }
-
     /// Convenience function. Is equivalent to `.collect::<Vec<_>>()`
     fn collect_vec(self) -> Vec<<Self as Iterator>::Item> {
         self.collect()
