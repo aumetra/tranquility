@@ -83,11 +83,10 @@ async fn create(
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     let state_filter = crate::state::filter(state);
 
-    let create_status = warp::path!("statuses")
-        .and(state_filter)
+    let create_status_logic = state_filter
         .and(authorisation_required(state))
         .and(urlencoded_or_json())
         .and_then(create);
-    // Restrict the body size
-    limit_body_size!(create_status)
+    // Limit the body size
+    warp::path!("statuses").and(limit_body_size!(create_status_logic))
 }
