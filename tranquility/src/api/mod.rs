@@ -1,8 +1,5 @@
 use {
-    crate::{
-        consts::{MAX_BODY_SIZE, MB_BYTES},
-        state::ArcState,
-    },
+    crate::state::ArcState,
     cfg_if::cfg_if,
     warp::{Filter, Rejection, Reply},
 };
@@ -11,16 +8,11 @@ pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = 
     let oauth = oauth::routes(state);
     let register = register::routes(state);
 
-    let auth_api = warp::body::content_length_limit(MAX_BODY_SIZE).and(oauth.or(register));
+    let auth_api = oauth.or(register);
 
     cfg_if! {
         if #[cfg(feature = "mastodon-api")] {
-            let mastodon_api = {
-                let limit = (state.config.instance.upload_limit as u64) * MB_BYTES;
-                warp::body::content_length_limit(limit).and(mastodon::routes(state))
-            };
-
-            mastodon_api.or(auth_api)
+            mastodon::routes(state).or(auth_api)
         } else {
             auth_api
         }

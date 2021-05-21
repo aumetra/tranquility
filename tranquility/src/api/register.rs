@@ -2,7 +2,7 @@ use {
     crate::{
         activitypub,
         database::{InsertActor, InsertExt},
-        map_err,
+        limit_body_size, map_err,
         state::ArcState,
     },
     once_cell::sync::Lazy,
@@ -90,6 +90,8 @@ pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = 
         .and(warp::body::form())
         .and_then(register)
         .with(ratelimit_wrapper);
+    // Restrict the body size
+    let register_logic = limit_body_size!(register_logic);
 
     warp::path!("api" / "tranquility" / "v1" / "register").and(register_logic)
 }

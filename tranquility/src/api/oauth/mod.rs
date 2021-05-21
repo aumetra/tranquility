@@ -1,5 +1,8 @@
 use {
-    crate::{consts::cors::OAUTH_TOKEN_ALLOWED_METHODS, state::ArcState, util::construct_cors},
+    crate::{
+        consts::cors::OAUTH_TOKEN_ALLOWED_METHODS, limit_body_size, state::ArcState,
+        util::construct_cors,
+    },
     askama::Template,
     once_cell::sync::Lazy,
     tranquility_ratelimit::{ratelimit, Configuration as RatelimitConfig},
@@ -37,6 +40,8 @@ where
         .and(warp::query())
         .and_then(authorize::post)
         .with(ratelimit!(from_filter: ratelimit_filter));
+    // Restrict the body size
+    let post = limit_body_size!(post);
 
     warp::path!("oauth" / "authorize").and(get.or(post))
 }
@@ -61,6 +66,8 @@ where
         .and(warp::body::form())
         .and_then(token::token)
         .with(ratelimit!(from_filter: ratelimit_filter));
+    // Restrict the body size
+    let token_logic = limit_body_size!(token_logic);
 
     token_path.and(token_logic).with(cors)
 }

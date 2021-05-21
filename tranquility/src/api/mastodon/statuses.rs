@@ -3,7 +3,7 @@ use {
     crate::{
         activitypub::Clean,
         database::{Actor as DbActor, InsertExt, InsertObject},
-        map_err,
+        limit_body_size, map_err,
         state::ArcState,
     },
     serde::Deserialize,
@@ -83,9 +83,11 @@ async fn create(
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     let state_filter = crate::state::filter(state);
 
-    warp::path!("statuses")
+    let create_status = warp::path!("statuses")
         .and(state_filter)
         .and(authorisation_required(state))
         .and(urlencoded_or_json())
-        .and_then(create)
+        .and_then(create);
+    // Restrict the body size
+    limit_body_size!(create_status)
 }
