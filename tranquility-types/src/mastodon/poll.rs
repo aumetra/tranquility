@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing a [Mastodon poll](https://docs.joinmastodon.org/entities/poll/)
 pub struct Poll {
     pub id: String,
@@ -21,7 +21,7 @@ pub struct Poll {
     pub emojis: Vec<super::Emoji>,
 }
 
-#[derive(Default, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing on option of a [Poll]
 pub struct PollOption {
     pub title: String,
