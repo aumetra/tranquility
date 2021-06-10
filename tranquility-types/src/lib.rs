@@ -2,6 +2,7 @@
 #![allow(
     clippy::doc_markdown,
     clippy::struct_excessive_bools,
+    clippy::missing_errors_doc,
     clippy::must_use_candidate
 )]
 
@@ -14,3 +15,5 @@ pub mod webfinger;
 
 #[cfg(test)]
 mod tests;
+
+mod util;
