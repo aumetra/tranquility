@@ -1,8 +1,7 @@
 use {
+    chrono::SecondsFormat,
     serde::{Deserialize, Serialize},
-    tranquility_types::activitypub::{
-        Activity, Actor, IsPrivate, IsUnlisted, Object, DATE_TIME_FORMAT,
-    },
+    tranquility_types::activitypub::{Activity, Actor, IsPrivate, IsUnlisted, Object},
 };
 
 #[derive(Clone, Deserialize)]
@@ -39,8 +38,11 @@ pub struct FollowActivity {
     pub approved: bool,
 }
 
-fn activitypub_datetime() -> String {
-    chrono::Utc::now().format(DATE_TIME_FORMAT).to_string()
+/// Get the current timestamp in the RFC 3339 format
+///
+/// ActivityPub technically uses the ISO 8601 format but RFC 3339 should be fine in most cases
+fn current_datetime() -> String {
+    chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true)
 }
 
 /// Extension trait for cleaning objects from potentially malicious HTML

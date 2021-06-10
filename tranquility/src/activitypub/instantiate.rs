@@ -1,5 +1,5 @@
 use {
-    super::activitypub_datetime,
+    super::current_datetime,
     crate::{config::Configuration, format_uuid},
     tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey},
     uuid::Uuid,
@@ -26,7 +26,7 @@ pub fn activity<T: Into<ObjectField>>(
         actor: owner_url.into(),
 
         object: object.into(),
-        published: activitypub_datetime(),
+        published: current_datetime(),
 
         to,
         cc,
@@ -100,7 +100,7 @@ pub fn object(
         summary: summary.into(),
         content: content.into(),
         sensitive,
-        published: activitypub_datetime(),
+        published: current_datetime(),
 
         attributed_to: owner_url.into(),
 
