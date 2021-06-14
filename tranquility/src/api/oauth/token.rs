@@ -116,7 +116,7 @@ async fn code_grant(
         actor_id: authorization_code.actor_id,
         access_token,
         refresh_token: None,
-        valid_until: valid_until.naive_utc(),
+        valid_until,
     }
     .insert(&state.db_pool)
     .await?;
@@ -161,7 +161,7 @@ async fn password_grant(
         actor_id: actor.id,
         access_token,
         refresh_token: None,
-        valid_until: valid_until.naive_utc(),
+        valid_until,
     }
     .insert(&state.db_pool)
     .await?;

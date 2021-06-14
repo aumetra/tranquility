@@ -4,7 +4,7 @@
 use {
     crate::{error::Error, map_err},
     async_trait::async_trait,
-    chrono::{NaiveDateTime, Utc},
+    chrono::{DateTime, Utc},
     sqlx::PgPool,
     uuid::Uuid,
 };
@@ -37,10 +37,10 @@ impl<T> InsertExt for T where T: ormx::Insert {}
 
 /// Wrapper struct for the query of the [last_activity_timestamp] function
 struct ObjectTimestamp {
-    timestamp: NaiveDateTime,
+    timestamp: DateTime<Utc>,
 }
 
-impl From<ObjectTimestamp> for NaiveDateTime {
+impl From<ObjectTimestamp> for DateTime<Utc> {
     fn from(timestamp: ObjectTimestamp) -> Self {
         timestamp.timestamp
     }
@@ -51,7 +51,7 @@ impl From<ObjectTimestamp> for NaiveDateTime {
 async fn last_activity_timestamp(
     conn_pool: &PgPool,
     last_activity_id: Option<Uuid>,
-) -> Result<NaiveDateTime, Error> {
+) -> Result<DateTime<Utc>, Error> {
     let last_timestamp = sqlx::query_as!(
         ObjectTimestamp,
         r#"
@@ -63,7 +63,7 @@ async fn last_activity_timestamp(
     .fetch_one(conn_pool)
     .await
     // Either return the current time or convert it via the `Into` trait
-    .map_or_else(|_| Utc::now().naive_local(), Into::into);
+    .map_or_else(|_| Utc::now(), Into::into);
 
     Ok(last_timestamp)
 }

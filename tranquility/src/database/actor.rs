@@ -1,5 +1,9 @@
 use {
-    crate::error::Error, chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool,
+    crate::error::Error,
+    chrono::{DateTime, Utc},
+    ormx::Table,
+    serde_json::Value,
+    sqlx::PgPool,
     uuid::Uuid,
 };
 
@@ -18,9 +22,9 @@ pub struct Actor {
     pub remote: bool,
 
     #[ormx(default)]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     #[ormx(default)]
-    pub updated_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Actor {

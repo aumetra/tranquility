@@ -22,18 +22,18 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
         "Left": [
           "Uuid",
-          "Timestamp",
+          "Timestamptz",
           "Int8"
         ]
       },
@@ -44,33 +44,6 @@
         false,
         false
       ]
-    }
-  },
-  "0d92ecaf0a459e35dfb1d8e5617f7ffe4f19e74558b5c97920c89ace24c5d76b": {
-    "query": "\n                UPDATE actors\n                SET actor = $1, username = $2\n                WHERE actor->>'id' = $3\n            ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Text",
-          "Text"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "0db67a3667c10583d3a68255e2b205c948ba9ac5a0ee143ba9f4629ace7cf3fc": {
-    "query": "\n            UPDATE objects\n            SET data = $1\n            WHERE id = $2\n        ",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Jsonb",
-          "Uuid"
-        ]
-      },
-      "nullable": []
     }
   },
   "11d3f3540d7d667af4c08036c7bc2c624bb5cc23619cbae6f05b04561421af39": {
@@ -95,12 +68,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -126,12 +99,12 @@
         {
           "ordinal": 0,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 1,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -163,8 +136,8 @@
           "Text",
           "Text",
           "Text",
-          "Timestamp",
-          "Timestamp",
+          "Timestamptz",
+          "Timestamptz",
           "Uuid"
         ]
       },
@@ -198,17 +171,17 @@
         {
           "ordinal": 4,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 5,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -269,12 +242,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -330,12 +303,12 @@
         {
           "ordinal": 6,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 7,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
@@ -373,12 +346,12 @@
         {
           "ordinal": 1,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 2,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -386,7 +359,7 @@
           "Uuid",
           "Uuid",
           "Text",
-          "Timestamp"
+          "Timestamptz"
         ]
       },
       "nullable": [
@@ -404,8 +377,8 @@
         "Left": [
           "Uuid",
           "Jsonb",
-          "Timestamp",
-          "Timestamp",
+          "Timestamptz",
+          "Timestamptz",
           "Uuid"
         ]
       },
@@ -444,17 +417,17 @@
         {
           "ordinal": 5,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 7,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -534,12 +507,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -582,12 +555,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -616,9 +589,9 @@
           "Uuid",
           "Uuid",
           "Text",
-          "Timestamp",
-          "Timestamp",
-          "Timestamp",
+          "Timestamptz",
+          "Timestamptz",
+          "Timestamptz",
           "Uuid"
         ]
       },
@@ -677,12 +650,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -706,12 +679,12 @@
         {
           "ordinal": 0,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 1,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -734,7 +707,7 @@
         {
           "ordinal": 0,
           "name": "timestamp!",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -813,12 +786,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -862,12 +835,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -894,12 +867,12 @@
         {
           "ordinal": 1,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 2,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -985,12 +958,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1033,12 +1006,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1093,12 +1066,12 @@
         {
           "ordinal": 6,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 7,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
@@ -1166,12 +1139,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1222,17 +1195,17 @@
         {
           "ordinal": 5,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 7,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1294,12 +1267,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1342,18 +1315,18 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
         "Left": [
           "Uuid",
-          "Timestamp",
+          "Timestamptz",
           "Int8"
         ]
       },
@@ -1398,17 +1371,17 @@
         {
           "ordinal": 5,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 7,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1451,12 +1424,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1498,12 +1471,12 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1532,50 +1505,6 @@
       "nullable": []
     }
   },
-  "cc6b4a9f05e8a42b768e900af17153bcd8e0ee07e94637bc86940e28818bd871": {
-    "query": "\n                SELECT * FROM objects\n                WHERE id = $1\n            ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "owner_id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 2,
-          "name": "data",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 3,
-          "name": "created_at",
-          "type_info": "Timestamp"
-        },
-        {
-          "ordinal": 4,
-          "name": "updated_at",
-          "type_info": "Timestamp"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "d60adcc0f4b55752a6843fdb4224f81968decac60174293ffddd2e792d14cf3d": {
     "query": "UPDATE oauth_tokens SET application_id = $1, actor_id = $2, access_token = $3, refresh_token = $4, valid_until = $5, created_at = $6, updated_at = $7 WHERE id = $8",
     "describe": {
@@ -1586,9 +1515,9 @@
           "Uuid",
           "Text",
           "Text",
-          "Timestamp",
-          "Timestamp",
-          "Timestamp",
+          "Timestamptz",
+          "Timestamptz",
+          "Timestamptz",
           "Uuid"
         ]
       },
@@ -1607,12 +1536,12 @@
         {
           "ordinal": 1,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 2,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1621,7 +1550,7 @@
           "Uuid",
           "Text",
           "Text",
-          "Timestamp"
+          "Timestamptz"
         ]
       },
       "nullable": [
@@ -1673,12 +1602,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1726,17 +1655,17 @@
         {
           "ordinal": 4,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 5,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1789,18 +1718,18 @@
         {
           "ordinal": 3,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 4,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
         "Left": [
           "Uuid",
-          "Timestamp",
+          "Timestamptz",
           "Int8"
         ]
       },
@@ -1845,17 +1774,17 @@
         {
           "ordinal": 5,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 7,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1902,17 +1831,17 @@
         {
           "ordinal": 4,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 5,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -1971,12 +1900,12 @@
         {
           "ordinal": 7,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 8,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -2025,17 +1954,17 @@
         {
           "ordinal": 4,
           "name": "valid_until",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 5,
           "name": "created_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         },
         {
           "ordinal": 6,
           "name": "updated_at",
-          "type_info": "Timestamp"
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -2067,8 +1996,8 @@
           "Text",
           "Jsonb",
           "Bool",
-          "Timestamp",
-          "Timestamp",
+          "Timestamptz",
+          "Timestamptz",
           "Uuid"
         ]
       },

@@ -67,7 +67,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         application_id: client.id,
         actor_id: actor.id,
         code: authorization_code,
-        valid_until: valid_until.naive_utc(),
+        valid_until,
     }
     .insert(&state.db_pool)
     .await?;

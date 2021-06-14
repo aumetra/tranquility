@@ -1,4 +1,10 @@
-use {crate::error::Error, chrono::NaiveDateTime, ormx::Table, sqlx::PgPool, uuid::Uuid};
+use {
+    crate::error::Error,
+    chrono::{DateTime, Utc},
+    ormx::Table,
+    sqlx::PgPool,
+    uuid::Uuid,
+};
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_authorizations", insertable)]
@@ -11,12 +17,12 @@ pub struct OAuthAuthorization {
 
     #[ormx(get_one(&str))]
     pub code: String,
-    pub valid_until: NaiveDateTime,
+    pub valid_until: DateTime<Utc>,
 
     #[ormx(default)]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     #[ormx(default)]
-    pub updated_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl OAuthAuthorization {
