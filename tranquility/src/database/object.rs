@@ -1,5 +1,9 @@
 use {
-    crate::error::Error, chrono::NaiveDateTime, ormx::Table, serde_json::Value, sqlx::PgPool,
+    crate::error::Error,
+    chrono::{DateTime, Utc},
+    ormx::Table,
+    serde_json::Value,
+    sqlx::PgPool,
     uuid::Uuid,
 };
 
@@ -12,9 +16,9 @@ pub struct Object {
     pub data: Value,
 
     #[ormx(default)]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     #[ormx(default)]
-    pub updated_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Object {
@@ -85,7 +89,7 @@ impl Object {
         owner_id: &Uuid,
         object_url: &str,
     ) -> Result<Self, Error> {
-        let object_result = sqlx::query_as!(
+        let object = sqlx::query_as!(
             Object,
             r#"
                 SELECT * FROM objects
@@ -100,13 +104,9 @@ impl Object {
             object_url,
         )
         .fetch_one(conn_pool)
-        .await;
+        .await?;
 
-        match object_result {
-            Ok(obj) => Ok(obj),
-            Err(sqlx::Error::RowNotFound) => Err(Error::InvalidRequest),
-            Err(e) => Err(e.into()),
-        }
+        Ok(object)
     }
 
     /// Get an object by its URL

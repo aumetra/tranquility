@@ -1,4 +1,8 @@
-use {chrono::NaiveDateTime, ormx::Table, uuid::Uuid};
+use {
+    chrono::{DateTime, Utc},
+    ormx::Table,
+    uuid::Uuid,
+};
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_tokens", insertable)]
@@ -11,10 +15,10 @@ pub struct OAuthToken {
     #[ormx(get_one(&str))]
     pub access_token: String,
     pub refresh_token: Option<String>,
-    pub valid_until: NaiveDateTime,
+    pub valid_until: DateTime<Utc>,
 
     #[ormx(default)]
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
     #[ormx(default)]
-    pub updated_at: NaiveDateTime,
+    pub updated_at: DateTime<Utc>,
 }

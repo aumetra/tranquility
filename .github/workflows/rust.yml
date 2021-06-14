@@ -13,6 +13,7 @@ env:
 jobs:
   check:
     name: Check
+    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,6 +37,7 @@ jobs:
 
   check_all_features:
     name: Check (all features)
+    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -60,6 +62,7 @@ jobs:
 
   check_no_default:
     name: Check (no features)
+    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -84,6 +87,7 @@ jobs:
 
   test:
     name: Test 
+    needs: [ fmt, clippy, check, check_all_features, check_no_default ]
     runs-on: ubuntu-latest
 
     services:
@@ -137,6 +141,7 @@ jobs:
 
   clippy:
     name: Clippy
+    needs: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
