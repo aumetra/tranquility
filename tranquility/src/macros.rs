@@ -110,6 +110,23 @@ macro_rules! impl_is_owned_by {
     }
 }
 
+/// Limit the body size of a filter
+#[macro_export(local_inner_macros)]
+macro_rules! limit_body_size {
+    // Use the default maximum body size
+    ($filter:expr) => {{
+        limit_body_size!($filter, crate::consts::MAX_BODY_SIZE)
+    }};
+    // Use the user-defined maximum body size
+    ($filter:expr, $limit:expr) => {{
+        warp::body::content_length_limit($limit).and($filter)
+    }};
+    // Multiply the user-defined maximum body size with the MB in bytes constant
+    ($filter:expr, $limit:ident MB) => {{
+        limit_body_size!($filter, $limit * crate::consts::MB_BYTES)
+    }};
+}
+
 /// Something like `map_err!(Err::<(), ()>(()))` expands to
 ///
 /// ```rust
@@ -146,19 +163,17 @@ macro_rules! match_handler {
     }
 }
 
-/// Limit the body size of a filter
-#[macro_export(local_inner_macros)]
-macro_rules! limit_body_size {
-    // Use the default maximum body size
-    ($filter:expr) => {{
-        limit_body_size!($filter, crate::consts::MAX_BODY_SIZE)
-    }};
-    // Use the user-defined maximum body size
-    ($filter:expr, $limit:expr) => {{
-        warp::body::content_length_limit($limit).and($filter)
-    }};
-    // Multiply the user-defined maximum body size with the MB in bytes constant
-    ($filter:expr, $limit:ident MB) => {{
-        limit_body_size!($filter, $limit * crate::consts::MB_BYTES)
+/// Compiles the regex and saves it into a lazy (so that it doesn't have to be recompiled for every usage)
+///
+/// This is comparable with the regex macro example from the OnceCell docs except that we use lazy instead of initialising a OnceCell ourselves.
+/// This doesn't make a difference though because a lazy uses a OnceCell internally anyway
+#[macro_export]
+macro_rules! regex {
+    ($regex:literal) => {{
+        static REGEX: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+            regex::Regex::new($regex).expect("Regex compilation failed")
+        });
+
+        &*REGEX
     }};
 }

@@ -14,7 +14,7 @@ use {
     warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
 };
 
-static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[[:alnum:]\-_]+$"#).unwrap());
+static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[\w\-]+$"#).unwrap());
 
 #[derive(Deserialize, Validate)]
 pub struct RegistrationForm {
