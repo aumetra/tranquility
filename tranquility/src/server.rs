@@ -6,7 +6,7 @@ pub async fn run(state: ArcState) {
 
     let activitypub = crate::activitypub::routes::routes(&state);
     let api = crate::api::routes(&state);
-    let webfinger = crate::webfinger::routes(&state);
+    let webfinger = crate::well_known::webfinger::routes(&state);
 
     let routes = activitypub
         .or(api)

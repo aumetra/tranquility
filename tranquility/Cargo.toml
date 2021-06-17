@@ -63,7 +63,7 @@ path = "../tranquility-ratelimit"
 
 [dependencies.tranquility-types]
 path = "../tranquility-types"
-features = ["activitypub", "webfinger"]
+features = ["activitypub", "nodeinfo", "webfinger"]
 
 [features]
 default = ["mastodon-api"]
