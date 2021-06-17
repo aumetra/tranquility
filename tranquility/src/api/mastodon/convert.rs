@@ -1,5 +1,3 @@
-#![allow(clippy::filter_map)]
-
 use {
     crate::{
         database::{Actor as DbActor, OAuthApplication, Object as DbObject},
