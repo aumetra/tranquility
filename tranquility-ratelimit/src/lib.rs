@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![deny(clippy::all, clippy::pedantic)]
+#![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc, clippy::must_use_candidate)]
 
 //! Ratelimit library based on governor for warp

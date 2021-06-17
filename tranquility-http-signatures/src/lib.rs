@@ -1,5 +1,6 @@
 #![forbid(rust_2018_idioms, unsafe_code)]
-#![deny(clippy::all, clippy::pedantic, missing_docs)]
+#![warn(clippy::all, clippy::pedantic)]
+#![deny(missing_docs)]
 #![allow(clippy::missing_errors_doc, clippy::module_name_repetitions)]
 // Disable this clippy lint, otherwise clippy will complain when compiled in a test environment
 // (for example, with rust-analyzer)

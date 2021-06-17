@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::pedantic)]
+#![warn(clippy::all, clippy::pedantic)]
 #![allow(
     clippy::doc_markdown,
     clippy::struct_excessive_bools,

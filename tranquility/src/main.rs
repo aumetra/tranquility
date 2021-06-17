@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
-#![deny(clippy::all, clippy::pedantic, rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
+#![deny(rust_2018_idioms)]
 #![allow(clippy::doc_markdown, clippy::module_name_repetitions)]
 
 #[macro_use]
