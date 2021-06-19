@@ -196,11 +196,15 @@ async fn nodeinfo() {
 
     let well_known = crate::well_known::routes(&state);
 
-    let response = warp::test::request().path("/.well-known/nodeinfo/2.1").reply(&well_known).await;
+    let response = warp::test::request()
+        .path("/.well-known/nodeinfo/2.1")
+        .reply(&well_known)
+        .await;
     assert!(response.status().is_success());
 
     let response_body = response.body();
-    let response_body = serde_json::from_slice(response_body).expect("Couldn't parse nodeinfo entity");
+    let response_body =
+        serde_json::from_slice(response_body).expect("Couldn't parse nodeinfo entity");
 
     let schema = serde_json::from_str(NODEINFO_21_SCHEMA).expect("Couldn't parse nodeinfo schema");
 
