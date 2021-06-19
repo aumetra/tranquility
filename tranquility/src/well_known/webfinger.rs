@@ -12,7 +12,6 @@ use {
 };
 
 // Keeping this for future use
-#[allow(dead_code)]
 pub async fn fetch_actor(
     state: &ArcState,
     username: &str,

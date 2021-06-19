@@ -1,12 +1,11 @@
 use {
     crate::{
         activitypub,
+        consts::regex::USERNAME,
         database::{InsertActor, InsertExt},
-        limit_body_size, map_err,
+        limit_body_size, map_err, regex,
         state::ArcState,
     },
-    once_cell::sync::Lazy,
-    regex::Regex,
     serde::Deserialize,
     tranquility_ratelimit::{ratelimit, Configuration},
     uuid::Uuid,
@@ -14,7 +13,7 @@ use {
     warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
 };
 
-static USERNAME_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[\w\-]+$"#).unwrap());
+regex!(USERNAME_REGEX = USERNAME);
 
 #[derive(Deserialize, Validate)]
 pub struct RegistrationForm {

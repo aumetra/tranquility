@@ -13,6 +13,24 @@ macro_rules! attempt_fetch {
     }};
 }
 
+/// Create a macro to emulate a constant that can be used with the `concat!` macro
+///
+/// This creates an macro with the name that expands to just the literal as well as an constant with the same value for type enforcement
+#[macro_export]
+macro_rules! r#const {
+    ($ident:ident: $type:ty = $val:literal) => {
+        macro_rules! $ident {
+            () => {
+                $val
+            };
+        }
+
+        #[doc(hidden)]
+        #[allow(dead_code)]
+        const $ident: $type = $val;
+    };
+}
+
 /// Format UUIDs in a unified way
 #[macro_export]
 macro_rules! format_uuid {
@@ -167,12 +185,46 @@ macro_rules! match_handler {
 ///
 /// This is comparable with the regex macro example from the OnceCell docs except that we use lazy instead of initialising a OnceCell ourselves.
 /// This doesn't make a difference though because a lazy uses a OnceCell internally anyway
+///
+/// Examples:
+/// ```
+/// regex!(TEST = "^.+$")
+/// ```
+///
+/// expands to
+///
+/// ```
+/// static TEST: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+///     regex::Regex::new("^.+$").expect("Regex compilation failed")
+/// });
+/// ```
+///
+/// ---
+///
+/// ```
+/// let test_regex = regex!("^.+$");
+/// ```
+///
+/// expands to
+///
+/// ```
+/// let test_regex = {
+///     static REGEX: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+///         regex::Regex::new("^.+$").expect("Regex compilation failed")
+///     });
+///     
+///     &*REGEX
+/// };
+/// ```
 #[macro_export]
 macro_rules! regex {
-    ($regex:literal) => {{
-        static REGEX: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+    ($ident:ident = $regex:ident) => {
+        static $ident: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
             regex::Regex::new($regex).expect("Regex compilation failed")
         });
+    };
+    ($regex:ident) => {{
+        regex!(REGEX = $regex);
 
         &*REGEX
     }};
