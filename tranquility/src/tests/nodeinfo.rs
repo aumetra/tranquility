@@ -1,4 +1,4 @@
-use {super::test_state, std::sync::Arc, valico::json_schema::Scope};
+use {super::test_state, std::sync::Arc};
 
 const NODEINFO_21_SCHEMA: &str = r#"
 {
@@ -196,22 +196,13 @@ async fn nodeinfo() {
 
     let well_known = crate::well_known::routes(&state);
 
-    let response = warp::test::request()
-        .path("/.well-known/nodeinfo/2.1")
-        .reply(&well_known)
-        .await;
+    let response = warp::test::request().path("/.well-known/nodeinfo/2.1").reply(&well_known).await;
     assert!(response.status().is_success());
 
     let response_body = response.body();
-    let response_body =
-        serde_json::from_slice(response_body).expect("Couldn't parse nodeinfo entity");
+    let response_body = serde_json::from_slice(response_body).expect("Couldn't parse nodeinfo entity");
 
     let schema = serde_json::from_str(NODEINFO_21_SCHEMA).expect("Couldn't parse nodeinfo schema");
 
-    let mut schema_scope = Scope::new();
-    let schema = schema_scope
-        .compile_and_return(schema, true)
-        .expect("Failed to compile schema");
-
-    assert!(schema.validate(&response_body).is_valid())
+    assert!(jsonschema::is_valid(&schema, &response_body))
 }

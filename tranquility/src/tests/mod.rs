@@ -55,7 +55,7 @@ fn test_config() -> Configuration {
 }
 
 async fn init_db() -> PgPool {
-    let conn_url = env::var("TEST_DB_URL").unwrap();
+    let conn_url = env::var("TEST_DB_URL").unwrap_or("postgres://localhost/tranquility".into());
 
     let conn_pool = PgPool::connect(&conn_url).await.unwrap();
     crate::database::migrate(&conn_pool).await.ok();

@@ -72,4 +72,4 @@ mastodon-api = ["tranquility-types/mastodon"]
 jaeger = ["opentelemetry", "opentelemetry-jaeger", "tracing-opentelemetry"]
 
 [dev-dependencies]
-valico = "3.6.0"
+jsonschema = { version = "0.11.0", default-features = false }
