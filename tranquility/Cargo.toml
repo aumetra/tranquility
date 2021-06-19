@@ -70,3 +70,6 @@ default = ["mastodon-api"]
 
 mastodon-api = ["tranquility-types/mastodon"]
 jaeger = ["opentelemetry", "opentelemetry-jaeger", "tracing-opentelemetry"]
+
+[dev-dependencies]
+valico = "3.6.0"

@@ -78,4 +78,5 @@ fn decode_follow_activity() {
     assert!(!follow_activity.approved);
 }
 
+mod nodeinfo;
 mod register;

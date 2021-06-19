@@ -3,37 +3,25 @@ use {
         consts::{SOFTWARE_NAME, VERSION},
         state::ArcState,
     },
-    tranquility_types::nodeinfo::{
-        Link, LinkCollection, Nodeinfo, Services, Software, Usage, UsageUsers,
-    },
+    tranquility_types::nodeinfo::{Link, LinkCollection, Nodeinfo, Services, Software, Usage},
     warp::{Filter, Rejection, Reply},
 };
 
 async fn nodeinfo(state: ArcState) -> Result<impl Reply, Rejection> {
     let info = Nodeinfo {
-        version: "2.1".into(),
         protocols: vec!["activitypub".into()],
         software: Software {
             name: SOFTWARE_NAME.into(),
             version: VERSION.into(),
-            homepage: None,
-            repository: None,
+            ..Software::default()
         },
         services: Services {
             inbound: Vec::new(),
             outbound: Vec::new(),
         },
         open_registrations: !state.config.instance.closed_registrations,
-        metadata: None,
-        usage: Usage {
-            users: UsageUsers {
-                total: 0,
-                active_halfyear: 0,
-                active_month: 0,
-            },
-            local_comments: 0,
-            local_posts: 0,
-        },
+        usage: Usage::default(),
+        ..Nodeinfo::default()
     };
 
     Ok(warp::reply::json(&info))

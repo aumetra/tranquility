@@ -1,6 +1,6 @@
 use {
     serde::{Deserialize, Serialize},
-    serde_json::Value,
+    serde_json::{Map, Value},
 };
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
@@ -28,7 +28,7 @@ pub struct LinkCollection {
     pub links: Vec<Link>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing a [Nodeinfo 2.1](https://github.com/jhass/nodeinfo/blob/1fcd229a84031253eb73a315e89d3f7f13f117b4/PROTOCOL.md) entity
 pub struct Nodeinfo {
@@ -38,7 +38,23 @@ pub struct Nodeinfo {
     pub services: Services,
     pub open_registrations: bool,
     pub usage: Usage,
-    pub metadata: Option<Value>,
+    pub metadata: Value,
+}
+
+impl Default for Nodeinfo {
+    fn default() -> Self {
+        Self {
+            version: "2.1".into(),
+            software: Software::default(),
+            protocols: Vec::new(),
+            services: Services::default(),
+            open_registrations: false,
+            usage: Usage::default(),
+
+            // Has to be an empty map to comply with the schema
+            metadata: Value::Object(Map::default()),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
@@ -64,8 +80,8 @@ pub struct UsageUsers {
 pub struct Software {
     pub name: String,
     pub version: String,
-    pub repository: Option<String>,
-    pub homepage: Option<String>,
+    pub repository: String,
+    pub homepage: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
