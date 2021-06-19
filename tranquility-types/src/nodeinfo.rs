@@ -38,7 +38,7 @@ pub struct Nodeinfo {
     pub services: Services,
     pub open_registrations: bool,
     pub usage: Usage,
-    pub metadata: Value,
+    pub metadata: Option<Value>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
@@ -46,8 +46,8 @@ pub struct Nodeinfo {
 /// Struct representing the `usage` field of a Nodeinfo entity
 pub struct Usage {
     pub users: UsageUsers,
-    pub local_posts: Option<u64>,
-    pub local_comments: Option<u64>,
+    pub local_posts: u64,
+    pub local_comments: u64,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
@@ -64,7 +64,7 @@ pub struct UsageUsers {
 pub struct Software {
     pub name: String,
     pub version: String,
-    pub respository: Option<String>,
+    pub repository: Option<String>,
     pub homepage: Option<String>,
 }
 

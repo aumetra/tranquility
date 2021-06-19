@@ -6,11 +6,11 @@ pub async fn run(state: ArcState) {
 
     let activitypub = crate::activitypub::routes::routes(&state);
     let api = crate::api::routes(&state);
-    let webfinger = crate::well_known::webfinger::routes(&state);
+    let well_known = crate::well_known::routes(&state);
 
     let routes = activitypub
         .or(api)
-        .or(webfinger)
+        .or(well_known)
         .with(logging)
         .recover(crate::error::recover);
 
