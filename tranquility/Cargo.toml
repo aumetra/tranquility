@@ -63,10 +63,13 @@ path = "../tranquility-ratelimit"
 
 [dependencies.tranquility-types]
 path = "../tranquility-types"
-features = ["activitypub", "webfinger"]
+features = ["activitypub", "nodeinfo", "webfinger"]
 
 [features]
 default = ["mastodon-api"]
 
 mastodon-api = ["tranquility-types/mastodon"]
 jaeger = ["opentelemetry", "opentelemetry-jaeger", "tracing-opentelemetry"]
+
+[dev-dependencies]
+jsonschema = { version = "0.11.0", default-features = false }

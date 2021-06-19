@@ -88,7 +88,7 @@ pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = 
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
     let cors = construct_cors(GENERAL_ALLOWED_METHODS);
 
-    warp::path!(".well-known" / "webfinger")
+    warp::path!("webfinger")
         .and(state)
         .and(warp::query())
         .and_then(webfinger)

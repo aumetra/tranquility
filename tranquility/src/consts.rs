@@ -23,6 +23,8 @@ pub mod daemon {
 pub const MAX_BODY_SIZE: u64 = 5 * MB_BYTES;
 pub const MB_BYTES: u64 = 1024_u64.pow(2);
 
+pub const SOFTWARE_NAME: &str = env!("CARGO_PKG_NAME");
+
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 pub const PROPER_VERSION: &str = concat!(
     "v",

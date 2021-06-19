@@ -10,6 +10,8 @@
 pub mod activitypub;
 #[cfg(feature = "mastodon")]
 pub mod mastodon;
+#[cfg(feature = "nodeinfo")]
+pub mod nodeinfo;
 #[cfg(feature = "webfinger")]
 pub mod webfinger;
 

@@ -41,7 +41,7 @@ mod macros;
 mod server;
 mod state;
 mod util;
-mod webfinger;
+mod well_known;
 
 #[cfg(test)]
 mod tests;
