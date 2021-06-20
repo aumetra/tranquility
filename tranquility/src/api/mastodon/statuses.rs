@@ -50,7 +50,7 @@ async fn create(
         vec![],
     );
 
-    object.format_mentions(Arc::clone(&state));
+    object.format_mentions(Arc::clone(&state)).await;
 
     // Parse the markdown if the feature is enabled
     #[cfg(feature = "markdown")]
