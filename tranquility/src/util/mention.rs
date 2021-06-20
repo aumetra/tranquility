@@ -7,7 +7,7 @@ use {
     regex::{Captures, Match},
     std::{mem, sync::Arc},
     tokio::runtime::Handle,
-    tranquility_types::activitypub::Actor,
+    tranquility_types::activitypub::{Actor, Object},
 };
 
 regex!(MENTION_REGEX = MENTION);
@@ -66,6 +66,13 @@ fn format_mention(username: &str, domain: Option<&str>) -> String {
 pub trait FormatMention {
     /// Format the mentions to links
     async fn format_mentions(&mut self, state: ArcState);
+}
+
+#[async_trait]
+impl FormatMention for Object {
+    async fn format_mentions(&mut self, state: ArcState) {
+        self.content.format_mentions(state).await
+    }
 }
 
 #[async_trait]

@@ -5,6 +5,7 @@ use {
         database::{Actor as DbActor, InsertExt, InsertObject},
         limit_body_size, map_err,
         state::ArcState,
+        util::mention::FormatMention,
     },
     serde::Deserialize,
     std::sync::Arc,
@@ -48,6 +49,8 @@ async fn create(
         vec![PUBLIC_IDENTIFIER.into(), author.followers],
         vec![],
     );
+
+    object.format_mentions(Arc::clone(&state));
 
     // Parse the markdown if the feature is enabled
     #[cfg(feature = "markdown")]
