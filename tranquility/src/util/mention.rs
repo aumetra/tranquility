@@ -7,7 +7,7 @@ use {
     regex::{Captures, Match},
     std::{mem, sync::Arc},
     tokio::runtime::Handle,
-    tranquility_types::activitypub::{Actor, Object},
+    tranquility_types::activitypub::{Actor, Object, Tag},
 };
 
 regex!(MENTION_REGEX = MENTION);
@@ -65,19 +65,19 @@ fn format_mention(username: &str, domain: Option<&str>) -> String {
 
 pub trait FormatMention {
     /// Format the mentions to links
-    async fn format_mentions(&mut self, state: ArcState);
+    async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag>;
 }
 
 #[async_trait]
 impl FormatMention for Object {
-    async fn format_mentions(&mut self, state: ArcState) {
+    async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag> {
         self.content.format_mentions(state).await
     }
 }
 
 #[async_trait]
 impl FormatMention for String {
-    async fn format_mentions(&mut self, state: ArcState) {
+    async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag> {
         let handle = Handle::current();
 
         // Safety:
@@ -94,6 +94,8 @@ impl FormatMention for String {
         // That's why we use `spawn_blocking` to be allowed to block and then use the handle to the runtime we created earlier
         // to spawn a future onto the already existing runtime for the networking/database interactions and block until the future has resolved
         tokio::task::spawn_blocking(move || {
+            let mut tags = Vec::new();
+
             let output = MENTION_REGEX.replace_all(this.as_str(), |capture: &Captures<'_>| {
                 let state = Arc::clone(&state);
                 let username = capture.get(1).unwrap().as_str();
@@ -118,15 +120,28 @@ impl FormatMention for String {
                 });
 
                 let mention = format_mention(username, domain);
-                actor_result
-                    .map(|actor| format!(r#"<a href="{}">{}</a>"#, actor.id, mention))
-                    .unwrap_or(mention)
-            });
 
+                if let Ok(actor) = actor_result {
+                    // Create a new ActivityPub tag object
+                    let tag = Tag {
+                        r#type: "Mention".into(),
+                        name: mention.clone(),
+                        href: actor.id.clone(),
+                    };
+                    tags.push(tag);
+
+                    format!(r#"<a href="{}">{}</a>"#, actor.id, mention)
+                } else {
+                    mention
+                }
+            });
             *this = output.to_string();
+
+            tags
         })
         .await
-        .ok();
+        .map_err(|err| error!(error = ?err))
+        .unwrap_or_default()
     }
 }
 
