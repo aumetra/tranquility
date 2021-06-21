@@ -3,9 +3,7 @@
 use {
     super::current_datetime,
     crate::{config::Configuration, format_uuid},
-    tranquility_types::activitypub::{
-        activity::ObjectField, Activity, Actor, Object, PublicKey, Tag,
-    },
+    tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey},
     uuid::Uuid,
 };
 
@@ -89,7 +87,6 @@ pub fn object(
     owner_url: &str,
     summary: &str,
     content: &str,
-    tags: Option<Vec<Tag>>,
     sensitive: bool,
     to: Vec<String>,
     cc: Vec<String>,
@@ -104,7 +101,6 @@ pub fn object(
 
         summary: summary.into(),
         content: content.into(),
-        tag: tags.unwrap_or_default(),
         sensitive,
         published: current_datetime(),
 

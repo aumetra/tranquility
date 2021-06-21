@@ -71,7 +71,10 @@ pub trait FormatMention {
 #[async_trait]
 impl FormatMention for Object {
     async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag> {
-        self.content.format_mentions(state).await
+        let tags = self.content.format_mentions(state).await;
+        self.tag = tags.clone();
+
+        tags
     }
 }
 

@@ -29,7 +29,7 @@ struct CreateForm {
 async fn create(
     state: ArcState,
     author_db: DbActor,
-    mut form: CreateForm,
+    form: CreateForm,
 ) -> Result<Response, Rejection> {
     if state.config.instance.character_limit < form.status.chars().count() {
         return Ok(
@@ -38,19 +38,19 @@ async fn create(
     }
 
     let author: Actor = map_err!(serde_json::from_value(author_db.actor))?;
-    let tags = form.status.format_mentions(Arc::clone(&state)).await;
 
     let (object_id, mut object) = crate::activitypub::instantiate::object(
         &state.config,
         author.id.as_str(),
         form.spoiler_text.as_str(),
         form.status.as_str(),
-        Some(tags),
         form.sensitive,
         // TODO: Actually add collections to the to/cc array
         vec![PUBLIC_IDENTIFIER.into(), author.followers],
         vec![],
     );
+
+    object.format_mentions(Arc::clone(&state)).await;
 
     // Parse the markdown if the feature is enabled
     #[cfg(feature = "markdown")]
