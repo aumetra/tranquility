@@ -1,5 +1,3 @@
-#![allow(clippy::too_many_arguments)]
-
 use {
     super::current_datetime,
     crate::{config::Configuration, format_uuid},
