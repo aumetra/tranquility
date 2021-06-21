@@ -103,7 +103,7 @@ impl FormatMention for String {
                     Ok(actor)
                 });
 
-                let mention = capture.get(0).unwrap().as_str().to_string();
+                let mut mention = capture.get(0).unwrap().as_str().to_string();
                 if let Ok(actor) = actor_result {
                     // Create a new ActivityPub tag object
                     tags.push(Tag {
@@ -112,10 +112,10 @@ impl FormatMention for String {
                         href: actor.id.clone(),
                     });
 
-                    format!(r#"<a href="{}">{}</a>"#, actor.id, mention)
-                } else {
-                    mention
+                    mention = format!(r#"<a href="{}">{}</a>"#, actor.id, mention);
                 }
+
+                mention
             });
 
             (output.to_string(), tags)
