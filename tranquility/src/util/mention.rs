@@ -88,6 +88,8 @@ impl FormatMention for String {
                 // Block until the future has resolved
                 // This is fine because we are inside the `spawn_blocking` context where blocking is allowed
                 let actor_result: Result<Actor, Error> = handle.block_on(async {
+                    // If a domain is present, use webfinger
+                    // Otherwise query the local accounts
                     let actor = if let Some(domain) = domain {
                         let (actor, _db_actor) =
                             webfinger::fetch_actor(&state, username, domain).await?;
