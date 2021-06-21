@@ -18,6 +18,9 @@ use {
     },
 };
 
+#[cfg(feature = "email")]
+use lettre::{error::Error as EmailContentError, transport::smtp::Error as SmtpError};
+
 #[derive(Debug, thiserror::Error)]
 /// Combined error enum for converting errors into rejections
 pub enum Error {
@@ -26,6 +29,10 @@ pub enum Error {
 
     #[error("Template formatting failed")]
     Askama(#[from] AskamaError),
+
+    #[cfg(feature = "email")]
+    #[error("Email content error")]
+    EmailContent(#[from] EmailContentError),
 
     #[error("Remote content fetch failed")]
     Fetch,
@@ -59,6 +66,10 @@ pub enum Error {
 
     #[error("serde-json operation failed")]
     SerdeJson(#[from] SerdeJsonError),
+
+    #[cfg(feature = "email")]
+    #[error("SMTP error")]
+    Smtp(#[from] SmtpError),
 
     #[error("Unexpected webfinger resource")]
     UnexpectedWebfingerResource,

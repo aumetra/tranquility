@@ -9,6 +9,19 @@ use {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the email configuration values
+pub struct ConfigurationEmail {
+    pub active: bool,
+
+    pub server: String,
+    pub starttls: bool,
+
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
 /// Struct holding the instance specific configuration values
 pub struct ConfigurationInstance {
     pub closed_registrations: bool,
@@ -56,6 +69,7 @@ pub struct ConfigurationTls {
 #[serde(rename_all = "kebab-case")]
 /// Struct holding the configuration values
 pub struct Configuration {
+    pub email: ConfigurationEmail,
     pub instance: ConfigurationInstance,
     pub ratelimit: ConfigurationRatelimit,
     pub server: ConfigurationServer,

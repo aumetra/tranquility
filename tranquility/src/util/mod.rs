@@ -38,4 +38,6 @@ where
     receiver.map(Result::unwrap)
 }
 
+#[cfg(feature = "email")]
+pub mod email;
 pub mod mention;

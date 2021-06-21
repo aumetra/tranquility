@@ -1,3 +1,20 @@
+# The email configuration part is always required (there is no conditional compilation on the configuration deserialization) 
+# but only active when the server was compiled with the "email" flag enabled
+#
+# The mail server has to support TLS, either via regular TLS or STARTTLS
+# Using an unencrypted transport is not supported and should not even be used anywhere anymore
+[email]
+# Activate/Deactivate email functionality
+active = false
+# Domain of the mail server
+server = "smtp.example.com"
+# Whether STARTTLS should be used or not
+starttls = false
+# Username of the mail account
+username = "tranquility"
+# Password of the mail account
+password = "verysecurepassword"
+
 [instance]
 # Maximum limit of characters per post
 character-limit = 1024
