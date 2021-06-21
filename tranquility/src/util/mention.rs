@@ -5,7 +5,7 @@ use {
     },
     async_trait::async_trait,
     regex::{Captures, Match},
-    std::{mem, sync::Arc},
+    std::sync::Arc,
     tokio::runtime::Handle,
     tranquility_types::activitypub::{Actor, Object, Tag},
 };
@@ -51,13 +51,26 @@ where
 }
 
 #[inline]
-/// Format the username and the domain into the mention format
-fn format_mention(username: &str, domain: Option<&str>) -> String {
-    if let Some(domain) = domain {
-        format!("@{}@{}", username, domain)
+/// Fetch an actor from the database
+///
+/// Use webfinger if a username and domain is present, search only through local accounts if only a username is present
+async fn fetch_actor(
+    state: &ArcState,
+    username: &str,
+    domain: Option<&str>,
+) -> Result<Actor, Error> {
+    let actor = if let Some(domain) = domain {
+        let (actor, _db_actor) = webfinger::fetch_actor(state, username, domain).await?;
+
+        actor
     } else {
-        format!("@{}", username)
-    }
+        let db_actor = DbActor::by_username_local(&state.db_pool, username).await?;
+        let actor: Actor = serde_json::from_value(db_actor.actor)?;
+
+        actor
+    };
+
+    Ok(actor)
 }
 
 #[async_trait]
@@ -82,69 +95,55 @@ impl FormatMention for Object {
 impl FormatMention for String {
     async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag> {
         let handle = Handle::current();
-
-        // Safety:
-        // This transmute is necessary as the `spawn_blocking` function requires the closure to have a static lifetime
-        // The data that is being formatted might not have a static lifetime
-        // This is fine though because the task gets awaited and therefore should get joined before the value can even be dropped
-        //
-        // (maybe clone this instead of transmuting)
-        let this = unsafe { mem::transmute::<_, &'static mut String>(self) };
+        let text = self.clone();
 
         // We have to do those moves (async -> sync -> async) because we can't run futures to completion inside a synchronous closure without blocking
         // and we can't access our database without an async executor because SQLx is async-only
         //
         // That's why we use `spawn_blocking` to be allowed to block and then use the handle to the runtime we created earlier
         // to spawn a future onto the already existing runtime for the networking/database interactions and block until the future has resolved
-        tokio::task::spawn_blocking(move || {
+        let format_result = tokio::task::spawn_blocking(move || {
             let mut tags = Vec::new();
 
-            let output = MENTION_REGEX.replace_all(this.as_str(), |capture: &Captures<'_>| {
+            let output = MENTION_REGEX.replace_all(text.as_str(), |capture: &Captures<'_>| {
                 let state = Arc::clone(&state);
                 let username = capture.name("username").unwrap().as_str();
                 let domain = capture.name("domain").as_ref().map(Match::as_str);
 
                 // Block until the future has resolved
                 // This is fine because we are inside the `spawn_blocking` context where blocking is allowed
-                let actor_result: Result<Actor, Error> = handle.block_on(async move {
-                    let actor = if let Some(domain) = domain {
-                        let (actor, _db_actor) =
-                            webfinger::fetch_actor(&state, username, domain).await?;
+                let actor_result: Result<Actor, Error> =
+                    handle.block_on(fetch_actor(&state, username, domain));
 
-                        actor
-                    } else {
-                        let db_actor = DbActor::by_username_local(&state.db_pool, username).await?;
-                        let actor: Actor = serde_json::from_value(db_actor.actor)?;
-
-                        actor
-                    };
-
-                    Ok(actor)
-                });
-
-                let mention = format_mention(username, domain);
-
+                let mention = capture.get(0).unwrap().as_str().to_string();
                 if let Ok(actor) = actor_result {
                     // Create a new ActivityPub tag object
-                    let tag = Tag {
+                    tags.push(Tag {
                         r#type: "Mention".into(),
                         name: mention.clone(),
                         href: actor.id.clone(),
-                    };
-                    tags.push(tag);
+                    });
 
                     format!(r#"<a href="{}">{}</a>"#, actor.id, mention)
                 } else {
                     mention
                 }
             });
-            *this = output.to_string();
 
-            tags
+            (output.to_string(), tags)
         })
         .await
-        .map_err(|err| error!(error = ?err))
-        .unwrap_or_default()
+        // Log the error and move on
+        // The user will most likely delete and redraft when the mentions don't work
+        .map_err(|err| error!(error = ?err));
+
+        if let Ok((content, tags)) = format_result {
+            *self = content;
+
+            tags
+        } else {
+            Vec::new()
+        }
     }
 }
 

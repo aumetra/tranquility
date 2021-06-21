@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #![warn(clippy::all, clippy::pedantic)]
 #![deny(rust_2018_idioms)]
 #![allow(clippy::doc_markdown, clippy::module_name_repetitions)]
