@@ -19,6 +19,20 @@ pub mod daemon {
     pub const DELETE_INTERVAL: Duration = Duration::from_secs(60);
 }
 
+pub mod regex {
+    use crate::r#const;
+
+    r#const!(USERNAME_BASE: &str = r#"[\w]+"#);
+
+    pub const USERNAME: &str = concat!("^", USERNAME_BASE!(), "$");
+    // Regex101 link (for explaination of the regex): https://regex101.com/r/pyTTsW/1
+    pub const MENTION: &str = concat!(
+        r#"(?:^|\W)@(?P<username>"#,
+        USERNAME_BASE!(),
+        r#")(?:@(?P<domain>[\w\.\-]+[[:alnum:]]+))?"#
+    );
+}
+
 // Default to 5MB
 pub const MAX_BODY_SIZE: u64 = 5 * MB_BYTES;
 pub const MB_BYTES: u64 = 1024_u64.pow(2);

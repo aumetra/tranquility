@@ -17,7 +17,7 @@ use tracing_opentelemetry::OpenTelemetryLayer;
 #[derive(FromArgs)]
 #[argh(description = "An ActivityPub server ^_^")]
 pub struct Opts {
-    #[argh(option, default = "String::from(\"config.toml\")")]
+    #[argh(option, default = "\"config.toml\".into()")]
     /// path to the configuration file (defaults to `config.toml`)
     config: String,
 
