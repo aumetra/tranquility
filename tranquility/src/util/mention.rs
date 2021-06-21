@@ -5,7 +5,6 @@ use {
     },
     async_trait::async_trait,
     regex::{Captures, Match},
-    std::sync::Arc,
     tokio::runtime::Handle,
     tranquility_types::activitypub::{Actor, Object, Tag},
 };
@@ -50,29 +49,6 @@ where
     }
 }
 
-#[inline]
-/// Fetch an actor from the database
-///
-/// Use webfinger if a username and domain is present, search only through local accounts if only a username is present
-async fn fetch_actor(
-    state: &ArcState,
-    username: &str,
-    domain: Option<&str>,
-) -> Result<Actor, Error> {
-    let actor = if let Some(domain) = domain {
-        let (actor, _db_actor) = webfinger::fetch_actor(state, username, domain).await?;
-
-        actor
-    } else {
-        let db_actor = DbActor::by_username_local(&state.db_pool, username).await?;
-        let actor: Actor = serde_json::from_value(db_actor.actor)?;
-
-        actor
-    };
-
-    Ok(actor)
-}
-
 #[async_trait]
 /// Trait for formatting mentions
 
@@ -106,14 +82,26 @@ impl FormatMention for String {
             let mut tags = Vec::new();
 
             let output = MENTION_REGEX.replace_all(text.as_str(), |capture: &Captures<'_>| {
-                let state = Arc::clone(&state);
                 let username = capture.name("username").unwrap().as_str();
                 let domain = capture.name("domain").as_ref().map(Match::as_str);
 
                 // Block until the future has resolved
                 // This is fine because we are inside the `spawn_blocking` context where blocking is allowed
-                let actor_result: Result<Actor, Error> =
-                    handle.block_on(fetch_actor(&state, username, domain));
+                let actor_result: Result<Actor, Error> = handle.block_on(async {
+                    let actor = if let Some(domain) = domain {
+                        let (actor, _db_actor) =
+                            webfinger::fetch_actor(&state, username, domain).await?;
+
+                        actor
+                    } else {
+                        let db_actor = DbActor::by_username_local(&state.db_pool, username).await?;
+                        let actor: Actor = serde_json::from_value(db_actor.actor)?;
+
+                        actor
+                    };
+
+                    Ok(actor)
+                });
 
                 let mention = capture.get(0).unwrap().as_str().to_string();
                 if let Ok(actor) = actor_result {
