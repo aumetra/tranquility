@@ -27,9 +27,9 @@ pub mod regex {
     pub const USERNAME: &str = concat!("^", USERNAME_BASE!(), "$");
     // Regex101 link (for explaination of the regex): https://regex101.com/r/pyTTsW/1
     pub const MENTION: &str = concat!(
-        r#"(?:^|\W)@("#,
+        r#"(?:^|\W)@(?P<username>"#,
         USERNAME_BASE!(),
-        r#")(?:@([\w\.\-]+[[:alnum:]]+))?"#
+        r#")(?:@(?P<domain>[\w\.\-]+[[:alnum:]]+))?"#
     );
 }
 

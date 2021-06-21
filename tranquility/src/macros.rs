@@ -13,9 +13,27 @@ macro_rules! attempt_fetch {
     }};
 }
 
-/// Create a macro to emulate a constant that can be used with the `concat!` macro
+/// Creates a macro to emulate a constant that can be used with the `concat!` macro
 ///
 /// This creates an macro with the name that expands to just the literal as well as an constant with the same value for type enforcement
+///
+/// ```
+/// r#const!(TEST: &str = "test");
+/// ```
+///
+/// expands to
+///
+/// ```
+/// macro_rules! TEST {
+///     () => {
+///         "test"
+///     };
+/// }
+///
+/// #[doc(hidden)]
+/// #[allow(dead_code)]
+/// const TEST: &str = TEST!();
+/// ```
 #[macro_export]
 macro_rules! r#const {
     ($ident:ident: $type:ty = $val:literal) => {
@@ -27,7 +45,7 @@ macro_rules! r#const {
 
         #[doc(hidden)]
         #[allow(dead_code)]
-        const $ident: $type = $val;
+        const $ident: $type = $ident!();
     };
 }
 

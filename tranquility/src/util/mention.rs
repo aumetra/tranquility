@@ -41,8 +41,8 @@ where
         MENTION_REGEX
             .captures_iter(self.as_ref())
             .map(|capture| {
-                let username = capture.get(1).unwrap().as_str();
-                let domain = capture.get(2).as_ref().map(Match::as_str);
+                let username = capture.name("username").unwrap().as_str();
+                let domain = capture.name("domain").as_ref().map(Match::as_str);
 
                 Mention::new(username, domain)
             })
@@ -98,8 +98,8 @@ impl FormatMention for String {
 
             let output = MENTION_REGEX.replace_all(this.as_str(), |capture: &Captures<'_>| {
                 let state = Arc::clone(&state);
-                let username = capture.get(1).unwrap().as_str();
-                let domain = capture.get(2).as_ref().map(Match::as_str);
+                let username = capture.name("username").unwrap().as_str();
+                let domain = capture.name("domain").as_ref().map(Match::as_str);
 
                 // Block until the future has resolved
                 // This is fine because we are inside the `spawn_blocking` context where blocking is allowed
