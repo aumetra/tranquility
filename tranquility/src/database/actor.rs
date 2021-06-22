@@ -32,6 +32,23 @@ pub struct Actor {
 }
 
 impl Actor {
+    /// Get an confirmed actor by their ID
+    pub async fn get(conn_pool: &PgPool, id: Uuid) -> Result<Self, Error> {
+        let actor = sqlx::query_as!(
+            Actor,
+            r#"
+                SELECT * FROM actors
+                WHERE id = $1
+                AND is_confirmed = TRUE
+            "#,
+            id
+        )
+        .fetch_one(conn_pool)
+        .await?;
+
+        Ok(actor)
+    }
+
     /// Get an actor by their URL
     pub async fn by_url(conn_pool: &PgPool, url: &str) -> Result<Self, Error> {
         let actor = sqlx::query_as!(

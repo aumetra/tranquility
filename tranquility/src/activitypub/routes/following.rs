@@ -5,7 +5,6 @@ use {
         database::Actor as DbActor, format_uuid, map_err, state::ArcState,
     },
     itertools::Itertools,
-    ormx::Table,
     tranquility_types::activitypub::{
         collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
     },

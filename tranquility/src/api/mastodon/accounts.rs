@@ -6,7 +6,6 @@ use {
         format_uuid, map_err,
         state::ArcState,
     },
-    ormx::Table,
     tranquility_types::{
         activitypub::Actor,
         mastodon::{Account, FollowResponse, Source},

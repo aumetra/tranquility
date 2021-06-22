@@ -9,7 +9,6 @@ use {
     },
     headers::authorization::{Bearer, Credentials},
     once_cell::sync::Lazy,
-    ormx::Table,
     serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
     warp::{
