@@ -48,7 +48,7 @@ impl Actor {
         Ok(actor)
     }
 
-    /// Get an local actor by their username
+    /// Get an confirmed local actor by their username
     pub async fn by_username_local(conn_pool: &PgPool, username: &str) -> Result<Self, Error> {
         let actor = sqlx::query_as!(
             Actor,
@@ -56,6 +56,7 @@ impl Actor {
                 SELECT * FROM actors
                 WHERE username = $1
                 AND remote = FALSE
+                AND is_confirmed = TRUE
             "#,
             username
         )
