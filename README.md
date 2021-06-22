@@ -1,7 +1,7 @@
 # Tranquility 
 
 [![Checks](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml/badge.svg)](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml)
-[![dependency status](https://deps.rs/repo/github/smallglitch/tranquility/status.svg)](https://deps.rs/repo/github/smallglitch/tranquility)
+[![Dependency status](https://deps.rs/repo/github/smallglitch/tranquility/status.svg)](https://deps.rs/repo/github/smallglitch/tranquility)
 
 Small ActivityPub server written in Rust
 
@@ -21,6 +21,14 @@ Backwards incompatible changes might occur
 Release binaries are built daily for Linux x86 and Linux ARMv7  
 
 [**Nightly tag**](https://github.com/smallglitch/tranquility/releases/tag/nightly)
+
+## Email confirmation
+
+Tranquility can send confirmation emails to users before they can log into their accounts
+
+Compile with the `email` feature to enable it
+
+You also need to configure credentials to a mail server in the configuration file
 
 ## Markdown formatted statuses
 
