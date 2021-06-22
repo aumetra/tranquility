@@ -122,6 +122,8 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
             username: actor.username.clone(),
             email: None,
             password_hash: None,
+            is_confirmed: false,
+            confirmation_code: None,
             actor: actor_value,
             private_key: None,
             remote: true,

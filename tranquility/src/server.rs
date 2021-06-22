@@ -8,11 +8,15 @@ pub async fn run(state: ArcState) {
     let api = crate::api::routes(&state);
     let well_known = crate::well_known::routes(&state);
 
-    let routes = activitypub
-        .or(api)
-        .or(well_known)
-        .with(logging)
-        .recover(crate::error::recover);
+    let routes = activitypub.or(api).or(well_known);
+
+    #[cfg(feature = "email")]
+    let routes = {
+        let email = crate::email::routes(&state);
+        routes.or(email)
+    };
+
+    let routes = routes.with(logging).recover(crate::error::recover);
 
     let server = warp::serve(routes);
 

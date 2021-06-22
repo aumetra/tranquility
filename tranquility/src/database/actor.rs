@@ -18,6 +18,10 @@ pub struct Actor {
     pub password_hash: Option<String>,
     pub private_key: Option<String>,
 
+    pub is_confirmed: bool,
+    #[ormx(get_one(&str))]
+    pub confirmation_code: Option<String>,
+
     pub actor: Value,
     pub remote: bool,
 
