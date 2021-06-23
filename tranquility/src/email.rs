@@ -76,8 +76,9 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
                 confirmation_url
             );
 
+            let from_mailbox = state.config.email.email.parse().unwrap();
             let to_mailbox = user.email.unwrap().parse().unwrap();
-            let message = Message::builder().subject("Account confirmation").to(to_mailbox).body(message_body)?;
+            let message = Message::builder().subject("Account confirmation").from(from_mailbox).to(to_mailbox).body(message_body)?;
 
             let transport = get_transport(&state)?;
             transport.send(message).await?;

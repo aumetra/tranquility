@@ -10,6 +10,8 @@ active = false
 server = "smtp.example.com"
 # Whether STARTTLS should be used or not
 starttls = false
+# Email address of the mail account
+email = "noreply@example.com"
 # Username of the mail account
 username = "tranquility"
 # Password of the mail account

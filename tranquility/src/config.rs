@@ -16,6 +16,7 @@ pub struct ConfigurationEmail {
     pub server: String,
     pub starttls: bool,
 
+    pub email: String,
     pub username: String,
     pub password: String,
 }
