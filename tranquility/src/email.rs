@@ -55,6 +55,10 @@ fn get_transport(state: &ArcState) -> Result<&'static AsyncSmtpTransport, Error>
 }
 
 pub fn send_confirmation(state: &ArcState, mut user: Actor) {
+    if !state.config.email.active {
+        return;
+    }
+
     let state = Arc::clone(&state);
 
     // Spawn off here since we don't want to delay the request processing
