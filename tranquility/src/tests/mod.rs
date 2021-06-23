@@ -32,6 +32,7 @@ fn test_config() -> Configuration {
             active: false,
             server: "smtp.example.com".into(),
             starttls: false,
+            email: "noreply@example.com".into(),
             username: "tranquility".into(),
             password: "tranquility-acct-password".into(),
         },
