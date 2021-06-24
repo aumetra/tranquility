@@ -56,7 +56,7 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
     );
     let actor = map_err!(serde_json::to_value(&actor))?;
 
-    InsertActor {
+    let user = InsertActor {
         id: user_id,
         username: form.username,
         actor,
@@ -64,9 +64,15 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
         password_hash: Some(password_hash),
         private_key: Some(private_key_pem),
         remote: false,
+
+        is_confirmed: true,
+        confirmation_code: None,
     }
     .insert(&state.db_pool)
     .await?;
+
+    #[cfg(feature = "email")]
+    crate::email::send_confirmation(&state, user);
 
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }

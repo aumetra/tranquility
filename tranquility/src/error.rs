@@ -24,13 +24,13 @@ pub enum Error {
     #[error("argon2 operation failed")]
     Argon2(#[from] Argon2Error),
 
-    #[error("Template formatting failed")]
+    #[error("Template formatting failed: {0}")]
     Askama(#[from] AskamaError),
 
     #[error("Remote content fetch failed")]
     Fetch,
 
-    #[error("HTTP signature operation failed")]
+    #[error("HTTP signature operation failed: {0}")]
     HttpSignatures(#[from] HttpSignaturesError),
 
     #[error("Invalid request")]
@@ -42,22 +42,22 @@ pub enum Error {
     #[error("Unauthorized")]
     Unauthorized,
 
-    #[error("reqwest operation failed")]
+    #[error("reqwest operation failed: {0}")]
     Reqwest(#[from] ReqwestError),
 
-    #[error("Invalid reqwest HeaderValue")]
+    #[error("Invalid reqwest HeaderValue: {0}")]
     ReqwestInvalidHeaderValue(#[from] ReqwestInvalidHeaderValue),
 
-    #[error("RSA operation failed")]
+    #[error("RSA operation failed: {0}")]
     Rsa(#[from] RsaError),
 
-    #[error("Database operation failed")]
+    #[error("Database operation failed: {0}")]
     Sqlx(#[from] SqlxError),
 
-    #[error("Database migration failed")]
+    #[error("Database migration failed: {0}")]
     SqlxMigration(#[from] SqlxMigrationError),
 
-    #[error("serde-json operation failed")]
+    #[error("serde-json operation failed: {0}")]
     SerdeJson(#[from] SerdeJsonError),
 
     #[error("Unexpected webfinger resource")]
@@ -66,10 +66,10 @@ pub enum Error {
     #[error("Unknown activity")]
     UnknownActivity,
 
-    #[error("URL couldn't be parsed")]
+    #[error("URL couldn't be parsed: {0}")]
     UrlParse(#[from] UrlParseError),
 
-    #[error("UUID operation failed")]
+    #[error("UUID operation failed: {0}")]
     Uuid(#[from] UuidError),
 
     #[error("Validation error")]

@@ -36,6 +36,10 @@ mod consts;
 mod crypto;
 mod daemon;
 mod database;
+
+#[cfg(feature = "email")]
+mod email;
+
 mod error;
 mod macros;
 mod server;

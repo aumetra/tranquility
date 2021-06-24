@@ -2,8 +2,8 @@ use {
     crate::{
         activitypub::FollowActivity,
         config::{
-            Configuration, ConfigurationInstance, ConfigurationRatelimit, ConfigurationServer,
-            ConfigurationTls,
+            Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationRatelimit,
+            ConfigurationServer, ConfigurationTls,
         },
         state::State,
     },
@@ -28,6 +28,14 @@ const FOLLOW_ACTIVITY: &str = r#"
 
 fn test_config() -> Configuration {
     Configuration {
+        email: ConfigurationEmail {
+            active: false,
+            server: "smtp.example.com".into(),
+            starttls: false,
+            email: "noreply@example.com".into(),
+            username: "tranquility".into(),
+            password: "tranquility-acct-password".into(),
+        },
         instance: ConfigurationInstance {
             closed_registrations: false,
             domain: "tranquility.example.com".into(),

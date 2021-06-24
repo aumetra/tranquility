@@ -27,7 +27,7 @@ cfg_if! {
 
         impl ParseMarkdown for tranquility_types::activitypub::Object {
             fn parse_markdown(&mut self) {
-                use markdown::{html, Options, Parser};
+                use pulldown_cmark::{html, Options, Parser};
 
                 let content = self.content.clone();
                 let parser = Parser::new_ext(&content, Options::all());

@@ -5,7 +5,6 @@ use {
         state::ArcState,
     },
     itertools::Itertools,
-    ormx::Table,
     std::ops::Not,
     tranquility_types::activitypub::{
         collection::Item, Activity, Actor, Collection, IsPrivate,

@@ -33,7 +33,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --features jaeger,markdown
+          args: --release --features email,jaeger,markdown
 
       - shell: bash
         run: strip target/release/tranquility

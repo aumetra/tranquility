@@ -1,5 +1,85 @@
 {
   "db": "PostgreSQL",
+  "0943f94731e1c4d897a22e82531ec0047e206db6fcbe803e6d4ae9d4172e90e6": {
+    "query": "SELECT id, username, email, password_hash, private_key, is_confirmed, confirmation_code, actor, remote, created_at, updated_at FROM actors WHERE confirmation_code = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 6,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 10,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "0b65b47aadbb3375bf04a73e311cc456040dc3351c1b9ab4aee67acff702cc35": {
     "query": "\n            SELECT * FROM objects\n            WHERE data->>'type' = 'Follow'\n            AND owner_id = $1\n            AND created_at < $2\n            LIMIT $3\n        ",
     "describe": {
@@ -92,38 +172,6 @@
       ]
     }
   },
-  "1d2ccbf155299448d06c2a44889610e4a7198e2b4e6bb340fc61f646671aca83": {
-    "query": "INSERT INTO actors (id, username, email, password_hash, private_key, actor, remote) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING created_at, updated_at",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 1,
-          "name": "updated_at",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Jsonb",
-          "Bool"
-        ]
-      },
-      "nullable": [
-        false,
-        false
-      ]
-    }
-  },
   "21b3164aa7c6a6d73d7d30f8a9588b1be167ee2d261116a9fc1b81c23fe5a167": {
     "query": "UPDATE oauth_applications SET client_name = $1, client_id = $2, client_secret = $3, redirect_uris = $4, scopes = $5, website = $6, created_at = $7, updated_at = $8 WHERE id = $9",
     "describe": {
@@ -142,6 +190,84 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "230a5a7aa0a4cdcd9c41d6ba9c3733304164a7130733cef5fcce63e4b8339087": {
+    "query": "SELECT id, username, email, password_hash, private_key, is_confirmed, confirmation_code, actor, remote, created_at, updated_at FROM actors",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 6,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 10,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
     }
   },
   "2702cc4e0672b2c582a9b8948bd14b4e09a6a2dd3a60f11e12cf0fe54214517f": {
@@ -200,72 +326,6 @@
       ]
     }
   },
-  "2c478d1291a84ac8f58fa85aff5c4bb46cc7ed60d6b264ef003b44905477927b": {
-    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "remote",
-          "type_info": "Bool"
-        },
-        {
-          "ordinal": 7,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 8,
-          "name": "updated_at",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": []
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "2db11cd7547b378a0424d5c2671a72ae9043dc07f46a90f84bb9eb2bfc2f2a19": {
     "query": "\n                SELECT * FROM actors\n                WHERE actor->>'id' = $1\n            ",
     "describe": {
@@ -314,6 +374,16 @@
           "ordinal": 8,
           "name": "remote",
           "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 10,
+          "name": "confirmation_code",
+          "type_info": "Text"
         }
       ],
       "parameters": {
@@ -330,7 +400,9 @@
         false,
         false,
         false,
-        false
+        false,
+        false,
+        true
       ]
     }
   },
@@ -366,6 +438,86 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "3eca0aea773abeece87f0fa4d12409971a553c5bbcc8cc7c3700290155670326": {
+    "query": "\n                SELECT * FROM actors\n                WHERE username = $1\n                AND remote = FALSE\n                AND is_confirmed = TRUE\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 10,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
       ]
     }
   },
@@ -465,74 +617,6 @@
       ]
     }
   },
-  "51aaa43171f2a3e02ca9054207f669aa07a53c1a3993d722836c891df5507dcf": {
-    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors WHERE email = $1",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "remote",
-          "type_info": "Bool"
-        },
-        {
-          "ordinal": 7,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 8,
-          "name": "updated_at",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "53a810cc3387d1a46ad3002269cec5df30f710af3b11f1936df36641cf7e3d05": {
     "query": "\n                SELECT * FROM objects\n                WHERE data->>'type' = $1\n                AND data->>'object' = $2\n\n                ORDER BY created_at DESC\n                LIMIT $3\n                OFFSET $4\n            ",
     "describe": {
@@ -573,6 +657,87 @@
       },
       "nullable": [
         false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "5af56c6e0dca88fcb84bfcb5736a4e8021ee598a81faf842e4864326ba1fe843": {
+    "query": "SELECT id, username, email, password_hash, private_key, is_confirmed, confirmation_code, actor, remote, created_at, updated_at FROM actors LIMIT $1 OFFSET $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 6,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 10,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
         false,
         false,
         false,
@@ -672,6 +837,86 @@
       ]
     }
   },
+  "65f4797b000b954f7cdeb61783d0c63f6e53e0e7a8a8046299f00b6f0388c6c0": {
+    "query": "SELECT id, username, email, password_hash, private_key, is_confirmed, confirmation_code, actor, remote, created_at, updated_at FROM actors WHERE email = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 6,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 10,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "6f1e5d6f4ff10793b6b3311118870b26a6d780bb3248a838d53d799d2831822e": {
     "query": "INSERT INTO objects (id, owner_id, data) VALUES ($1, $2, $3) RETURNING created_at, updated_at",
     "describe": {
@@ -697,6 +942,86 @@
       "nullable": [
         false,
         false
+      ]
+    }
+  },
+  "709c65bc5104dc560af35bdbc366479ff40776742ab28cca59eeb10240cd016e": {
+    "query": "\n                SELECT * FROM actors\n                WHERE id = $1\n                AND is_confirmed = TRUE\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "email",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "password_hash",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "private_key",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 5,
+          "name": "actor",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 8,
+          "name": "remote",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 9,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 10,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
       ]
     }
   },
@@ -732,6 +1057,28 @@
       "nullable": []
     }
   },
+  "7b38fc33175a63a427b63cec3fe1b4f35aa0e7310e5b961fdbc813ff9db2715b": {
+    "query": "UPDATE actors SET username = $1, email = $2, password_hash = $3, private_key = $4, is_confirmed = $5, confirmation_code = $6, actor = $7, remote = $8, created_at = $9, updated_at = $10 WHERE id = $11",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Bool",
+          "Text",
+          "Jsonb",
+          "Bool",
+          "Timestamptz",
+          "Timestamptz",
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "7c47c607f32395d9b5b5382b19268c4687b49c48cee05b073ab35eb08c8fa6a3": {
     "query": "DELETE FROM objects WHERE id = $1",
     "describe": {
@@ -742,6 +1089,40 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "7f349841d45ee0759af31cb1aba5be7312c05b8be7ad04026631afd0966eaae1": {
+    "query": "INSERT INTO actors (id, username, email, password_hash, private_key, is_confirmed, confirmation_code, actor, remote) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING created_at, updated_at",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 1,
+          "name": "updated_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Bool",
+          "Text",
+          "Jsonb",
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
     }
   },
   "7fbe449d281c0fb6bb5215e20c08afb195f6335d31698825af99a0408d4fadae": {
@@ -916,8 +1297,8 @@
       "nullable": []
     }
   },
-  "a6fc90ede9ce41d33b89c32844bb530105461df2a3449f2d44bc2a888dd2b4da": {
-    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors WHERE id = $1",
+  "a343fe8f988f7caedb74b73666ed78b9e2f201462bb3a34f15fe43323dd5454c": {
+    "query": "SELECT id, username, email, password_hash, private_key, is_confirmed, confirmation_code, actor, remote, created_at, updated_at FROM actors WHERE id = $1",
     "describe": {
       "columns": [
         {
@@ -947,21 +1328,31 @@
         },
         {
           "ordinal": 5,
+          "name": "is_confirmed",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 6,
+          "name": "confirmation_code",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 7,
           "name": "actor",
           "type_info": "Jsonb"
         },
         {
-          "ordinal": 6,
+          "ordinal": 8,
           "name": "remote",
           "type_info": "Bool"
         },
         {
-          "ordinal": 7,
+          "ordinal": 9,
           "name": "created_at",
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 8,
+          "ordinal": 10,
           "name": "updated_at",
           "type_info": "Timestamptz"
         }
@@ -976,6 +1367,8 @@
         false,
         true,
         true,
+        true,
+        false,
         true,
         false,
         false,
@@ -1022,74 +1415,6 @@
       },
       "nullable": [
         false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
-  "b0d198bb0ec49b5d9b47f3451c0ecf5898091c63206b1bcb2249c702bb4eefc0": {
-    "query": "\n                SELECT * FROM actors\n                WHERE username = $1\n                AND remote = FALSE\n            ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 7,
-          "name": "updated_at",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 8,
-          "name": "remote",
-          "type_info": "Bool"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
         false,
         false,
         false,
@@ -1858,75 +2183,6 @@
       ]
     }
   },
-  "fb06195fdd1e6c2682b1a4ee04b88d65b5711acd43d906f623d3378d92701c9d": {
-    "query": "SELECT id, username, email, password_hash, private_key, actor, remote, created_at, updated_at FROM actors LIMIT $1 OFFSET $2",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "username",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "email",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "password_hash",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "private_key",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 5,
-          "name": "actor",
-          "type_info": "Jsonb"
-        },
-        {
-          "ordinal": 6,
-          "name": "remote",
-          "type_info": "Bool"
-        },
-        {
-          "ordinal": 7,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 8,
-          "name": "updated_at",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Int8"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "fce63cd96eded0bfc83855c86d0faf7877a2fb4fa0fa6bb47191efc275e79197": {
     "query": "SELECT id, application_id, actor_id, code, valid_until, created_at, updated_at FROM oauth_authorizations LIMIT $1 OFFSET $2",
     "describe": {
@@ -1982,26 +2238,6 @@
         false,
         false
       ]
-    }
-  },
-  "fda3c1f0dca517085eabfaf2508ed22472920b886f5046db97f4e35e2b013129": {
-    "query": "UPDATE actors SET username = $1, email = $2, password_hash = $3, private_key = $4, actor = $5, remote = $6, created_at = $7, updated_at = $8 WHERE id = $9",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Jsonb",
-          "Bool",
-          "Timestamptz",
-          "Timestamptz",
-          "Uuid"
-        ]
-      },
-      "nullable": []
     }
   }
 }
