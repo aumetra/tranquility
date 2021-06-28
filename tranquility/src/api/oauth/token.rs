@@ -1,6 +1,7 @@
 use {
     super::TokenTemplate,
     crate::{
+        consts::oauth::DISPLAY_REDIRECT_URI,
         crypto::password,
         database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
@@ -18,14 +19,14 @@ use {
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
 /// Form for password grant authorisation flows
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct FormPasswordGrant {
     username: String,
     password: String,
 }
 
 /// Form for code grant authorisation flows
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct FormCodeGrant {
     client_id: Uuid,
     client_secret: String,
@@ -34,7 +35,7 @@ struct FormCodeGrant {
     code: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(untagged)]
 #[non_exhaustive]
 enum FormData {
@@ -42,7 +43,7 @@ enum FormData {
     PasswordGrant(FormPasswordGrant),
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Form {
     grant_type: String,
 
@@ -68,13 +69,13 @@ impl FormData {
     }
 }
 
-/// Serialisable struct for responding to an access token request
-#[derive(Serialize)]
-struct AccessTokenResponse {
-    access_token: String,
-    token_type: String,
-    scope: String,
-    created_at: i64,
+/// De-/Serialisable struct for responding to an access token request
+#[derive(Deserialize, Serialize)]
+pub struct AccessTokenResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub scope: String,
+    pub created_at: i64,
 }
 
 impl Default for AccessTokenResponse {
@@ -121,8 +122,7 @@ async fn code_grant(
     .insert(&state.db_pool)
     .await?;
 
-    // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
-    if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
+    if redirect_uri == DISPLAY_REDIRECT_URI {
         let page = map_err!(TokenTemplate {
             token: access_token.access_token,
         }

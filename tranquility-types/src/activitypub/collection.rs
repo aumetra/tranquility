@@ -3,7 +3,7 @@ use {
     serde_json::Value,
 };
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing an [ActivityStreams collection](https://www.w3.org/TR/activitystreams-core/#collections)
 pub struct Collection {
@@ -25,7 +25,7 @@ pub struct Collection {
     pub ordered_items: Vec<Item>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum Item {
     Activity(super::Activity),

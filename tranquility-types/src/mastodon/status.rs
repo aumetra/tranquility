@@ -3,7 +3,7 @@ use {
     std::boxed::Box,
 };
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing a [Mastodon status](https://docs.joinmastodon.org/entities/status/)
 pub struct Status {
     pub id: String,

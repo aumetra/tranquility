@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing a [Mastodon card](https://docs.joinmastodon.org/entities/card/)
 pub struct Card {
     pub r#type: String,

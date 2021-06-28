@@ -1,6 +1,5 @@
 use {
     crate::{
-        activitypub::FollowActivity,
         config::{
             Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationRatelimit,
             ConfigurationServer, ConfigurationTls,
@@ -11,21 +10,9 @@ use {
     std::env,
 };
 
-const FOLLOW_ACTIVITY: &str = r#"
-{
-    "cc": ["https://www.w3.org/ns/activitystreams#Public"],
-    "id": "https://a.example.com/activities/8dcc256a-8c3f-49ee-ab22-bb51c9082260",
-    "to": ["https://b.example.com/users/test"],
-    "type": "Follow",
-    "actor": "https://a.example.com/users/test",
-    "state": "pending",
-    "object": "https://b.example.com/users/test",
-    "context": "https://a.example.com/contexts/9c3b4420-dd74-454b-8124-c4759b849f3a",
-    "published": "2019-08-20T14:02:09.995388Z",
-    "context_id": 8
-}
-"#;
+const TEST_PASSWORD: &str = "1234567.";
 
+/// Create a test configuration
 fn test_config() -> Configuration {
     Configuration {
         email: ConfigurationEmail {
@@ -62,6 +49,7 @@ fn test_config() -> Configuration {
     }
 }
 
+/// Migrate the database
 async fn init_db() -> PgPool {
     let conn_url = env::var("TEST_DB_URL").unwrap();
 
@@ -71,6 +59,7 @@ async fn init_db() -> PgPool {
     conn_pool
 }
 
+/// Migrate the database and construct a state (without an `Arc` so the values can be adjusted as needed)
 async fn test_state() -> State {
     let config = test_config();
     let db_pool = init_db().await;
@@ -78,13 +67,9 @@ async fn test_state() -> State {
     State::new_arcless(config, db_pool)
 }
 
-#[test]
-fn decode_follow_activity() {
-    let follow_activity: FollowActivity = serde_json::from_str(FOLLOW_ACTIVITY).unwrap();
-
-    assert_eq!(follow_activity.activity.r#type, "Follow");
-    assert!(!follow_activity.approved);
-}
-
-mod nodeinfo;
+mod follow_activity;
+mod oauth;
 mod register;
+
+#[cfg(feature = "mastodon-api")]
+mod mastodon;

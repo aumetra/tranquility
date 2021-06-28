@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing an [Mastodon account](https://docs.joinmastodon.org/entities/account/)
 pub struct Account {
     pub id: String,
@@ -35,7 +35,7 @@ pub struct Account {
     pub fields: Vec<super::Field>,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing the answer to a successful follow
 pub struct FollowResponse {
     pub id: String,

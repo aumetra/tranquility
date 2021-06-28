@@ -5,7 +5,7 @@ use {
 
 pub type KvPairs = HashMap<String, Option<String>>;
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing a [link object](https://tools.ietf.org/html/rfc7033#section-4.4.4) contained in a JRD object
 pub struct Link {
     pub rel: String,
@@ -23,7 +23,7 @@ pub struct Link {
     pub properties: Option<KvPairs>,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct repesenting an [JSON resource descriptor](https://tools.ietf.org/html/rfc7033#section-4.4)
 pub struct Resource {
     pub subject: String,
