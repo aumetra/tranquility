@@ -8,7 +8,7 @@ build = "build.rs"
 
 [dependencies]
 ammonia = "3.1.2"
-argh = "0.1.4"
+argh = "0.1.5"
 askama = "0.10.5"
 async-trait = "0.1.50"
 base64 = "0.13.0"
