@@ -1,5 +1,4 @@
-# The email configuration part is always required (there is no conditional compilation on the configuration deserialization) 
-# but only active when the server was compiled with the "email" flag enabled
+# The email and jaeger configuration parts are always required, regardless of the enabled features
 #
 # The mail server has to support TLS, either via regular TLS or STARTTLS
 # Using an unencrypted transport is not supported and should not even be used anywhere anymore
@@ -43,6 +42,14 @@ moderators = [ ]
 # Upload limit for profile/header pictures, attachments, etc. in kilobytes
 # Defaults to 2048 (2MB)
 upload-limit = 2048
+
+[jaeger]
+# Activate/Deactivate jaeger functionality
+active = false
+# Host of the jaeger collector
+host = "localhost"
+# Port of the collector accepting the compact thrift protocol
+port = 6831
 
 [ratelimit]
 # Activates ratelimiting for routes responsible for authentication and for the registration endpoint

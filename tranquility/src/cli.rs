@@ -3,6 +3,7 @@
 
 use {
     crate::{
+        config::Configuration,
         consts::PROPER_VERSION,
         state::{ArcState, State},
     },
@@ -21,26 +22,35 @@ pub struct Opts {
     /// path to the configuration file (defaults to `config.toml`)
     config: String,
 
-    #[argh(switch, short = 'V')]
+    #[argh(switch, short = 'v')]
     /// print the version
     version: bool,
 }
 
 /// Initialise the tracing subscriber
-fn init_tracing() {
+fn init_tracing(_config: &Configuration) {
     let subscriber = Registry::default()
         .with(EnvFilter::from_default_env())
         .with(fmt::layer());
 
     #[cfg(feature = "jaeger")]
-    let subscriber = {
-        let jaeger_tracer = opentelemetry_jaeger::new_pipeline()
-            .with_service_name(env!("CARGO_PKG_NAME"))
-            .install_batch(opentelemetry::runtime::Tokio)
-            .unwrap();
+    {
+        if _config.jaeger.active {
+            let host = _config.jaeger.host.as_str();
+            let port = _config.jaeger.port;
 
-        subscriber.with(OpenTelemetryLayer::new(jaeger_tracer))
-    };
+            let jaeger_endpoint = opentelemetry_jaeger::new_pipeline()
+                .with_service_name(env!("CARGO_PKG_NAME"))
+                .with_agent_endpoint((host, port))
+                .install_batch(opentelemetry::runtime::Tokio)
+                .expect("Couldn't install jaeger pipeline");
+
+            subscriber
+                .with(OpenTelemetryLayer::new(jaeger_endpoint))
+                .init();
+            return;
+        }
+    }
 
     subscriber.init();
 }
@@ -56,9 +66,9 @@ pub async fn run() -> ArcState {
         process::exit(0);
     }
 
-    init_tracing();
-
     let config = crate::config::load(options.config).await;
+    init_tracing(&config);
+
     let db_pool = crate::database::connection::init_pool(&config.server.database_url)
         .await
         .expect("Couldn't connect to database");

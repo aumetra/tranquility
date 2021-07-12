@@ -38,6 +38,15 @@ pub struct ConfigurationInstance {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// Struct holding the jaeger specific configuration values
+pub struct ConfigurationJaeger {
+    pub active: bool,
+    pub host: String,
+    pub port: u16,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
 /// Struct holding the ratelimit specific configuration values
 pub struct ConfigurationRatelimit {
     pub active: bool,
@@ -72,6 +81,7 @@ pub struct ConfigurationTls {
 pub struct Configuration {
     pub email: ConfigurationEmail,
     pub instance: ConfigurationInstance,
+    pub jaeger: ConfigurationJaeger,
     pub ratelimit: ConfigurationRatelimit,
     pub server: ConfigurationServer,
     pub tls: ConfigurationTls,
