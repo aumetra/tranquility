@@ -40,6 +40,7 @@ pub struct ConfigurationInstance {
 #[serde(rename_all = "kebab-case")]
 /// Struct holding the jaeger specific configuration values
 pub struct ConfigurationJaeger {
+    pub active: bool,
     pub host: String,
     pub port: u16,
 }

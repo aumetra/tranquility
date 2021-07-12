@@ -44,6 +44,8 @@ moderators = [ ]
 upload-limit = 2048
 
 [jaeger]
+# Activate/Deactivate jaeger functionality
+active = false
 # Host of the jaeger collector
 host = "localhost"
 # Port of the collector accepting the compact thrift protocol

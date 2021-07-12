@@ -8,7 +8,6 @@ use {
         state::{ArcState, State},
     },
     argh::FromArgs,
-    cfg_if::cfg_if,
     std::process,
     tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry},
 };
@@ -34,26 +33,26 @@ fn init_tracing(_config: &Configuration) {
         .with(EnvFilter::from_default_env())
         .with(fmt::layer());
 
-    cfg_if! {
-        if #[cfg(feature = "jaeger")] {
+    #[cfg(feature = "jaeger")]
+    {
+        if _config.jaeger.active {
             let host = _config.jaeger.host.as_str();
             let port = _config.jaeger.port;
 
             let jaeger_endpoint = opentelemetry_jaeger::new_pipeline()
                 .with_service_name(env!("CARGO_PKG_NAME"))
                 .with_agent_endpoint((host, port))
-                .install_batch(opentelemetry::runtime::Tokio);
+                .install_batch(opentelemetry::runtime::Tokio)
+                .expect("Couldn't install jaeger pipeline");
 
-            // Try to connect to the jaeger endpoint
-            // If it works, great. If not, log and move on
-            match jaeger_endpoint {
-                Ok(endpoint) => subscriber.with(OpenTelemetryLayer::new(endpoint)).init(),
-                Err(err) => warn!(error = ?err, "Jaeger exporter couldn't be initialised")
-            }
-        } else {
-            subscriber.init();
+            subscriber
+                .with(OpenTelemetryLayer::new(jaeger_endpoint))
+                .init();
+            return;
         }
     }
+
+    subscriber.init();
 }
 
 /// - Initialises the tracing verbosity levels  
@@ -68,11 +67,11 @@ pub async fn run() -> ArcState {
     }
 
     let config = crate::config::load(options.config).await;
+    init_tracing(&config);
+
     let db_pool = crate::database::connection::init_pool(&config.server.database_url)
         .await
         .expect("Couldn't connect to database");
-
-    init_tracing(&config);
 
     State::new(config, db_pool)
 }

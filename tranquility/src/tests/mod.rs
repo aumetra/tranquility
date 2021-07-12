@@ -45,6 +45,7 @@ fn test_config() -> Configuration {
             moderators: Vec::new(),
         },
         jaeger: ConfigurationJaeger {
+            active: false,
             host: "localhost".into(),
             port: 6831,
         },
