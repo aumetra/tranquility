@@ -2,8 +2,8 @@ use {
     crate::{
         activitypub::FollowActivity,
         config::{
-            Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationRatelimit,
-            ConfigurationServer, ConfigurationTls,
+            Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationJaeger,
+            ConfigurationRatelimit, ConfigurationServer, ConfigurationTls,
         },
         state::State,
     },
@@ -43,6 +43,10 @@ fn test_config() -> Configuration {
             character_limit: 1024,
             upload_limit: 4096,
             moderators: Vec::new(),
+        },
+        jaeger: ConfigurationJaeger {
+            host: "localhost".into(),
+            port: 6831,
         },
         ratelimit: ConfigurationRatelimit {
             active: false,

@@ -2,6 +2,8 @@
 #![warn(clippy::all, clippy::pedantic)]
 #![deny(rust_2018_idioms)]
 #![allow(clippy::doc_markdown, clippy::module_name_repetitions)]
+// Needed because of conditional compilation
+#![allow(clippy::used_underscore_binding)]
 
 #[macro_use]
 extern crate tracing;

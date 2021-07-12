@@ -1,5 +1,5 @@
 // Warnings related to those lints are caused by expanded SQLx code
-#![allow(clippy::used_underscore_binding, clippy::similar_names)]
+#![allow(clippy::similar_names)]
 
 use {
     crate::{error::Error, map_err},
