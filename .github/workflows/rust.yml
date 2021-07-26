@@ -116,12 +116,9 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: actions-rs/cargo@v1
+      - run: ./run_tests.sh
         env:
           TEST_DB_URL: postgres://tranquility:tranquility@localhost:5432/tests
-        with:
-          command: test
-          args: -- --show-output
 
   fmt:
     name: Rustfmt

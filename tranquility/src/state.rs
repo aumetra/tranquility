@@ -6,7 +6,7 @@ use {
     notify::{Event, EventKind, Watcher},
     once_cell::sync::OnceCell,
     sqlx::PgPool,
-    std::{path::Path, sync::Arc},
+    std::{mem, path::Path, sync::Arc},
     tokio::runtime::Handle,
 };
 
@@ -67,17 +67,23 @@ where
         let path = path.clone();
 
         notify::recommended_watcher(move |event| {
+            let _guard = info_span!("configuration_change_event");
+
             // Other events don't really make sense
             match event {
                 Ok(Event {
                     kind: EventKind::Modify(..),
                     ..
                 }) => {
+                    debug!("Configuration changed. Reloading");
+
                     let state = handle.block_on(prepare_state(&path));
                     STATE.get().unwrap().swap(state);
 
                     #[cfg(feature = "email")]
                     crate::email::update_transport();
+
+                    debug!("Configuration reloaded");
                 }
                 Err(err) => warn!(error = ?err, "File watching failed"),
                 _ => (),
@@ -89,12 +95,24 @@ where
     watcher
         .watch(&path, RecursiveMode::NonRecursive)
         .expect("Failed to watch configuration file");
+
+    // Keep the watcher in memory
+    // There's almost certainly a cleaner solution but this will do
+    mem::forget(watcher);
 }
 
 /// Initialise the state from a raw struct
 pub fn init_raw(state: Arc<State>) {
     let state = ArcSwap::new(state);
 
+    // The test binaries share the same global state. If the state is already initialised, just replace it
+    // The tests are supposed to be run sequentially so that one test doesn't override the state of another
+    #[cfg(test)]
+    if let Err(state) = STATE.set(state) {
+        STATE.get().unwrap().swap(state.into_inner());
+    }
+
+    #[cfg(not(test))]
     STATE
         .set(state)
         .map_err(|_| ())
