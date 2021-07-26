@@ -4,11 +4,9 @@ use {
         activitypub::Clean,
         database::{Actor as DbActor, InsertExt, InsertObject},
         limit_body_size, map_err,
-        state::ArcState,
         util::mention::FormatMention,
     },
     serde::Deserialize,
-    std::sync::Arc,
     tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
     warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
 };
@@ -26,11 +24,8 @@ struct CreateForm {
     spoiler_text: String,
 }
 
-async fn create(
-    state: ArcState,
-    author_db: DbActor,
-    form: CreateForm,
-) -> Result<Response, Rejection> {
+async fn create(author_db: DbActor, form: CreateForm) -> Result<Response, Rejection> {
+    let state = crate::state::get();
     if state.config.instance.character_limit < form.status.chars().count() {
         return Ok(
             warp::reply::with_status("Status too long", StatusCode::BAD_REQUEST).into_response(),
@@ -50,7 +45,7 @@ async fn create(
         vec![],
     );
 
-    object.format_mentions(Arc::clone(&state)).await;
+    object.format_mentions().await;
 
     // Parse the markdown if the feature is enabled
     #[cfg(feature = "markdown")]
@@ -77,19 +72,17 @@ async fn create(
         object.cc.clone(),
     );
 
-    crate::activitypub::deliverer::deliver(create_activity, Arc::clone(&state)).await?;
+    crate::activitypub::deliverer::deliver(create_activity).await?;
 
-    let mastodon_status = object.into_mastodon(&state).await?;
+    let mastodon_status = object.into_mastodon().await?;
     Ok(warp::reply::json(&mastodon_status).into_response())
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state_filter = crate::state::filter(state);
-
-    let create_status_logic = state_filter
-        .and(authorisation_required(state))
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let create_status_logic = authorisation_required()
         .and(urlencoded_or_json())
         .and_then(create);
+
     // Limit the body size
     warp::path!("statuses").and(limit_body_size!(create_status_logic))
 }

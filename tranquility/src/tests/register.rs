@@ -1,6 +1,6 @@
 use {
-    super::test_state,
-    std::sync::Arc,
+    super::{init_db, init_state, test_config},
+    crate::state::State,
     warp::{
         hyper::{body, StatusCode},
         Reply,
@@ -9,11 +9,14 @@ use {
 
 #[tokio::test]
 async fn closed_registrations() {
-    let mut state = test_state().await;
-    state.config.instance.closed_registrations = true;
-    let state = Arc::new(state);
+    let mut config = test_config();
+    config.instance.closed_registrations = true;
+    let db_pool = init_db().await;
 
-    let register_endpoint = crate::api::register::routes(&state);
+    let state = State::new(config, db_pool);
+    crate::state::init_raw(state);
+
+    let register_endpoint = crate::api::register::routes();
 
     let test_request = warp::test::request()
         .method("POST")
@@ -30,8 +33,8 @@ async fn closed_registrations() {
 
 #[tokio::test]
 async fn register_endpoint() {
-    let state = Arc::new(test_state().await);
-    let register_endpoint = crate::api::register::routes(&state);
+    init_state().await;
+    let register_endpoint = crate::api::register::routes();
 
     let test_request = warp::test::request()
         .method("POST")
@@ -47,5 +50,5 @@ async fn register_endpoint() {
     assert_eq!(test_response.status(), StatusCode::CREATED);
 
     let body_data = body::to_bytes(test_response.into_body()).await.unwrap();
-    assert_eq!(body_data, b"Account created" as &'static [u8]);
+    assert_eq!(body_data, b"Account created" as &[u8]);
 }

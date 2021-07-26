@@ -1,4 +1,4 @@
-use {super::test_state, std::sync::Arc};
+use super::init_state;
 
 const NODEINFO_21_SCHEMA: &str = r#"
 {
@@ -192,9 +192,9 @@ const NODEINFO_21_SCHEMA: &str = r#"
 
 #[tokio::test]
 async fn nodeinfo() {
-    let state = Arc::new(test_state().await);
+    init_state().await;
 
-    let well_known = crate::well_known::routes(&state);
+    let well_known = crate::well_known::routes();
 
     let response = warp::test::request()
         .path("/.well-known/nodeinfo/2.1")

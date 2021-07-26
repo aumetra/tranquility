@@ -4,7 +4,6 @@ use {
         consts::regex::USERNAME,
         database::{InsertActor, InsertExt},
         limit_body_size, map_err, regex,
-        state::ArcState,
     },
     serde::Deserialize,
     tranquility_ratelimit::{ratelimit, Configuration},
@@ -35,7 +34,8 @@ pub struct RegistrationForm {
     password: String,
 }
 
-async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, Rejection> {
+async fn register(form: RegistrationForm) -> Result<Response, Rejection> {
+    let state = crate::state::get();
     if state.config.instance.closed_registrations {
         return Ok(StatusCode::FORBIDDEN.into_response());
     }
@@ -72,12 +72,13 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
     .await?;
 
     #[cfg(feature = "email")]
-    crate::email::send_confirmation(&state, _user);
+    crate::email::send_confirmation(_user);
 
     Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let state = crate::state::get();
     let active = state.config.ratelimit.active;
     let registration_quota = state.config.ratelimit.registration_quota;
 
@@ -85,13 +86,10 @@ pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = 
         .active(active)
         .burst_quota(registration_quota);
 
-    let state_filter = crate::state::filter(state);
-
     // Ratelimit only the logic
     let ratelimit_wrapper =
         ratelimit!(from_config: ratelimit_config).expect("Couldn't construct ratelimit wrapper");
     let register_logic = warp::post()
-        .and(state_filter)
         .and(warp::body::form())
         .and_then(register)
         .with(ratelimit_wrapper);

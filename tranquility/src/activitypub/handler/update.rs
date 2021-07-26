@@ -3,14 +3,13 @@ use {
         activitypub::{fetcher, Clean},
         database::Actor,
         error::Error,
-        state::ArcState,
     },
     ormx::Table,
     tranquility_types::activitypub::Activity,
     warp::http::StatusCode,
 };
 
-pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Update activities are usually only used to update the actor
     // (For example, when the user changes their bio or display name)
     let ap_actor = activity
@@ -20,8 +19,9 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     ap_actor.clean();
 
     // Fetch the actor (just in case)
-    fetcher::fetch_actor(state, ap_actor.id.as_str()).await?;
+    fetcher::fetch_actor(ap_actor.id.as_str()).await?;
 
+    let state = crate::state::get();
     let mut actor = Actor::by_url(&state.db_pool, ap_actor.id.as_str()).await?;
 
     // Update the actor value

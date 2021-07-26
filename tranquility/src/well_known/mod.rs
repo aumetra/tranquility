@@ -1,10 +1,7 @@
-use {
-    crate::state::ArcState,
-    warp::{Filter, Rejection, Reply},
-};
+use warp::{Filter, Rejection, Reply};
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let routes = nodeinfo::routes(state).or(webfinger::routes(state));
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let routes = nodeinfo::routes().or(webfinger::routes());
 
     warp::path!(".well-known" / ..).and(routes)
 }

@@ -1,6 +1,6 @@
 use {
     crate::{
-        consts::regex::MENTION, database::Actor as DbActor, error::Error, regex, state::ArcState,
+        consts::regex::MENTION, database::Actor as DbActor, error::Error, regex,
         well_known::webfinger,
     },
     async_trait::async_trait,
@@ -54,13 +54,13 @@ where
 
 pub trait FormatMention {
     /// Format the mentions to links
-    async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag>;
+    async fn format_mentions(&mut self) -> Vec<Tag>;
 }
 
 #[async_trait]
 impl FormatMention for Object {
-    async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag> {
-        let tags = self.content.format_mentions(state).await;
+    async fn format_mentions(&mut self) -> Vec<Tag> {
+        let tags = self.content.format_mentions().await;
         self.tag = tags.clone();
 
         tags
@@ -69,7 +69,7 @@ impl FormatMention for Object {
 
 #[async_trait]
 impl FormatMention for String {
-    async fn format_mentions(&mut self, state: ArcState) -> Vec<Tag> {
+    async fn format_mentions(&mut self) -> Vec<Tag> {
         let handle = Handle::current();
         let text = self.clone();
 
@@ -91,11 +91,11 @@ impl FormatMention for String {
                     // If a domain is present, use webfinger
                     // Otherwise query the local accounts
                     let actor = if let Some(domain) = domain {
-                        let (actor, _db_actor) =
-                            webfinger::fetch_actor(&state, username, domain).await?;
+                        let (actor, _db_actor) = webfinger::fetch_actor(username, domain).await?;
 
                         actor
                     } else {
+                        let state = crate::state::get();
                         let db_actor = DbActor::by_username_local(&state.db_pool, username).await?;
                         let actor: Actor = serde_json::from_value(db_actor.actor)?;
 

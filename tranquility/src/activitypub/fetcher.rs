@@ -5,7 +5,6 @@ use {
         database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
         impl_from, impl_into, impl_is_owned_by, map_err,
-        state::ArcState,
         util::HTTP_CLIENT,
     },
     reqwest::IntoUrl,
@@ -34,26 +33,24 @@ impl_is_owned_by!(
 ///
 /// It makes multiple attempts to fetch the entity and decode it into different normalized forms.
 /// If none of the attempts succeed, a `Fetch` error is returned
-#[instrument(skip(state))]
-pub async fn fetch_any(state: &ArcState, url: &str) -> Result<Entity, Error> {
+#[instrument]
+pub async fn fetch_any(url: &str) -> Result<Entity, Error> {
     // Create a custom closure around the `fetch_actor` function
     // Otherwise the pattern in the macro won't match
-    let fetch_actor_fn = |state, url| async move {
-        fetch_actor(state, url)
-            .await
-            .map(|(actor, _db_actor)| actor)
-    };
+    let fetch_actor_fn =
+        |url| async move { fetch_actor(url).await.map(|(actor, _db_actor)| actor) };
 
-    attempt_fetch!(state, url, [fetch_activity, fetch_actor_fn, fetch_object]);
+    attempt_fetch!(url, [fetch_activity, fetch_actor_fn, fetch_object]);
 
     Err(Error::Fetch)
 }
 
 /// Attempt to deserialize the data from the given URL as an ActivityPub activity
-#[instrument(skip(state))]
-pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Error> {
+#[instrument]
+pub async fn fetch_activity(url: &str) -> Result<Activity, Error> {
     debug!("Fetching remote actor...");
 
+    let state = crate::state::get();
     match DbObject::by_url(&state.db_pool, url).await {
         Ok(activity) => return Ok(serde_json::from_value(activity.data)?),
         Err(e) => debug!(
@@ -63,7 +60,7 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
     }
 
     if let Entity::Activity(mut activity) = fetch_entity(url).await? {
-        let (_actor, actor_db) = fetch_actor(state, &activity.actor).await?;
+        let (_actor, actor_db) = fetch_actor(&activity.actor).await?;
         // Normalize the activity
         if let Some(object) = activity.object.as_mut_object() {
             object.clean();
@@ -101,10 +98,11 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
 }
 
 /// Attempt to deserialize the data from the given URL as an ActivityPub actor
-#[instrument(skip(state))]
-pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor), Error> {
+#[instrument]
+pub async fn fetch_actor(url: &str) -> Result<(Actor, DbActor), Error> {
     debug!("Fetching remote actor...");
 
+    let state = crate::state::get();
     match DbActor::by_url(&state.db_pool, url).await {
         Ok(actor) => return Ok((serde_json::from_value(actor.actor.clone())?, actor)),
         Err(e) => debug!(
@@ -140,10 +138,11 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
 }
 
 /// Attempt to deserialize the data from the given URL as an ActivityPub object
-#[instrument(skip(state))]
-pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> {
+#[instrument]
+pub async fn fetch_object(url: &str) -> Result<Object, Error> {
     debug!("Fetching remote object...");
 
+    let state = crate::state::get();
     match DbObject::by_url(&state.db_pool, url).await {
         Ok(object) => return Ok(serde_json::from_value(object.data)?),
         Err(e) => debug!(
@@ -155,7 +154,7 @@ pub async fn fetch_object(state: &ArcState, url: &str) -> Result<Object, Error> 
     if let Entity::Object(mut object) = fetch_entity(url).await? {
         object.clean();
 
-        let (_actor, actor_db) = fetch_actor(state, &object.attributed_to).await?;
+        let (_actor, actor_db) = fetch_actor(&object.attributed_to).await?;
         let object_value = serde_json::to_value(&object)?;
 
         InsertObject {

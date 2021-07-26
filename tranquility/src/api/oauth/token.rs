@@ -5,7 +5,6 @@ use {
         database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
         map_err,
-        state::ArcState,
     },
     askama::Template,
     chrono::Duration,
@@ -90,7 +89,6 @@ impl Default for AccessTokenResponse {
 }
 
 async fn code_grant(
-    state: &ArcState,
     FormCodeGrant {
         client_id,
         client_secret,
@@ -99,6 +97,7 @@ async fn code_grant(
         ..
     }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
+    let state = crate::state::get();
     let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &client_id).await)?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
@@ -141,11 +140,11 @@ async fn code_grant(
 }
 
 async fn password_grant(
-    state: &ArcState,
     FormPasswordGrant {
         username, password, ..
     }: FormPasswordGrant,
 ) -> Result<impl Reply, Rejection> {
+    let state = crate::state::get();
     let actor = Actor::by_username_local(&state.db_pool, username.as_str()).await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
@@ -175,15 +174,15 @@ async fn password_grant(
     Ok(warp::reply::json(&response))
 }
 
-pub async fn token(state: ArcState, form: Form) -> Result<Response, Rejection> {
+pub async fn token(form: Form) -> Result<Response, Rejection> {
     let response = match form.grant_type.as_str() {
         "authorization_code" => {
             let form_data = form.data.code_grant()?;
-            code_grant(&state, form_data).await?.into_response()
+            code_grant(form_data).await?.into_response()
         }
         "password" => {
             let form_data = form.data.password_grant()?;
-            password_grant(&state, form_data).await?.into_response()
+            password_grant(form_data).await?.into_response()
         }
         _ => return Err(Error::InvalidRequest.into()),
     };

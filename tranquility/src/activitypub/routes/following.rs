@@ -2,7 +2,7 @@ use {
     super::CollectionQuery,
     crate::{
         activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE,
-        database::Actor as DbActor, format_uuid, map_err, state::ArcState,
+        database::Actor as DbActor, format_uuid, map_err,
     },
     itertools::Itertools,
     tranquility_types::activitypub::{
@@ -12,11 +12,9 @@ use {
     warp::{Rejection, Reply},
 };
 
-pub async fn following(
-    user_id: Uuid,
-    state: ArcState,
-    query: CollectionQuery,
-) -> Result<impl Reply, Rejection> {
+pub async fn following(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply, Rejection> {
+    let state = crate::state::get();
+
     let latest_follow_activities = crate::database::follow::following(
         &state.db_pool,
         user_id,

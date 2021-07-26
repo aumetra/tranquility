@@ -3,15 +3,13 @@ use {
         activitypub::{self, deliverer, fetcher, FollowActivity},
         database::{Actor, InsertExt, InsertObject},
         error::Error,
-        state::ArcState,
     },
-    std::sync::Arc,
     tranquility_types::activitypub::{activity::ObjectField, Activity},
     uuid::Uuid,
     warp::http::StatusCode,
 };
 
-pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     let actor_url = match activity.object {
         ObjectField::Actor(ref actor) => actor.id.as_str(),
         ObjectField::Url(ref url) => url.as_str(),
@@ -19,7 +17,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     };
 
     // Fetch the actor (just in case)
-    let (actor, actor_db) = fetcher::fetch_actor(state, actor_url).await?;
+    let (actor, actor_db) = fetcher::fetch_actor(actor_url).await?;
 
     // Normalize the activity
     if let ObjectField::Actor(actor) = activity.object {
@@ -33,6 +31,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
     };
     let activity = serde_json::to_value(&follow_activity)?;
 
+    let state = crate::state::get();
     InsertObject {
         id: Uuid::new_v4(),
         owner_id: actor_db.id,
@@ -64,7 +63,7 @@ pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCo
         .insert(&state.db_pool)
         .await?;
 
-        deliverer::deliver(accept_activity, Arc::clone(state)).await?;
+        deliverer::deliver(accept_activity).await?;
     }
 
     Ok(StatusCode::CREATED)

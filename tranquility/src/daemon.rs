@@ -1,20 +1,9 @@
-use {
-    crate::{consts::daemon::DELETE_INTERVAL, database::OAuthAuthorization, state::ArcState},
-    std::{future::Future, sync::Arc},
-    tokio::time,
-};
-
-// Keeping this for future use
-#[allow(dead_code)]
-fn bulk_spawn(futures: Vec<impl Future<Output = ()> + Send + Sync + 'static>) {
-    for future in futures {
-        tokio::spawn(future);
-    }
-}
+use crate::{consts::daemon::DELETE_INTERVAL, database::OAuthAuthorization};
 
 /// Delete all expired authorisation codes from the database
-async fn delete_expired_authorisation_codes(state: ArcState) {
-    let mut query_interval = time::interval(DELETE_INTERVAL);
+async fn delete_expired_authorisation_codes() {
+    let state = crate::state::get_full();
+    let mut query_interval = tokio::time::interval(DELETE_INTERVAL);
 
     loop {
         match OAuthAuthorization::delete_expired(&state.db_pool).await {
@@ -26,8 +15,6 @@ async fn delete_expired_authorisation_codes(state: ArcState) {
     }
 }
 
-pub fn start(state: &ArcState) {
-    let state = Arc::clone(state);
-
-    tokio::spawn(delete_expired_authorisation_codes(state));
+pub fn start() {
+    tokio::spawn(delete_expired_authorisation_codes());
 }

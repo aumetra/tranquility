@@ -2,11 +2,7 @@
 #![allow(clippy::default_trait_access)]
 
 use {
-    crate::{
-        config::Configuration,
-        consts::PROPER_VERSION,
-        state::{ArcState, State},
-    },
+    crate::consts::PROPER_VERSION,
     argh::FromArgs,
     std::process,
     tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry},
@@ -28,16 +24,19 @@ pub struct Opts {
 }
 
 /// Initialise the tracing subscriber
-fn init_tracing(_config: &Configuration) {
+fn init_tracing() {
     let subscriber = Registry::default()
         .with(EnvFilter::from_default_env())
         .with(fmt::layer());
 
     #[cfg(feature = "jaeger")]
     {
-        if _config.jaeger.active {
-            let host = _config.jaeger.host.as_str();
-            let port = _config.jaeger.port;
+        let state = crate::state::get();
+        let config = &state.config;
+
+        if config.jaeger.active {
+            let host = config.jaeger.host.as_str();
+            let port = config.jaeger.port;
 
             let jaeger_endpoint = opentelemetry_jaeger::new_pipeline()
                 .with_service_name(env!("CARGO_PKG_NAME"))
@@ -58,7 +57,7 @@ fn init_tracing(_config: &Configuration) {
 /// - Initialises the tracing verbosity levels  
 /// - Creates a database connection pool  
 /// - Returns a constructed state  
-pub async fn run() -> ArcState {
+pub async fn run() {
     let options = argh::from_env::<Opts>();
 
     if options.version {
@@ -66,12 +65,6 @@ pub async fn run() -> ArcState {
         process::exit(0);
     }
 
-    let config = crate::config::load(options.config).await;
-    init_tracing(&config);
-
-    let db_pool = crate::database::connection::init_pool(&config.server.database_url)
-        .await
-        .expect("Couldn't connect to database");
-
-    State::new(config, db_pool)
+    crate::state::init(options.config).await;
+    init_tracing();
 }

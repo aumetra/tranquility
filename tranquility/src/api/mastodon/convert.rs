@@ -3,7 +3,6 @@ use {
         database::{Actor as DbActor, OAuthApplication, Object as DbObject},
         error::Error,
         format_uuid,
-        state::ArcState,
     },
     async_trait::async_trait,
     itertools::Itertools,
@@ -26,14 +25,14 @@ where
     type Error: Into<Rejection>;
 
     /// Convert the object into an Mastodon API entity
-    async fn into_mastodon(self, state: &ArcState) -> Result<ApiEntity, Self::Error>;
+    async fn into_mastodon(self) -> Result<ApiEntity, Self::Error>;
 }
 
 #[async_trait]
 impl IntoMastodon<Account> for DbActor {
     type Error = Error;
 
-    async fn into_mastodon(self, _state: &ArcState) -> Result<Account, Self::Error> {
+    async fn into_mastodon(self) -> Result<Account, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
 
         let id = format_uuid!(self.id);
@@ -85,7 +84,7 @@ impl IntoMastodon<Account> for DbActor {
 impl IntoMastodon<Source> for DbActor {
     type Error = Error;
 
-    async fn into_mastodon(self, _state: &ArcState) -> Result<Source, Self::Error> {
+    async fn into_mastodon(self) -> Result<Source, Self::Error> {
         let actor: Actor = serde_json::from_value(self.actor)?;
 
         let source = Source {
@@ -105,10 +104,10 @@ impl IntoMastodon<Source> for DbActor {
 impl IntoMastodon<Status> for DbObject {
     type Error = Error;
 
-    async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
+    async fn into_mastodon(self) -> Result<Status, Self::Error> {
         let activity_or_object: Object = serde_json::from_value(self.data)?;
 
-        activity_or_object.into_mastodon(state).await
+        activity_or_object.into_mastodon().await
     }
 }
 
@@ -116,7 +115,7 @@ impl IntoMastodon<Status> for DbObject {
 impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
     type Error = Error;
 
-    async fn into_mastodon(self, state: &ArcState) -> Result<Vec<Account>, Self::Error> {
+    async fn into_mastodon(self) -> Result<Vec<Account>, Self::Error> {
         let db_to_url = |object: DbObject| {
             let activity: Activity = match serde_json::from_value(object.data) {
                 Ok(activity) => activity,
@@ -130,8 +129,9 @@ impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
         };
 
         let fetch_account_fn = |url: String| async move {
+            let state = crate::state::get();
             let account = DbActor::by_url(&state.db_pool, url.as_str()).await?;
-            let account: Account = account.into_mastodon(state).await?;
+            let account: Account = account.into_mastodon().await?;
 
             Ok::<_, Error>(account)
         };
@@ -152,7 +152,7 @@ impl IntoMastodon<Vec<Account>> for Vec<DbObject> {
 impl IntoMastodon<App> for OAuthApplication {
     type Error = Error;
 
-    async fn into_mastodon(self, _state: &ArcState) -> Result<App, Self::Error> {
+    async fn into_mastodon(self) -> Result<App, Self::Error> {
         let id = format_uuid!(self.id);
         let client_id = format_uuid!(self.client_id);
         let website = if self.website.is_empty() {
@@ -179,14 +179,15 @@ impl IntoMastodon<App> for OAuthApplication {
 impl IntoMastodon<Status> for Object {
     type Error = Error;
 
-    async fn into_mastodon(self, state: &ArcState) -> Result<Status, Self::Error> {
+    async fn into_mastodon(self) -> Result<Status, Self::Error> {
+        let state = crate::state::get();
         let db_object = DbObject::by_url(&state.db_pool, self.id.as_str()).await?;
         let (_actor, db_actor) =
-            crate::activitypub::fetcher::fetch_actor(state, self.attributed_to.as_str()).await?;
+            crate::activitypub::fetcher::fetch_actor(self.attributed_to.as_str()).await?;
 
         let id = format_uuid!(db_object.id);
         let application = super::DEFAULT_APPLICATION.clone();
-        let account = db_actor.into_mastodon(state).await?;
+        let account = db_actor.into_mastodon().await?;
 
         let status = Status {
             id,

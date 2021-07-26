@@ -1,8 +1,5 @@
 use {
-    crate::{
-        crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState,
-        util::HTTP_CLIENT,
-    },
+    crate::{crypto, database::Actor as DbActor, error::Error, map_err, util::HTTP_CLIENT},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -18,19 +15,17 @@ struct DeliveryData {
     author: Actor,
     author_db: DbActor,
     activity: Activity,
-    state: ArcState,
 }
 
 impl DeliveryData {
-    async fn new(activity: Activity, state: ArcState) -> Result<Arc<Self>, Error> {
+    async fn new(activity: Activity) -> Result<Arc<Self>, Error> {
         let (author, author_db) =
-            crate::activitypub::fetcher::fetch_actor(&state, activity.actor.as_str()).await?;
+            crate::activitypub::fetcher::fetch_actor(activity.actor.as_str()).await?;
 
         let delivery_data = DeliveryData {
             author,
             author_db,
             activity,
-            state,
         };
 
         Ok(Arc::new(delivery_data))
@@ -105,11 +100,13 @@ async fn prepare_request(
 
 /// Resolve the follow collections and the actor URL to inbox URLs
 async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<String>, Error> {
+    let state = crate::state::get();
+
     // Check if the current URL is the user's follower collection
     if delivery_data.author.followers == url {
         // Get the inbox URLs of all the followers
         let inbox_urls = crate::database::inbox_urls::resolve_followers(
-            &delivery_data.state.db_pool,
+            &state.db_pool,
             delivery_data.author.id.as_str(),
         )
         .await?;
@@ -118,8 +115,7 @@ async fn resolve_url(delivery_data: &DeliveryData, url: String) -> Result<Vec<St
     } else {
         // Get the inbox URL of the requested user
         let inbox_url =
-            crate::database::inbox_urls::resolve_one(&delivery_data.state.db_pool, url.as_str())
-                .await?;
+            crate::database::inbox_urls::resolve_one(&state.db_pool, url.as_str()).await?;
 
         Ok(vec![inbox_url])
     }
@@ -156,8 +152,8 @@ async fn get_recipient_list(delivery_data: &DeliveryData) -> Result<Vec<String>,
 }
 
 /// Deliver an activity to the specified user (groups)
-pub async fn deliver(activity: Activity, state: ArcState) -> Result<(), Error> {
-    let delivery_data = DeliveryData::new(activity, state).await?;
+pub async fn deliver(activity: Activity) -> Result<(), Error> {
+    let delivery_data = DeliveryData::new(activity).await?;
 
     tokio::spawn(async move {
         let recipient_list = match get_recipient_list(&delivery_data).await {

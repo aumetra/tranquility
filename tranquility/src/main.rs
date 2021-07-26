@@ -20,14 +20,10 @@ cfg_if::cfg_if! {
 
 #[tokio::main]
 async fn main() {
-    let state = cli::run().await;
+    cli::run().await;
+    daemon::start();
 
-    database::migrate(&state.db_pool)
-        .await
-        .expect("Database migration failed");
-    daemon::start(&state);
-
-    server::run(state).await;
+    server::run().await;
 }
 
 mod activitypub;

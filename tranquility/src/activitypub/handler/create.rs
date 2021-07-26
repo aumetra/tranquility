@@ -3,21 +3,21 @@ use {
         activitypub::{fetcher, Clean},
         database::{InsertExt, InsertObject},
         error::Error,
-        state::ArcState,
     },
     tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
     uuid::Uuid,
     warp::http::StatusCode,
 };
 
-async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, Error> {
-    let (_owner, owner_db) = fetcher::fetch_actor(state, &activity.actor).await?;
+async fn insert_object(activity: &Activity) -> Result<Object, Error> {
+    let (_owner, owner_db) = fetcher::fetch_actor(&activity.actor).await?;
 
     let mut object = activity.object.as_object().unwrap().clone();
     object.clean();
 
     let object_value = serde_json::to_value(&object)?;
 
+    let state = crate::state::get();
     InsertObject {
         id: Uuid::new_v4(),
         owner_id: owner_db.id,
@@ -29,16 +29,16 @@ async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, 
     Ok(object)
 }
 
-pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(mut activity: Activity) -> Result<StatusCode, Error> {
     // Save the object in the database
     match activity.object {
         ObjectField::Object(_) => {
-            let object = insert_object(state, &activity).await?;
+            let object = insert_object(&activity).await?;
 
             activity.object = ObjectField::Url(object.id);
         }
         ObjectField::Url(ref url) => {
-            fetcher::fetch_object(state, url).await?;
+            fetcher::fetch_object(url).await?;
         }
         ObjectField::Actor(_) => return Err(Error::UnknownActivity),
     }

@@ -1,5 +1,6 @@
 use {
-    crate::{database::Actor, error::Error as OtherError, map_err, state::ArcState},
+    crate::{database::Actor, error::Error as OtherError, map_err, state::State},
+    arc_swap::{ArcSwap, Guard},
     lettre::{
         error::Error as ContentError,
         transport::smtp::{authentication::Credentials, Error as SmtpError},
@@ -13,7 +14,10 @@ use {
 
 type AsyncSmtpTransport = lettre::AsyncSmtpTransport<Tokio1Executor>;
 
+static SMTP_TRANSPORT: OnceCell<ArcSwap<AsyncSmtpTransport>> = OnceCell::new();
+
 #[derive(Debug, thiserror::Error)]
+/// Email-related errors
 enum Error {
     #[error("Content error: {0}")]
     Content(#[from] ContentError),
@@ -30,7 +34,7 @@ enum Error {
 
 #[inline]
 /// Initialise the SMTP transport
-fn init_transport(state: &ArcState) -> Result<AsyncSmtpTransport, Error> {
+fn init_transport(state: &State) -> Result<Arc<AsyncSmtpTransport>, Error> {
     let transport_builder = if state.config.email.starttls {
         AsyncSmtpTransport::relay(&state.config.email.server)
     } else {
@@ -43,23 +47,42 @@ fn init_transport(state: &ArcState) -> Result<AsyncSmtpTransport, Error> {
         .credentials(Credentials::new(username, password))
         .build();
 
-    Ok(transport)
+    Ok(Arc::new(transport))
 }
 
-#[inline]
 /// Get a reference to the global SMTP transport (or initialise one if there isn't one already)
-fn get_transport(state: &ArcState) -> Result<&'static AsyncSmtpTransport, Error> {
-    static SMTP_TRANSPORT: OnceCell<AsyncSmtpTransport> = OnceCell::new();
+fn get_transport(state: &State) -> Result<Guard<Arc<AsyncSmtpTransport>>, Error> {
+    SMTP_TRANSPORT
+        .get_or_try_init::<_, Error>(|| {
+            let transport = init_transport(state)?;
 
-    SMTP_TRANSPORT.get_or_try_init::<_, Error>(|| init_transport(&state))
+            Ok(ArcSwap::new(transport))
+        })
+        .map(ArcSwap::load)
 }
 
-pub fn send_confirmation(state: &ArcState, mut user: Actor) {
+/// Attempt to update the transport on configuration change
+pub fn update_transport() {
+    let state = crate::state::get();
+    let transport = match init_transport(&state) {
+        Ok(transport) => transport,
+        Err(err) => {
+            warn!(error = ?err, "Failed to construct SMTP transport");
+            return;
+        }
+    };
+
+    if let Some(global_transport) = SMTP_TRANSPORT.get() {
+        global_transport.swap(transport);
+    }
+}
+
+pub fn send_confirmation(mut user: Actor) {
+    let state = crate::state::get_full();
+
     if !state.config.email.active {
         return;
     }
-
-    let state = Arc::clone(&state);
 
     // Spawn off here since we don't want to delay the request processing
     tokio::spawn(async move {
@@ -97,10 +120,8 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
     });
 }
 
-async fn confirm_account(
-    confirmation_code: String,
-    state: ArcState,
-) -> Result<impl Reply, Rejection> {
+async fn confirm_account(confirmation_code: String) -> Result<impl Reply, Rejection> {
+    let state = crate::state::get();
     let mut user = map_err!(Actor::by_confirmation_code(&state.db_pool, &confirmation_code).await)?;
     user.is_confirmed = true;
     map_err!(user.update(&state.db_pool).await)?;
@@ -108,10 +129,6 @@ async fn confirm_account(
     Ok("Account confirmed!")
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    warp::path!("confirm-account" / String)
-        .and(state)
-        .and_then(confirm_account)
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    warp::path!("confirm-account" / String).and_then(confirm_account)
 }

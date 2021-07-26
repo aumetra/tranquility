@@ -1,7 +1,7 @@
 use {
     crate::{
         consts::cors::GENERAL_ALLOWED_METHODS, database::Actor as DbActor, error::Error, map_err,
-        state::ArcState, util::construct_cors, util::HTTP_CLIENT,
+        util::construct_cors, util::HTTP_CLIENT,
     },
     serde::Deserialize,
     tranquility_types::{
@@ -12,11 +12,7 @@ use {
 };
 
 // Keeping this for future use
-pub async fn fetch_actor(
-    state: &ArcState,
-    username: &str,
-    domain: &str,
-) -> Result<(Actor, DbActor), Error> {
+pub async fn fetch_actor(username: &str, domain: &str) -> Result<(Actor, DbActor), Error> {
     let resource = format!("acct:{}@{}", username, domain);
     let url = format!(
         "https://{}/.well-known/webfinger?resource={}",
@@ -35,7 +31,7 @@ pub async fn fetch_actor(
         .find(|link| link.rel == "self")
         .ok_or(Error::UnexpectedWebfingerResource)?;
 
-    crate::activitypub::fetcher::fetch_actor(state, &actor_url.href).await
+    crate::activitypub::fetcher::fetch_actor(&actor_url.href).await
 }
 
 #[derive(Deserialize)]
@@ -44,7 +40,9 @@ pub struct Query {
     resource: String,
 }
 
-pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Rejection> {
+pub async fn webfinger(query: Query) -> Result<Response, Rejection> {
+    let state = crate::state::get();
+
     let resource = query.resource;
     let mut resource_tokens = resource.trim_start_matches("acct:").split('@');
 
@@ -80,15 +78,12 @@ pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Reject
     .into_response())
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     // Enable CORS for the ".well-known" routes
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
     let cors = construct_cors(GENERAL_ALLOWED_METHODS);
 
     warp::path!("webfinger")
-        .and(state)
         .and(warp::query())
         .and_then(webfinger)
         .with(cors)

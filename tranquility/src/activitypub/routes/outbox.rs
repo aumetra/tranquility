@@ -2,7 +2,6 @@ use {
     super::CollectionQuery,
     crate::{
         consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, format_uuid, map_err,
-        state::ArcState,
     },
     itertools::Itertools,
     std::ops::Not,
@@ -14,11 +13,9 @@ use {
     warp::{Rejection, Reply},
 };
 
-pub async fn outbox(
-    user_id: Uuid,
-    state: ArcState,
-    query: CollectionQuery,
-) -> Result<impl Reply, Rejection> {
+pub async fn outbox(user_id: Uuid, query: CollectionQuery) -> Result<impl Reply, Rejection> {
+    let state = crate::state::get();
+
     let latest_activities = crate::database::outbox::activities(
         &state.db_pool,
         user_id,

@@ -1,5 +1,5 @@
 use {
-    crate::{consts::VERSION, state::ArcState},
+    crate::consts::VERSION,
     tranquility_types::mastodon::{
         instance::{Stats, Urls},
         Instance,
@@ -7,7 +7,8 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
-async fn instance(state: ArcState) -> Result<impl Reply, Rejection> {
+async fn instance() -> Result<impl Reply, Rejection> {
+    let state = crate::state::get();
     let streaming_api = format!("wss://{}", state.config.instance.domain);
 
     let instance = Instance {
@@ -33,8 +34,6 @@ async fn instance(state: ArcState) -> Result<impl Reply, Rejection> {
     Ok(warp::reply::json(&instance))
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    warp::path!("instance").and(state).and_then(instance)
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    warp::path!("instance").and_then(instance)
 }

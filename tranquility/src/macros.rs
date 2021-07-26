@@ -3,9 +3,9 @@
 /// If it doesn't, the error gets logged and the function continues  
 #[macro_export]
 macro_rules! attempt_fetch {
-    ($state:ident, $url:ident, [$($func:ident),+]) => {{
+    ($url:ident, [$($func:ident),+]) => {{
         $(
-            match $func($state, $url).await {
+            match $func($url).await {
                 Ok(val) => return Ok(val.into()),
                 Err(err) => tracing::debug!(error = ?err, "Couldn't fetch entity"),
             }
@@ -183,7 +183,7 @@ macro_rules! map_err {
 #[macro_export]
 macro_rules! match_handler {
     {
-        ($state:ident, $activity:ident);
+        $activity:ident;
 
         $($type:ident),+
     } => {
@@ -191,7 +191,7 @@ macro_rules! match_handler {
             match $activity.r#type.as_str() {
                 $(
                     stringify!($type) =>
-                        crate::activitypub::handler::[<$type:lower>]::handle(&$state, $activity).await,
+                        crate::activitypub::handler::[<$type:lower>]::handle($activity).await,
                 )+
                 _ => Err(crate::error::Error::UnknownActivity),
             }

@@ -1,18 +1,18 @@
-use {crate::state::ArcState, std::net::IpAddr, warp::Filter};
+use {std::net::IpAddr, warp::Filter};
 
 /// Combine all route filters and start a warp server
-pub async fn run(state: ArcState) {
+pub async fn run() {
     let logging = warp::trace::request();
 
-    let activitypub = crate::activitypub::routes::routes(&state);
-    let api = crate::api::routes(&state);
-    let well_known = crate::well_known::routes(&state);
+    let activitypub = crate::activitypub::routes::routes();
+    let api = crate::api::routes();
+    let well_known = crate::well_known::routes();
 
     let routes = activitypub.or(api).or(well_known);
 
     #[cfg(feature = "email")]
     let routes = {
-        let email = crate::email::routes(&state);
+        let email = crate::email::routes();
         routes.or(email)
     };
 
@@ -20,6 +20,7 @@ pub async fn run(state: ArcState) {
 
     let server = warp::serve(routes);
 
+    let state = crate::state::get();
     let config = &state.config;
 
     let interface = config.server.interface.parse::<IpAddr>().unwrap();

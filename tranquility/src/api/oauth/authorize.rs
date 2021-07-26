@@ -5,7 +5,6 @@ use {
         database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
         error::Error,
         map_err,
-        state::ArcState,
     },
     askama::Template,
     chrono::Duration,
@@ -38,7 +37,8 @@ pub async fn get() -> Result<impl Reply, Rejection> {
     Ok(warp::reply::html(AUTHORIZE_FORM.as_str()))
 }
 
-pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response, Rejection> {
+pub async fn post(form: Form, query: Query) -> Result<Response, Rejection> {
+    let state = crate::state::get();
     let actor = Actor::by_username_local(&state.db_pool, &form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());

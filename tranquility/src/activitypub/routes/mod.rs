@@ -1,5 +1,5 @@
 use {
-    crate::{consts::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
+    crate::{consts::MAX_BODY_SIZE, error::Error, map_err},
     serde::{de::DeserializeOwned, Deserialize},
     uuid::Uuid,
     warp::{hyper::body::Bytes, Filter, Rejection, Reply},
@@ -27,7 +27,10 @@ fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy 
 /// The standard `warp::body::json()` filter only decodes content from requests
 /// that have the header "Content-Type: application/json" but the inbox
 /// requests have the types of either "application/ld+json" or "application/activity+json"
-fn ap_json<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
+fn ap_json<T>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy
+where
+    T: DeserializeOwned,
+{
     let json_parser_fn = |body: Bytes| async move {
         let value = map_err!(serde_json::from_slice(&body))?;
 
@@ -50,45 +53,37 @@ pub struct CollectionQuery {
     last_id: Option<Uuid>,
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state_filter = crate::state::filter(state);
-
+pub fn routes() -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     let followers = warp::path!("users" / Uuid / "followers")
         .and(warp::get())
-        .and(state_filter.clone())
         .and(warp::query())
         .and(header_requirements())
         .and_then(followers::followers);
 
     let following = warp::path!("users" / Uuid / "following")
         .and(warp::get())
-        .and(state_filter.clone())
         .and(warp::query())
         .and(header_requirements())
         .and_then(following::following);
 
     let inbox = warp::path!("users" / Uuid / "inbox")
         .and(warp::post())
-        .and(state_filter.clone())
-        .and(inbox::validate_request(state))
+        .and(inbox::validate_request())
         .and_then(inbox::inbox);
 
     let objects = warp::path!("objects" / Uuid)
         .and(warp::get())
-        .and(state_filter.clone())
         .and(header_requirements())
         .and_then(objects::objects);
 
     let outbox = warp::path!("users" / Uuid / "outbox")
         .and(warp::get())
-        .and(state_filter.clone())
         .and(warp::query())
         .and(header_requirements())
         .and_then(outbox::outbox);
 
     let users = warp::path!("users" / Uuid)
         .and(warp::get())
-        .and(state_filter)
         .and(header_requirements())
         .and_then(users::users);
 

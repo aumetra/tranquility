@@ -1,12 +1,14 @@
 use {
-    crate::{activitypub::FollowActivity, database::Object, error::Error, state::ArcState},
+    crate::{activitypub::FollowActivity, database::Object, error::Error},
     ormx::Table,
     tranquility_types::activitypub::Activity,
     warp::http::StatusCode,
 };
 
-pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, Error> {
+pub async fn handle(activity: Activity) -> Result<StatusCode, Error> {
     let follow_activity_url = activity.object.as_url().ok_or(Error::UnknownActivity)?;
+
+    let state = crate::state::get();
     let mut follow_activity_db = Object::by_url(&state.db_pool, follow_activity_url).await?;
 
     let mut follow_activity: FollowActivity = serde_json::from_value(follow_activity_db.data)?;

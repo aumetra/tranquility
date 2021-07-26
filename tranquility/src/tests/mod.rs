@@ -76,11 +76,12 @@ async fn init_db() -> PgPool {
     conn_pool
 }
 
-async fn test_state() -> State {
+async fn init_state() {
     let config = test_config();
     let db_pool = init_db().await;
 
-    State::new_arcless(config, db_pool)
+    let state = State::new(config, db_pool);
+    crate::state::init_raw(state);
 }
 
 #[test]

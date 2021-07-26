@@ -2,14 +2,13 @@ use {
     crate::{
         database::{Actor as DbActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
-        state::ArcState,
     },
-    std::sync::Arc,
     tranquility_types::activitypub::{Activity, Actor},
 };
 
 /// Create an Follow activity for a follow, save it and send it out
-pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
+pub async fn follow(db_actor: DbActor, followed: &Actor) -> Result<(), Error> {
+    let state = crate::state::get();
     let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
     // Check if there's already a follow activity
@@ -43,13 +42,15 @@ pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Re
     .insert(&state.db_pool)
     .await?;
 
-    crate::activitypub::deliverer::deliver(follow_activity, Arc::clone(state)).await?;
+    crate::activitypub::deliverer::deliver(follow_activity).await?;
 
     Ok(())
 }
 
 /// Create an Undo activity for the given activity, save it and send it out
-pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) -> Result<(), Error> {
+pub async fn undo(db_actor: DbActor, db_activity: DbObject) -> Result<(), Error> {
+    let state = crate::state::get();
+
     // Tried to delete someone else's activity
     if db_activity.owner_id != db_actor.id {
         return Err(Error::Unauthorized);
@@ -77,17 +78,14 @@ pub async fn undo(state: &ArcState, db_actor: DbActor, db_activity: DbObject) ->
     .insert(&state.db_pool)
     .await?;
 
-    crate::activitypub::deliverer::deliver(undo_activity, Arc::clone(state)).await?;
+    crate::activitypub::deliverer::deliver(undo_activity).await?;
 
     Ok(())
 }
 
 /// Search the follow activity in the database and undo it
-pub async fn unfollow(
-    state: &ArcState,
-    db_actor: DbActor,
-    followed_db_actor: DbActor,
-) -> Result<(), Error> {
+pub async fn unfollow(db_actor: DbActor, followed_db_actor: DbActor) -> Result<(), Error> {
+    let state = crate::state::get();
     let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
 
     let follow_activity = DbObject::by_type_owner_and_object_url(
@@ -98,5 +96,5 @@ pub async fn unfollow(
     )
     .await?;
 
-    undo(state, db_actor, follow_activity).await
+    undo(db_actor, follow_activity).await
 }
