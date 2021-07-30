@@ -12,7 +12,7 @@ Backwards incompatible changes might occur
 
 ## Requirements
 
-- **Rust** 1.50+  
+- **Rust** 1.51+  
 - **PostgreSQL** (9.5+ should be fine)  
 - **Git** (build-time dependency; see [`build.rs`](tranquility/build.rs))  
 
