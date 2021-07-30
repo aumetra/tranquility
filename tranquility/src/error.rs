@@ -3,7 +3,7 @@ use {
     argon2::Error as Argon2Error,
     askama::Error as AskamaError,
     reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
-    rsa::errors::Error as RsaError,
+    rsa::{errors::Error as RsaError, pkcs8::Error as Pkcs8Error},
     serde_json::Error as SerdeJsonError,
     sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
     tranquility_http_signatures::Error as HttpSignaturesError,
@@ -41,6 +41,9 @@ pub enum Error {
 
     #[error("Unauthorized")]
     Unauthorized,
+
+    #[error("PKCS#8 operation failed: {0}")]
+    Pkcs8(#[from] Pkcs8Error),
 
     #[error("reqwest operation failed: {0}")]
     Reqwest(#[from] ReqwestError),
@@ -105,7 +108,11 @@ pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
                 Ok(warp::reply::with_status(error_text, StatusCode::UNAUTHORIZED).into_response())
             }
 
-            Error::Argon2(..) | Error::Sqlx(..) | Error::SqlxMigration(..) | Error::Rsa(..) => {
+            Error::Argon2(..)
+            | Error::Pkcs8(..)
+            | Error::Sqlx(..)
+            | Error::SqlxMigration(..)
+            | Error::Rsa(..) => {
                 error!(?error, "Internal error occurred");
 
                 Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response())
