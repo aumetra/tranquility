@@ -65,18 +65,21 @@ pub mod rsa {
     use {
         crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_task},
         rand::rngs::OsRng,
-        rsa::{PrivateKeyPemEncoding, PublicKeyPemEncoding, RSAPrivateKey},
+        rsa::{
+            pkcs8::{ToPrivateKey, ToPublicKey},
+            RsaPrivateKey,
+        },
     };
 
     /// Generate an RSA key pair (key size defined in the `consts` file)
-    pub async fn generate() -> Result<RSAPrivateKey, Error> {
-        cpu_intensive_task(|| Ok(RSAPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
+    pub async fn generate() -> Result<RsaPrivateKey, Error> {
+        cpu_intensive_task(|| Ok(RsaPrivateKey::new(&mut OsRng, KEY_SIZE)?)).await
     }
 
     /// Get the public key from the private key and encode both in the PKCS#8 PEM format
-    pub fn to_pem(rsa_key: &RSAPrivateKey) -> Result<(String, String), Error> {
-        let public_key = PublicKeyPemEncoding::to_pem_pkcs8(&rsa_key.to_public_key())?;
-        let private_key = PrivateKeyPemEncoding::to_pem_pkcs8(rsa_key)?;
+    pub fn to_pem(rsa_key: &RsaPrivateKey) -> Result<(String, String), Error> {
+        let public_key = rsa_key.to_public_key_pem()?;
+        let private_key = rsa_key.to_pkcs8_pem()?.to_string();
 
         Ok((public_key, private_key))
     }
