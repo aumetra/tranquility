@@ -208,5 +208,5 @@ async fn nodeinfo() {
 
     let schema = serde_json::from_str(NODEINFO_21_SCHEMA).expect("Couldn't parse nodeinfo schema");
 
-    assert!(jsonschema::is_valid(&schema, &response_body))
+    assert!(jsonschema::is_valid(&schema, &response_body));
 }

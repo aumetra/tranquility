@@ -79,6 +79,7 @@ pub enum Error {
 impl Reject for Error {}
 
 /// Recover function for recovering from some of the errors with a custom error status
+#[allow(clippy::unused_async)]
 pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
     if let Some(error) = rejection.find::<Error>() {
         let error_text = error.to_string();

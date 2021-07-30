@@ -14,9 +14,9 @@ pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, 
     let object_url = activity.object.as_url().ok_or(Error::UnknownActivity)?;
 
     // Fetch the object (just in case)
-    fetcher::fetch_object(&state, &object_url).await?;
+    fetcher::fetch_object(state, object_url).await?;
     // Fetch the actor (just in case)
-    fetcher::fetch_actor(&state, &activity.actor).await?;
+    fetcher::fetch_actor(state, &activity.actor).await?;
 
     let actor = Actor::by_url(&state.db_pool, &activity.actor).await?;
     let activity_value = serde_json::to_value(&activity)?;

@@ -34,6 +34,7 @@ pub struct Query {
     state: String,
 }
 
+#[allow(clippy::unused_async)]
 pub async fn get() -> Result<impl Reply, Rejection> {
     Ok(warp::reply::html(AUTHORIZE_FORM.as_str()))
 }
@@ -58,7 +59,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         return Err(Error::InvalidRequest.into());
     }
 
-    let authorization_code = crate::crypto::token::generate()?;
+    let authorization_code = crate::crypto::token::generate();
 
     let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
     let valid_until = chrono::Utc::now() + validity_duration;

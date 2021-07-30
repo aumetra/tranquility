@@ -109,7 +109,7 @@ async fn code_grant(
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
 
-    let access_token = crate::crypto::token::generate()?;
+    let access_token = crate::crypto::token::generate();
 
     let access_token = InsertOAuthToken {
         application_id: Some(client.id),
@@ -154,7 +154,7 @@ async fn password_grant(
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
 
-    let access_token = crate::crypto::token::generate()?;
+    let access_token = crate::crypto::token::generate();
 
     let access_token = InsertOAuthToken {
         application_id: None,

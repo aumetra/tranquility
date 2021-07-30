@@ -149,7 +149,7 @@ mod test {
     fn local_mention() {
         let mentions = LOCAL_MENTION.mentions();
 
-        assert_eq!(mentions, [Mention::new("alice", None)])
+        assert_eq!(mentions, [Mention::new("alice", None)]);
     }
 
     #[test]
@@ -164,13 +164,13 @@ mod test {
                 Mention::new("carol", Some("the.third.example.com")),
                 Mention::new("dave", Some("fourth.example.com")),
             ]
-        )
+        );
     }
 
     #[test]
     fn remote_mention() {
         let mentions = REMOTE_MENTION.mentions();
 
-        assert_eq!(mentions, [Mention::new("bob", Some("example.com"))])
+        assert_eq!(mentions, [Mention::new("bob", Some("example.com"))]);
     }
 }

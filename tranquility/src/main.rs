@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
-#![warn(clippy::all, clippy::pedantic)]
 #![deny(rust_2018_idioms)]
+#![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::doc_markdown, clippy::module_name_repetitions)]
 // Needed because of conditional compilation
 #![allow(clippy::used_underscore_binding)]
@@ -18,6 +18,8 @@ cfg_if::cfg_if! {
     }
 }
 
+// allow because of tokio macro
+#[allow(clippy::semicolon_if_nothing_returned)]
 #[tokio::main]
 async fn main() {
     let state = cli::run().await;

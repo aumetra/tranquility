@@ -184,7 +184,7 @@ pub async fn deliver(activity: Activity, state: ArcState) -> Result<(), Error> {
                     warn!(
                         "Delivery request wasn't successful\nStatus code: {}\nServer response: {}",
                         response_status, response_body,
-                    )
+                    );
                 }
                 Err(err) => warn!("Delivery request failed: {}", err),
             }
