@@ -5,6 +5,7 @@ use rand::{
 };
 
 /// Generate a type that supports being generated via `rand::Rng::gen()` using `OsRng`
+#[inline]
 pub fn gen_secure_rand<T>() -> T
 where
     Standard: Distribution<T>,
@@ -82,14 +83,14 @@ pub mod rsa {
 }
 
 pub mod token {
-    use crate::{consts::crypto::TOKEN_LENGTH, error::Error};
+    use crate::consts::crypto::TOKEN_LENGTH;
 
     /// Generate a cryptographically random token (length defined in the `consts` file)
-    pub fn generate() -> Result<String, Error> {
+    pub fn generate() -> String {
         // Two characters are needed to encode one byte as hex
         let token = crate::crypto::gen_secure_rand::<[u8; TOKEN_LENGTH / 2]>();
 
-        Ok(hex::encode(token))
+        hex::encode(token)
     }
 }
 

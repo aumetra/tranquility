@@ -26,7 +26,7 @@ pub struct RegisterForm {
 
 async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejection> {
     let client_id = Uuid::new_v4();
-    let client_secret = crate::crypto::token::generate()?;
+    let client_secret = crate::crypto::token::generate();
 
     let application = InsertOAuthApplication {
         client_name: form.client_name,

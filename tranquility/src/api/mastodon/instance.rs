@@ -7,6 +7,7 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
+#[allow(clippy::unused_async)]
 async fn instance(state: ArcState) -> Result<impl Reply, Rejection> {
     let streaming_api = format!("wss://{}", state.config.instance.domain);
 

@@ -1,3 +1,6 @@
+// i'll allow this lint module-wide because expanded tokio macros
+#![allow(clippy::semicolon_if_nothing_returned)]
+
 use {
     crate::{
         activitypub::FollowActivity,

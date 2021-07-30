@@ -51,7 +51,7 @@ fn init_transport(state: &ArcState) -> Result<AsyncSmtpTransport, Error> {
 fn get_transport(state: &ArcState) -> Result<&'static AsyncSmtpTransport, Error> {
     static SMTP_TRANSPORT: OnceCell<AsyncSmtpTransport> = OnceCell::new();
 
-    SMTP_TRANSPORT.get_or_try_init::<_, Error>(|| init_transport(&state))
+    SMTP_TRANSPORT.get_or_try_init::<_, Error>(|| init_transport(state))
 }
 
 pub fn send_confirmation(state: &ArcState, mut user: Actor) {
@@ -59,7 +59,7 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
         return;
     }
 
-    let state = Arc::clone(&state);
+    let state = Arc::clone(state);
 
     // Spawn off here since we don't want to delay the request processing
     tokio::spawn(async move {
@@ -67,7 +67,7 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
         // the try syntax and to handle all the errors in a single place
         let result: Result<(), Error> = async move {
             // Generate and save the confirmation code
-            let confirmation_code = crate::crypto::token::generate()?;
+            let confirmation_code = crate::crypto::token::generate();
             user.confirmation_code = Some(confirmation_code.clone());
             user.is_confirmed = false;
             user.update(&state.db_pool).await?;
@@ -92,7 +92,7 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
         .await;
 
         if let Err(err) = result {
-            error!(error = ?err, "Couldn't send confirmation email")
+            error!(error = ?err, "Couldn't send confirmation email");
         }
     });
 }

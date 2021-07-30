@@ -7,6 +7,7 @@ use {
     warp::{Filter, Rejection, Reply},
 };
 
+#[allow(clippy::unused_async)]
 async fn nodeinfo(state: ArcState) -> Result<impl Reply, Rejection> {
     let info = Nodeinfo {
         protocols: vec!["activitypub".into()],
@@ -27,6 +28,7 @@ async fn nodeinfo(state: ArcState) -> Result<impl Reply, Rejection> {
     Ok(warp::reply::json(&info))
 }
 
+#[allow(clippy::unused_async)]
 async fn nodeinfo_links(state: ArcState) -> Result<impl Reply, Rejection> {
     let entity_link = format!(
         "https://{}/.well-known/nodeinfo/2.1",

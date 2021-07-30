@@ -111,8 +111,8 @@ impl TryInto<Quota> for Configuration {
 }
 
 /// Check if the IP is ratelimited. If it is, reject the request
-async fn check_ratelimit(
-    rate_limiter: ArcRatelimiter,
+fn check_ratelimit(
+    rate_limiter: &ArcRatelimiter,
     ip_address: Option<SocketAddr>,
 ) -> Result<(), Rejection> {
     let ip_address = ip_address.unwrap();
@@ -132,6 +132,8 @@ async fn check_ratelimit(
 /// (I currently don't know any other way to achieve this with warp)
 ///
 #[doc(hidden)]
+// this function needs to return a `TryFuture`
+#[allow(clippy::unused_async)]
 pub async fn __recover_fn(rejection: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(wait_until) = rejection.find::<WaitUntil>() {
         let wait_until = wait_until.0;
@@ -163,7 +165,7 @@ pub fn ratelimit(
 
             async move {
                 if active {
-                    check_ratelimit(rate_limiter, ip_address).await
+                    check_ratelimit(&rate_limiter, ip_address)
                 } else {
                     Ok(())
                 }

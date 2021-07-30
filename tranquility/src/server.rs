@@ -31,8 +31,8 @@ pub async fn run(state: ArcState) {
             .cert_path(&config.tls.certificate)
             .key_path(&config.tls.secret_key)
             .run(addr)
-            .await
+            .await;
     } else {
-        server.run(addr).await
+        server.run(addr).await;
     }
 }
