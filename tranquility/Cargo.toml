@@ -32,7 +32,7 @@ serde_json = "1.0.67"
 serde_qs = { version = "0.8.4", features = ["warp"] }
 sha2 = "0.9.6"
 sqlx = { version = "0.5.7", features = ["chrono", "json", "offline", "postgres", "runtime-tokio-rustls", "uuid"] }
-thiserror = "1.0.28"
+thiserror = "1.0.29"
 tokio = { version = "1.11.0", features = ["full", "tracing"] }
 toml = "0.5.8"
 tracing = { version = "0.1.26", features = ["attributes"] }
