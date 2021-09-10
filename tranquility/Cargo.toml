@@ -30,7 +30,7 @@ rust-argon2 = "0.8.3"
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.67"
 serde_qs = { version = "0.8.4", features = ["warp"] }
-sha2 = "0.9.6"
+sha2 = "0.9.8"
 sqlx = { version = "0.5.7", features = ["chrono", "json", "offline", "postgres", "runtime-tokio-rustls", "uuid"] }
 thiserror = "1.0.29"
 tokio = { version = "1.11.0", features = ["full", "tracing"] }
