@@ -36,7 +36,7 @@ thiserror = "1.0.29"
 tokio = { version = "1.11.0", features = ["full", "tracing"] }
 toml = "0.5.8"
 tracing = { version = "0.1.26", features = ["attributes"] }
-tracing-subscriber = { version = "0.2.21", features = ["parking_lot"] }
+tracing-subscriber = { version = "0.2.22", features = ["parking_lot"] }
 url = "2.2.2"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
 validator = { version = "0.14.0", features = ["derive"] }
