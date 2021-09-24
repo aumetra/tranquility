@@ -1501,9 +1501,9 @@ dependencies = [
 
 [[package]]
 name = "ormx"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f18bf3856eb0b10751fdefcde1055f74af5b92728bf0388e45aeb80e69395a7"
+checksum = "f7e7c3949d1c9cacb2602a650fc15484fb830ccfbf48bef50eaab42e71de69d4"
 dependencies = [
  "futures",
  "ormx-macros",
@@ -1512,9 +1512,9 @@ dependencies = [
 
 [[package]]
 name = "ormx-macros"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b78f0f25762cc86c7c3b0990222b66665151bb13c3ce878d16ca3ec9d98bc11e"
+checksum = "62fb1eedb7fd6d4eef931d1cf1613e35ba8807e2e69892cc7fab5dc84015d8d0"
 dependencies = [
  "itertools",
  "once_cell",
