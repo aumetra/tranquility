@@ -19,7 +19,7 @@ headers = "0.3.5"
 hex = "0.4.3"
 itertools = "0.10.1"
 once_cell = "1.8.0"
-ormx = { version = "0.9.0", features = ["postgres"] }
+ormx = { version = "0.10.0", features = ["postgres"] }
 paste = "1.0.5"
 rand = "0.8.4"
 rayon = "1.5.1"

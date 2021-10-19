@@ -7,7 +7,7 @@ use {
 };
 
 #[derive(Clone, Table)]
-#[ormx(id = id, table = "oauth_authorizations", insertable)]
+#[ormx(id = id, table = "oauth_authorizations", deletable, insertable)]
 pub struct OAuthAuthorization {
     #[ormx(default)]
     pub id: Uuid,
