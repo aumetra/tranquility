@@ -1,6 +1,6 @@
 use {
     crate::{database::Object, error::Error, state::ArcState},
-    ormx::Table,
+    ormx::Delete,
     tranquility_types::activitypub::Activity,
     warp::http::StatusCode,
 };

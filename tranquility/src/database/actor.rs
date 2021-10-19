@@ -8,7 +8,7 @@ use {
 };
 
 #[derive(Clone, Table)]
-#[ormx(id = id, table = "actors", insertable)]
+#[ormx(id = id, table = "actors", deletable, insertable)]
 pub struct Actor {
     pub id: Uuid,
 
