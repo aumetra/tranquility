@@ -33,7 +33,7 @@ serde_qs = { version = "0.8.5", features = ["warp"] }
 sha2 = "0.9.8"
 sqlx = { version = "0.5.9", features = ["chrono", "json", "offline", "postgres", "runtime-tokio-rustls", "uuid"] }
 thiserror = "1.0.30"
-tokio = { version = "1.13.0", features = ["full", "tracing"] }
+tokio = { version = "1.13.1", features = ["full", "tracing"] }
 toml = "0.5.8"
 tracing = { version = "0.1.29", features = ["attributes"] }
 tracing-subscriber = { version = "0.2.25", features = ["parking_lot"] }
