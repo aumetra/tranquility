@@ -55,7 +55,7 @@ pulldown-cmark = { version = "0.8.0", default-features = false, optional = true 
 
 # Memory allocators (optional)
 jemalloc = { package = "jemallocator", version = "0.3.2", optional = true }
-mimalloc = { version = "0.1.26", optional = true }
+mimalloc = { version = "0.1.27", optional = true }
 
 [dependencies.tranquility-http-signatures]
 path = "../tranquility-http-signatures"
