@@ -1491,6 +1491,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6105e89802af13fdf48c49d7646d3b533a70e536d818aae7e78ba0433d01acb8"
+dependencies = [
+ "async-trait",
+ "crossbeam-channel",
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "js-sys",
+ "lazy_static",
+ "percent-encoding",
+ "pin-project",
+ "rand 0.8.4",
+ "thiserror",
+]
+
+[[package]]
 name = "opentelemetry-jaeger"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1498,7 +1517,7 @@ checksum = "db22f492873ea037bc267b35a0e8e4fb846340058cb7c864efe3d0bf23684593"
 dependencies = [
  "async-trait",
  "lazy_static",
- "opentelemetry",
+ "opentelemetry 0.16.0",
  "opentelemetry-semantic-conventions",
  "thiserror",
  "thrift",
@@ -1511,7 +1530,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffeac823339e8b0f27b961f4385057bf9f97f2863bc745bd015fd6091f2270e9"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.16.0",
 ]
 
 [[package]]
@@ -2724,15 +2743,15 @@ dependencies = [
 
 [[package]]
 name = "tracing-opentelemetry"
-version = "0.15.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "599f388ecb26b28d9c1b2e4437ae019a7b336018b45ed911458cd9ebf91129f6"
+checksum = "a73d0f08e0d227c4c63e6d003804946767f4c4f01f52098b56821ae22e336bfc"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.17.0",
  "tracing",
  "tracing-core",
  "tracing-log",
- "tracing-subscriber",
+ "tracing-subscriber 0.3.6",
 ]
 
 [[package]]
@@ -2769,6 +2788,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-subscriber"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77be66445c4eeebb934a7340f227bfe7b338173d3f8c00a60a5a58005c9faecf"
+dependencies = [
+ "sharded-slab",
+ "thread_local",
+ "tracing-core",
+]
+
+[[package]]
 name = "tranquility"
 version = "0.1.0"
 dependencies = [
@@ -2788,7 +2818,7 @@ dependencies = [
  "lettre",
  "mimalloc",
  "once_cell",
- "opentelemetry",
+ "opentelemetry 0.16.0",
  "opentelemetry-jaeger",
  "ormx",
  "paste",
@@ -2809,7 +2839,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-opentelemetry",
- "tracing-subscriber",
+ "tracing-subscriber 0.2.25",
  "tranquility-http-signatures",
  "tranquility-ratelimit",
  "tranquility-types",
