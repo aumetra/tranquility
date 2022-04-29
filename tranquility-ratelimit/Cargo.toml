@@ -6,7 +6,7 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
-governor = "0.3.2"
+governor = "0.4.2"
 thiserror = "1.0.30"
 
 [dependencies.warp]
