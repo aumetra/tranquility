@@ -1,12 +1,14 @@
-use {
-    crate::{activitypub::ActivityObject, database::Object, state::ArcState},
-    ormx::Table,
-    tranquility_types::activitypub::IsPrivate,
-    uuid::Uuid,
-    warp::{http::StatusCode, reply::Response, Rejection, Reply},
-};
+use crate::{activitypub::ActivityObject, database::Object, error::Error, state::ArcState};
+use axum::{extract::Path, response::IntoResponse, Extension, Json};
+use http::StatusCode;
+use ormx::Table;
+use tranquility_types::activitypub::IsPrivate;
+use uuid::Uuid;
 
-pub async fn objects(id: Uuid, state: ArcState) -> Result<Response, Rejection> {
+pub async fn objects(
+    Path(id): Path<Uuid>,
+    Extension(state): Extension<ArcState>,
+) -> Result<impl IntoResponse, Error> {
     let object = Object::get(&state.db_pool, id).await?;
     let activity_or_object: ActivityObject = serde_json::from_value(object.data.clone())?;
 
@@ -15,5 +17,5 @@ pub async fn objects(id: Uuid, state: ArcState) -> Result<Response, Rejection> {
         return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
-    Ok(warp::reply::json(&object.data).into_response())
+    Ok(Json(&object.data).into_response())
 }

@@ -3,7 +3,7 @@ pub mod activitypub {
 }
 
 pub mod cors {
-    use axum::http::Method;
+    use http::Method;
 
     pub const API_ALLOWED_METHODS: &[Method] = &[
         Method::POST,

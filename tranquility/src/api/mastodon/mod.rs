@@ -1,5 +1,3 @@
-use std::ops::{Deref, DerefMut};
-
 use crate::{
     consts::cors::API_ALLOWED_METHODS,
     database::{Actor, OAuthToken},
@@ -9,11 +7,11 @@ use crate::{
 use async_trait::async_trait;
 use axum::{
     extract::{FromRequest, RequestParts},
-    http::header::AUTHORIZATION,
     Router,
 };
-use headers::authorization::{Bearer, Credentials};
+use headers::{authorization::Bearer, HeaderMapExt};
 use once_cell::sync::Lazy;
+use std::ops::Deref;
 use tower_http::cors::CorsLayer;
 use tranquility_types::mastodon::App;
 
@@ -22,15 +20,20 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
     ..App::default()
 });
 
-pub struct Auth(pub Actor);
+/// Authorisation extractor
+///
+/// It takes the `Authorization` header and tries to decodes it as an `Bearer` authorisation.  
+/// Then it fetches the actor associated with the token
+pub struct Authorisation(pub Actor);
 
-impl Auth {
+impl Authorisation {
+    /// Convert the auth struct into the inner actor
     pub fn into_inner(self) -> Actor {
         self.0
     }
 }
 
-impl Deref for Auth {
+impl Deref for Authorisation {
     type Target = Actor;
 
     fn deref(&self) -> &Self::Target {
@@ -39,15 +42,14 @@ impl Deref for Auth {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for Auth {
+impl<B> FromRequest<B> for Authorisation {
     type Rejection = Error;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let authorisation_header = req
+        let credentials = req
             .headers()
-            .get(AUTHORIZATION)
+            .typed_get::<Bearer>()
             .ok_or(Error::Unauthorized)?;
-        let credentials = Bearer::decode(&authorisation_header).ok_or(Error::Unauthorized)?;
         let token = credentials.token();
 
         let state = req

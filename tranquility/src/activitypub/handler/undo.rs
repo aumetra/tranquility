@@ -1,7 +1,7 @@
 use {
     crate::{database::Object, error::Error, state::ArcState},
+    http::StatusCode,
     tranquility_types::activitypub::Activity,
-    warp::http::StatusCode,
 };
 
 pub async fn handle(state: &ArcState, delete_activity: Activity) -> Result<StatusCode, Error> {

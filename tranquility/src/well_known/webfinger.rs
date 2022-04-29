@@ -45,12 +45,12 @@ pub struct QueryParams {
 pub async fn webfinger(
     Extension(state): Extension<ArcState>,
     Query(QueryParams { resource }): Query<QueryParams>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, Error> {
     let mut resource_tokens = resource.trim_start_matches("acct:").split('@');
     let username = resource_tokens.next().ok_or(Error::InvalidRequest)?;
 
     if resource_tokens.next().ok_or(Error::InvalidRequest)? != state.config.instance.domain {
-        return Ok(StatusCode::NOT_FOUND);
+        return Ok(StatusCode::NOT_FOUND.into_response());
     }
 
     let actor_db = DbActor::by_username_local(&state.db_pool, username).await?;
@@ -71,7 +71,7 @@ pub async fn webfinger(
         ..Resource::default()
     };
 
-    Ok(([("Content-Type", "application/jrd+json")], Json(resource)))
+    Ok(([("Content-Type", "application/jrd+json")], Json(resource)).into_response())
 }
 
 pub fn routes() -> Router {

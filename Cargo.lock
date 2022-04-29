@@ -2832,6 +2832,7 @@ dependencies = [
  "futures-util",
  "headers",
  "hex",
+ "http",
  "itertools",
  "jemallocator",
  "jsonschema",

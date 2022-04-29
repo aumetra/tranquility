@@ -5,9 +5,9 @@ use {
         error::Error,
         state::ArcState,
     },
+    http::StatusCode,
     tranquility_types::activitypub::Activity,
     uuid::Uuid,
-    warp::http::StatusCode,
 };
 
 pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, Error> {

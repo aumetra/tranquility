@@ -1,9 +1,13 @@
 use super::CollectionQuery;
 use crate::{
     activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE,
-    database::Actor as DbActor, format_uuid, state::ArcState,
+    database::Actor as DbActor, error::Error, format_uuid, state::ArcState,
 };
-use axum::{response::IntoResponse, Json};
+use axum::{
+    extract::{Path, Query},
+    response::IntoResponse,
+    Extension, Json,
+};
 use itertools::Itertools;
 use tranquility_types::activitypub::{
     collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
@@ -11,10 +15,10 @@ use tranquility_types::activitypub::{
 use uuid::Uuid;
 
 pub async fn followers(
-    user_id: Uuid,
-    state: ArcState,
-    query: CollectionQuery,
-) -> impl IntoResponse {
+    Path(user_id): Path<Uuid>,
+    Extension(state): Extension<ArcState>,
+    Query(query): Query<CollectionQuery>,
+) -> Result<impl IntoResponse, Error> {
     let latest_follow_activities = crate::database::follow::followers(
         &state.db_pool,
         user_id,
@@ -54,5 +58,5 @@ pub async fn followers(
         ..Collection::default()
     };
 
-    Ok(Json(&followers_collection))
+    Ok(Json(followers_collection))
 }

@@ -23,7 +23,7 @@ async fn nodeinfo(Extension(state): Extension<ArcState>) -> impl IntoResponse {
         ..Nodeinfo::default()
     };
 
-    Json(&info)
+    Json(info)
 }
 
 #[allow(clippy::unused_async)]

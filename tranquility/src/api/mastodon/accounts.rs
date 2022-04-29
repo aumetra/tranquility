@@ -1,4 +1,4 @@
-use super::{convert::IntoMastodon, Auth};
+use super::{convert::IntoMastodon, Authorisation};
 use crate::{
     activitypub::interactions,
     database::{Actor as DbActor, Object as DbObject},
@@ -21,14 +21,14 @@ use uuid::Uuid;
 async fn accounts(
     Path(id): Path<Uuid>,
     Extension(state): Extension<ArcState>,
-    authorized_db_actor: Option<Auth>,
+    authorized_db_actor: Option<Authorisation>,
 ) -> Result<impl IntoResponse, Error> {
     let db_actor = DbActor::get(&state.db_pool, id).await?;
     let mut mastodon_account: Account = db_actor.into_mastodon(&state).await?;
 
     // Add the source field to the returned account if the requested account
     // is the account that has authorized itself
-    if let Some(Auth(authorized_db_actor)) = authorized_db_actor {
+    if let Some(Authorisation(authorized_db_actor)) = authorized_db_actor {
         if id == authorized_db_actor.id {
             let source: Source = authorized_db_actor.into_mastodon(&state).await?;
             mastodon_account.source = Some(source);
@@ -41,7 +41,7 @@ async fn accounts(
 async fn follow(
     Path(id): Path<Uuid>,
     Extension(state): Extension<ArcState>,
-    Auth(authorized_db_actor): Auth,
+    Authorisation(authorized_db_actor): Authorisation,
 ) -> Result<impl IntoResponse, Error> {
     let followed_db_actor = DbActor::get(&state.db_pool, id).await?;
     let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
@@ -90,7 +90,7 @@ async fn followers(
 async fn unfollow(
     Path(id): Path<Uuid>,
     Extension(state): Extension<ArcState>,
-    Auth(authorized_db_actor): Auth,
+    Authorisation(authorized_db_actor): Authorisation,
 ) -> Result<impl IntoResponse, Error> {
     // Fetch the follow activity
     let followed_db_actor = DbActor::get(&state.db_pool, id).await?;
@@ -108,7 +108,7 @@ async fn unfollow(
 
 async fn verify_credentials(
     Extension(state): Extension<ArcState>,
-    Auth(db_actor): Auth,
+    Authorisation(db_actor): Authorisation,
 ) -> Result<impl IntoResponse, Error> {
     let mut mastodon_account: Account = db_actor.clone().into_mastodon(&state).await?;
     let mastodon_account_source: Source = db_actor.into_mastodon(&state).await?;

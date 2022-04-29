@@ -2,6 +2,7 @@ use crate::{
     activitypub,
     consts::regex::USERNAME,
     database::{InsertActor, InsertExt},
+    error::Error,
     regex,
     state::ArcState,
     util::Form,
@@ -36,7 +37,7 @@ pub struct RegistrationForm {
 async fn register(
     Extension(state): Extension<ArcState>,
     Form(form): Form<RegistrationForm>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, Error> {
     if state.config.instance.closed_registrations {
         return Ok(StatusCode::FORBIDDEN.into_response());
     }

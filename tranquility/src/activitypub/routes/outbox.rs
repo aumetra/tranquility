@@ -1,24 +1,25 @@
-use {
-    super::CollectionQuery,
-    crate::{
-        consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, format_uuid,
-        state::ArcState,
-    },
-    itertools::Itertools,
-    std::ops::Not,
-    tranquility_types::activitypub::{
-        collection::Item, Activity, Actor, Collection, IsPrivate,
-        OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
-    },
-    uuid::Uuid,
-    warp::{Rejection, Reply},
+use super::CollectionQuery;
+use crate::{
+    consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, error::Error,
+    format_uuid, state::ArcState,
 };
+use axum::{
+    extract::{Path, Query},
+    response::IntoResponse,
+    Extension, Json,
+};
+use itertools::Itertools;
+use std::ops::Not;
+use tranquility_types::activitypub::{
+    collection::Item, Activity, Actor, Collection, IsPrivate, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
+};
+use uuid::Uuid;
 
 pub async fn outbox(
-    user_id: Uuid,
-    state: ArcState,
-    query: CollectionQuery,
-) -> Result<impl Reply, Rejection> {
+    Path(user_id): Path<Uuid>,
+    Extension(state): Extension<ArcState>,
+    Query(query): Query<CollectionQuery>,
+) -> Result<impl IntoResponse, Error> {
     let latest_activities = crate::database::outbox::activities(
         &state.db_pool,
         user_id,
@@ -60,5 +61,5 @@ pub async fn outbox(
         ..Collection::default()
     };
 
-    Ok(warp::reply::json(&outbox_collection))
+    Ok(Json(outbox_collection))
 }

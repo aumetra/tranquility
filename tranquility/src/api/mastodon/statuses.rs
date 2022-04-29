@@ -1,4 +1,4 @@
-use super::{convert::IntoMastodon, Auth};
+use super::{convert::IntoMastodon, Authorisation};
 use crate::{
     activitypub::Clean,
     database::{InsertExt, InsertObject},
@@ -26,7 +26,7 @@ struct CreateForm {
 
 async fn create(
     Extension(state): Extension<ArcState>,
-    Auth(author_db): Auth,
+    Authorisation(author_db): Authorisation,
     Form(form): Form<CreateForm>,
 ) -> Result<impl IntoResponse, Error> {
     if state.config.instance.character_limit < form.status.chars().count() {

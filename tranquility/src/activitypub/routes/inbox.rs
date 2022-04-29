@@ -1,24 +1,15 @@
-use axum::http::Request;
-
-use {
-    crate::{
-        activitypub::{
-            fetcher,
-            routes::{ap_json, optional_raw_query},
-        },
-        crypto,
-        error::Error,
-        match_handler,
-        state::ArcState,
+use crate::{
+    activitypub::{
+        fetcher,
+        routes::{ap_json, optional_raw_query},
     },
-    core::ops::Not,
-    tranquility_types::activitypub::{activity::ObjectField, Activity},
-    warp::{
-        http::{HeaderMap, Method},
-        path::FullPath,
-        Filter, Rejection, Reply,
-    },
+    crypto,
+    error::Error,
+    match_handler,
+    state::ArcState,
 };
+use http::Request;
+use tranquility_types::activitypub::{activity::ObjectField, Activity};
 
 /// Return a filter that
 /// - Decodes the activity

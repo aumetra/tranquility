@@ -5,10 +5,10 @@ use {
         error::Error,
         state::ArcState,
     },
+    http::StatusCode,
     std::sync::Arc,
     tranquility_types::activitypub::{activity::ObjectField, Activity},
     uuid::Uuid,
-    warp::http::StatusCode,
 };
 
 pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {

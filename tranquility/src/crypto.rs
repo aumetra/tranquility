@@ -93,7 +93,7 @@ pub mod token {
 
 pub mod request {
     use crate::{error::Error, util::cpu_intensive_task};
-    use axum::http::{
+    use http::{
         self,
         header::{HeaderName, HeaderValue},
     };
@@ -126,7 +126,10 @@ pub mod request {
         // The public key is provided in the PEM format
         // That's why the function takes a `String`
         public_key: String,
-    ) -> impl Future<Output = Result<bool, Error>> + Send {
+    ) -> impl Future<Output = Result<bool, Error>> + Send
+    where
+        B: Send + 'static,
+    {
         cpu_intensive_task(move || {
             let public_key = public_key.as_bytes();
 

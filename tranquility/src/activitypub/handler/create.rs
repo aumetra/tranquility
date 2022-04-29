@@ -5,9 +5,9 @@ use {
         error::Error,
         state::ArcState,
     },
+    http::StatusCode,
     tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
     uuid::Uuid,
-    warp::http::StatusCode,
 };
 
 async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, Error> {
