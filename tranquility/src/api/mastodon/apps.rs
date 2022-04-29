@@ -41,7 +41,7 @@ async fn create(
     .await?;
     let mastodon_application = application.into_mastodon(&state).await?;
 
-    Ok(Json(&mastodon_application))
+    Ok(Json(mastodon_application))
 }
 
 pub fn routes() -> Router {

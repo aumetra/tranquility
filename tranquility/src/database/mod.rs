@@ -28,7 +28,7 @@ pub trait InsertExt: ormx::Insert {
         // Acquire a connection from the database pool
         let mut db_conn = conn_pool.acquire().await?;
 
-        ormx::Insert::insert(self, &mut db_conn).await
+        Ok(ormx::Insert::insert(self, &mut db_conn).await?)
     }
 }
 

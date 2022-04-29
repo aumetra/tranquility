@@ -73,7 +73,7 @@ pub mod rsa {
     /// Get the public key from the private key and encode both in the PKCS#8 PEM format
     pub fn to_pem(rsa_key: &RsaPrivateKey) -> Result<(String, String), Error> {
         let public_key = rsa_key.to_public_key_pem(LineEnding::LF)?;
-        let private_key = rsa_key.to_pkcs8_pem(LineEnding::LF)?;
+        let private_key = rsa_key.to_pkcs8_pem(LineEnding::LF)?.to_string(); // Having this zeroised would be nice but SQLx has no support at the moment. Maybe there's some workaround?
 
         Ok((public_key, private_key))
     }
@@ -96,8 +96,10 @@ pub mod request {
     use http::{
         self,
         header::{HeaderName, HeaderValue},
+        HeaderMap,
     };
     use std::future::Future;
+    use tranquility_http_signatures::Request;
 
     /// Sign a reqwest HTTP request
     pub fn sign(
@@ -121,19 +123,20 @@ pub mod request {
     }
 
     /// Verify an HTTP request using parameters obtained from warp
-    pub fn verify<B>(
-        request: http::Request<B>,
+    pub fn verify(
+        method: String,
+        path: String,
+        query: Option<String>,
+        headers: HeaderMap,
         // The public key is provided in the PEM format
         // That's why the function takes a `String`
         public_key: String,
-    ) -> impl Future<Output = Result<bool, Error>> + Send
-    where
-        B: Send + 'static,
-    {
+    ) -> impl Future<Output = Result<bool, Error>> + Send {
         cpu_intensive_task(move || {
+            let request = Request::new(&method, &path, query.as_deref(), &headers);
             let public_key = public_key.as_bytes();
 
-            Ok(tranquility_http_signatures::verify(&request, public_key)?)
+            Ok(tranquility_http_signatures::verify(request, public_key)?)
         })
     }
 }

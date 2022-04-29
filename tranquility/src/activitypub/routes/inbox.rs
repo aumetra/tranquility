@@ -1,36 +1,17 @@
-use crate::{
-    activitypub::{
-        fetcher,
-        routes::{ap_json, optional_raw_query},
-    },
-    crypto,
-    error::Error,
-    match_handler,
-    state::ArcState,
+use crate::{activitypub::fetcher, crypto, error::Error, match_handler, state::ArcState};
+use async_trait::async_trait;
+use axum::{
+    body::HttpBody,
+    extract::{FromRequest, RequestParts},
+    response::{IntoResponse, Response},
+    Extension, Json,
 };
-use http::Request;
+use http::StatusCode;
+use std::{error::Error as StdError, sync::Arc};
 use tranquility_types::activitypub::{activity::ObjectField, Activity};
 
-/// Return a filter that
-/// - Decodes the activity
-/// - Verifies the HTTP signature
-/// - Checks if the activity/object contained/referenced in the activity actually belongs to the author of the activity
-pub fn validate_request(
-    state: &ArcState,
-) -> impl Filter<Extract = (Activity,), Error = Rejection> + Clone {
-    crate::state::filter(state)
-        .and(warp::method())
-        .and(warp::path::full())
-        .and(optional_raw_query())
-        .and(warp::header::headers_cloned())
-        .and(ap_json())
-        .and_then(verify_signature)
-        .untuple_one()
-        .and_then(verify_ownership)
-}
-
 /// Checks if the activity/object contained/referenced in the activity actually belongs to the author of the activity
-async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activity, Rejection> {
+async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activity, Error> {
     // It's fine if the objects or activities don't match in this case
     if activity.r#type == "Announce" || activity.r#type == "Follow" {
         return Ok(activity);
@@ -45,35 +26,58 @@ async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activit
         }
     };
 
-    identity_match
-        .then(|| activity)
-        .ok_or_else(|| Error::Unauthorized.into())
+    identity_match.then(|| activity).ok_or(Error::Unauthorized)
 }
 
-/// Verifies the HTTP signature with the public key of the owner of the activity
-async fn verify_signature<B>(
-    state: ArcState,
-    request: Request<B>,
-    activity: Activity,
-) -> Result<(ArcState, Activity), Rejection> {
-    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(&state, &activity.actor).await?;
-    let public_key = remote_actor.public_key.public_key_pem;
+/// Inbox payload extractor
+///
+/// This extractor also runs additional checks about whether this request is actually valid
+pub struct InboxPayload(pub Activity);
 
-    crypto::request::verify(request, public_key)
+#[async_trait]
+impl<B> FromRequest<B> for InboxPayload
+where
+    B: HttpBody + Send + Sync,
+    B::Data: Send,
+    B::Error: StdError + Send + Sync + 'static,
+{
+    type Rejection = Response;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let Json(activity) = Json::<Activity>::from_request(req)
+            .await
+            .map_err(IntoResponse::into_response)?;
+
+        let state = req
+            .extensions()
+            .get::<ArcState>()
+            .expect("[Bug] State missing in request extensions");
+
+        let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(state, &activity.actor).await?;
+        let public_key = remote_actor.public_key.public_key_pem;
+
+        crypto::request::verify(
+            req.method().as_str().to_string(),
+            req.uri().path().to_string(),
+            req.uri().query().map(ToString::to_string),
+            req.headers().clone(),
+            public_key,
+        )
         .await?
-        .then(|| (state, activity))
-        .ok_or_else(|| Error::Unauthorized.into())
+        .then(|| ())
+        .ok_or_else(|| StatusCode::UNAUTHORIZED.into_response())?;
+
+        let activity = verify_ownership(Arc::clone(state), activity).await?;
+        Ok(Self(activity))
+    }
 }
 
 /// Inbox handler
 pub async fn inbox(
-    // Do we even care about the user ID?
-    // Theoretically we could just use one shared inbox and get rid of the unique inboxes
-    _user_id: uuid::Uuid,
-    state: ArcState,
-    activity: Activity,
-) -> Result<impl Reply, Rejection> {
-    let response = match_handler! {
+    Extension(state): Extension<ArcState>,
+    InboxPayload(activity): InboxPayload,
+) -> Result<impl IntoResponse, Error> {
+    match_handler! {
         (state, activity);
 
         Accept,
@@ -85,7 +89,5 @@ pub async fn inbox(
         Reject,
         Undo,
         Update
-    };
-
-    response.map_err(Rejection::from)
+    }
 }

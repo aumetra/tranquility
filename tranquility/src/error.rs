@@ -6,7 +6,10 @@ use axum::{
     Json,
 };
 use reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError};
-use rsa::{errors::Error as RsaError, pkcs8::Error as Pkcs8Error};
+use rsa::{
+    errors::Error as RsaError,
+    pkcs8::{spki::Error as SpkiError, Error as Pkcs8Error},
+};
 use serde_json::Error as SerdeJsonError;
 use sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError};
 use tranquility_http_signatures::Error as HttpSignaturesError;
@@ -50,6 +53,9 @@ pub enum Error {
     #[error("RSA operation failed: {0}")]
     Rsa(#[from] RsaError),
 
+    #[error("SPKI operation failed: {0}")]
+    Spki(#[from] SpkiError),
+
     #[error("Database operation failed: {0}")]
     Sqlx(#[from] SqlxError),
 
@@ -73,6 +79,12 @@ pub enum Error {
 
     #[error("Validation error")]
     Validation(#[from] ValidationErrors),
+}
+
+impl From<Error> for Response {
+    fn from(err: Error) -> Self {
+        err.into_response()
+    }
 }
 
 impl IntoResponse for Error {

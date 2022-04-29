@@ -1,4 +1,7 @@
-use crate::{database::Actor as DbActor, error::Error, state::ArcState, util::HTTP_CLIENT};
+use crate::{
+    consts::cors::GENERAL_ALLOWED_METHODS, database::Actor as DbActor, error::Error,
+    state::ArcState, util::HTTP_CLIENT,
+};
 use axum::{
     extract::Query, http::StatusCode, response::IntoResponse, routing::get, Extension, Json, Router,
 };
@@ -77,5 +80,5 @@ pub async fn webfinger(
 pub fn routes() -> Router {
     Router::new()
         .route("/webfinger", get(webfinger))
-        .layer(CorsLayer::very_permissive())
+        .layer(CorsLayer::very_permissive().allow_methods(GENERAL_ALLOWED_METHODS.to_vec()))
 }

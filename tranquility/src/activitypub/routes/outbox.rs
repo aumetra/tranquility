@@ -40,7 +40,7 @@ pub async fn outbox(
             create_activity
                 .is_private()
                 .not()
-                .then(|| Item::Activity(create_activity))
+                .then(|| Item::Activity(Box::new(create_activity)))
         })
         .collect_vec();
 

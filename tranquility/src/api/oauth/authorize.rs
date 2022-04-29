@@ -4,28 +4,30 @@ use crate::{
     database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
     error::Error,
     state::ArcState,
+    util::Form,
 };
 use askama::Template;
 use axum::{
-    http::Uri,
+    extract::Query,
     response::{Html, IntoResponse, Redirect},
+    Extension,
 };
+use axum_macros::debug_handler;
 use chrono::Duration;
 use once_cell::sync::Lazy;
 use serde::Deserialize;
-use std::convert::TryFrom;
 use uuid::Uuid;
 
 static AUTHORIZATION_CODE_VALIDITY: Lazy<Duration> = Lazy::new(|| Duration::minutes(5));
 
 #[derive(Deserialize)]
-pub struct Form {
+pub struct AuthoriseForm {
     username: String,
     password: String,
 }
 
 #[derive(Deserialize)]
-pub struct Query {
+pub struct QueryParams {
     response_type: String,
     client_id: Uuid,
     redirect_uri: String,
@@ -36,13 +38,18 @@ pub struct Query {
 
 #[allow(clippy::unused_async)]
 pub async fn get() -> impl IntoResponse {
-    Ok(Html(AUTHORIZE_FORM.as_str()))
+    Html(AUTHORIZE_FORM.as_str())
 }
 
-pub async fn post(state: ArcState, form: Form, query: Query) -> Result<impl IntoResponse, Error> {
+#[debug_handler]
+pub async fn post(
+    Extension(state): Extension<ArcState>,
+    Form(form): Form<AuthoriseForm>,
+    Query(query): Query<QueryParams>,
+) -> Result<impl IntoResponse, Error> {
     let actor = Actor::by_username_local(&state.db_pool, &form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
-        return Err(Error::Unauthorized.into());
+        return Err(Error::Unauthorized);
     }
 
     // RFC 6749:
@@ -51,12 +58,12 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<impl Into
     //    REQUIRED.  Value MUST be set to "code".
     // ```
     if query.response_type != "code" {
-        return Err(Error::InvalidRequest.into());
+        return Err(Error::InvalidRequest);
     }
 
     let client = OAuthApplication::by_client_id(&state.db_pool, &query.client_id).await?;
     if client.redirect_uris != query.redirect_uri {
-        return Err(Error::InvalidRequest.into());
+        return Err(Error::InvalidRequest);
     }
 
     let authorization_code = crate::crypto::token::generate();
@@ -87,9 +94,6 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<impl Into
             query.redirect_uri, authorization_code.code, query.state,
         );
 
-        #[allow(clippy::map_err_ignore)]
-        let redirect_uri: Uri = Uri::try_from(redirect_uri).map_err(|_| Error::InvalidRequest)?;
-
-        Ok(Redirect::temporary(redirect_uri).into_response())
+        Ok(Redirect::temporary(&redirect_uri).into_response())
     }
 }

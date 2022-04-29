@@ -23,7 +23,7 @@ struct TokenTemplate {
 pub fn routes() -> Router {
     let token_router = Router::new()
         .route("/token", post(token::token))
-        .layer(CorsLayer::new().allowed_methods(OAUTH_TOKEN_ALLOWED_METHODS));
+        .layer(CorsLayer::very_permissive().allow_methods(OAUTH_TOKEN_ALLOWED_METHODS.to_vec()));
 
     let authorize_router = Router::new()
         .route("/authorize", get(authorize::get))

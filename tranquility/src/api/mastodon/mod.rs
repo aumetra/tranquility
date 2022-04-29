@@ -9,7 +9,7 @@ use axum::{
     extract::{FromRequest, RequestParts},
     Router,
 };
-use headers::{authorization::Bearer, HeaderMapExt};
+use headers::{authorization::Bearer, Authorization, HeaderMapExt};
 use once_cell::sync::Lazy;
 use std::ops::Deref;
 use tower_http::cors::CorsLayer;
@@ -26,13 +26,6 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
 /// Then it fetches the actor associated with the token
 pub struct Authorisation(pub Actor);
 
-impl Authorisation {
-    /// Convert the auth struct into the inner actor
-    pub fn into_inner(self) -> Actor {
-        self.0
-    }
-}
-
 impl Deref for Authorisation {
     type Target = Actor;
 
@@ -42,13 +35,16 @@ impl Deref for Authorisation {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for Authorisation {
+impl<B> FromRequest<B> for Authorisation
+where
+    B: Send,
+{
     type Rejection = Error;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
         let credentials = req
             .headers()
-            .typed_get::<Bearer>()
+            .typed_get::<Authorization<Bearer>>()
             .ok_or(Error::Unauthorized)?;
         let token = credentials.token();
 
@@ -59,6 +55,8 @@ impl<B> FromRequest<B> for Authorisation {
 
         let access_token = OAuthToken::by_access_token(&state.db_pool, token).await?;
         let actor = Actor::get(&state.db_pool, access_token.actor_id).await?;
+
+        Ok(Self(actor))
     }
 }
 
@@ -74,7 +72,7 @@ pub fn routes() -> Router {
 
     Router::new()
         .nest("/api/v1", v1_router)
-        .layer(CorsLayer::new().allow_methods(API_ALLOWED_METHODS))
+        .layer(CorsLayer::very_permissive().allow_methods(API_ALLOWED_METHODS.to_vec()))
 }
 
 pub mod accounts;

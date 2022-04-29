@@ -1,5 +1,6 @@
 use crate::{database::Actor, error::Error as OtherError, state::ArcState};
 use axum::{extract::Path, response::IntoResponse, routing::get, Extension, Router};
+use axum_macros::debug_handler;
 use lettre::{
     error::Error as ContentError,
     transport::smtp::{authentication::Credentials, Error as SmtpError},
@@ -95,10 +96,11 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
     });
 }
 
+#[debug_handler]
 async fn confirm_account(
     Path(confirmation_code): Path<String>,
     Extension(state): Extension<ArcState>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, OtherError> {
     let mut user = Actor::by_confirmation_code(&state.db_pool, &confirmation_code).await?;
     user.is_confirmed = true;
     user.update(&state.db_pool).await?;
@@ -106,6 +108,6 @@ async fn confirm_account(
     Ok("Account confirmed!")
 }
 
-pub fn routes(state: &ArcState) -> Router {
+pub fn routes() -> Router {
     Router::new().route("/confirm-account/:confirmation_code", get(confirm_account))
 }

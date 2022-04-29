@@ -24,15 +24,15 @@ where
     B: HttpBody + Send,
     B::Data: Send,
     B::Error: StdError + Send + Sync + 'static,
-    T: DeserializeOwned,
+    T: DeserializeOwned + Send,
 {
     type Rejection = <AxumForm<T> as FromRequest<B>>::Rejection;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        if let Ok(val) = Json::<T>::from_request(req).await {
+        if let Ok(Json(val)) = Json::<T>::from_request(req).await {
             Ok(Self(val))
         } else {
-            let val = AxumForm::from_request(req).await?;
+            let AxumForm(val) = AxumForm::from_request(req).await?;
             Ok(Self(val))
         }
     }

@@ -4,12 +4,14 @@ use crate::{
     database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
     error::Error,
     state::ArcState,
+    util::Form,
 };
 use askama::Template;
 use axum::{
     response::{Html, IntoResponse},
-    Json,
+    Extension, Json,
 };
+use axum_macros::debug_handler;
 use chrono::Duration;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -43,7 +45,7 @@ enum FormData {
 }
 
 #[derive(Deserialize)]
-pub struct Form {
+pub struct TokenForm {
     grant_type: String,
 
     #[serde(flatten)]
@@ -101,7 +103,7 @@ async fn code_grant(
 ) -> Result<impl IntoResponse, Error> {
     let client = OAuthApplication::by_client_id(&state.db_pool, &client_id).await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
-        return Err(Error::Unauthorized.into());
+        return Err(Error::Unauthorized);
     }
 
     let authorization_code = OAuthAuthorization::by_code(&state.db_pool, &code).await?;
@@ -148,7 +150,7 @@ async fn password_grant(
 ) -> Result<impl IntoResponse, Error> {
     let actor = Actor::by_username_local(&state.db_pool, username.as_str()).await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
-        return Err(Error::Unauthorized.into());
+        return Err(Error::Unauthorized);
     }
 
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
@@ -175,7 +177,11 @@ async fn password_grant(
     Ok(Json(response))
 }
 
-pub async fn token(state: ArcState, form: Form) -> Result<impl IntoResponse, Error> {
+#[debug_handler]
+pub async fn token(
+    Extension(state): Extension<ArcState>,
+    Form(form): Form<TokenForm>,
+) -> Result<impl IntoResponse, Error> {
     let response = match form.grant_type.as_str() {
         "authorization_code" => {
             let form_data = form.data.code_grant()?;
@@ -185,7 +191,7 @@ pub async fn token(state: ArcState, form: Form) -> Result<impl IntoResponse, Err
             let form_data = form.data.password_grant()?;
             password_grant(&state, form_data).await?.into_response()
         }
-        _ => return Err(Error::InvalidRequest.into()),
+        _ => return Err(Error::InvalidRequest),
     };
 
     Ok(response)

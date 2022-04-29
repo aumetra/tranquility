@@ -8,5 +8,5 @@ pub async fn users(
 ) -> Result<impl IntoResponse, Error> {
     let actor = Actor::get(&state.db_pool, id).await?;
 
-    Ok(Json(&actor.actor))
+    Ok(Json(actor.actor))
 }

@@ -35,7 +35,7 @@ async fn accounts(
         }
     }
 
-    Ok(Json(&mastodon_account))
+    Ok(Json(mastodon_account))
 }
 
 async fn follow(
@@ -54,7 +54,7 @@ async fn follow(
         following: true,
         ..FollowResponse::default()
     };
-    Ok(Json(&follow_response))
+    Ok(Json(follow_response))
 }
 
 async fn following(
@@ -65,7 +65,7 @@ async fn following(
         DbObject::by_type_and_owner(&state.db_pool, "Follow", &id, 10, 0).await?;
     let followed_accounts: Vec<Account> = follow_activities.into_mastodon(&state).await?;
 
-    Ok(Json(&followed_accounts))
+    Ok(Json(followed_accounts))
 }
 
 async fn followers(
@@ -80,7 +80,7 @@ async fn followers(
             .await?;
     let follower_accounts: Vec<Account> = followed_activities.into_mastodon(&state).await?;
 
-    Ok(Json(&follower_accounts))
+    Ok(Json(follower_accounts))
 }
 
 // TODO: Implement `/api/v1/accounts/:id/statuses` endpoint
@@ -103,7 +103,7 @@ async fn unfollow(
         id: followed_actor_id,
         ..FollowResponse::default()
     };
-    Ok(Json(&unfollow_response))
+    Ok(Json(unfollow_response))
 }
 
 async fn verify_credentials(
@@ -115,7 +115,7 @@ async fn verify_credentials(
 
     mastodon_account.source = Some(mastodon_account_source);
 
-    Ok(Json(&mastodon_account))
+    Ok(Json(mastodon_account))
 }
 
 pub fn routes() -> Router {

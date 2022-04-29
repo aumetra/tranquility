@@ -14,7 +14,7 @@ pub async fn run(state: ArcState) -> io::Result<()> {
         .layer(TraceLayer::new_for_http());
 
     #[cfg(feature = "email")]
-    let router = router.merge(crate::email::routes(&state));
+    let router = router.merge(crate::email::routes());
 
     let config = &state.config;
 
@@ -22,9 +22,11 @@ pub async fn run(state: ArcState) -> io::Result<()> {
     let addr = (interface, config.server.port);
 
     if config.tls.serve_tls_directly {
-        let config =
-            RustlsConfig::from_pem_file(state.config.tls.certificate, state.config.tls.secret_key)
-                .await?;
+        let config = RustlsConfig::from_pem_file(
+            &state.config.tls.certificate,
+            &state.config.tls.secret_key,
+        )
+        .await?;
 
         axum_server::bind_rustls(addr.into(), config)
             .serve(router.into_make_service())

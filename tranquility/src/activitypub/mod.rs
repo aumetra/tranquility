@@ -7,8 +7,8 @@ use {
 #[derive(Clone, Deserialize)]
 #[serde(untagged)]
 pub enum ActivityObject {
-    Activity(Activity),
-    Object(Object),
+    Activity(Box<Activity>),
+    Object(Box<Object>),
 }
 
 impl IsPrivate for ActivityObject {
