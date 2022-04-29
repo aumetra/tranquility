@@ -1,18 +1,19 @@
-use {
-    super::TokenTemplate,
-    crate::{
-        crypto::password,
-        database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
-        error::Error,
-        state::ArcState,
-    },
-    askama::Template,
-    chrono::Duration,
-    once_cell::sync::Lazy,
-    serde::{Deserialize, Serialize},
-    uuid::Uuid,
-    warp::{reply::Response, Rejection, Reply},
+use super::TokenTemplate;
+use crate::{
+    crypto::password,
+    database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
+    error::Error,
+    state::ArcState,
 };
+use askama::Template;
+use axum::{
+    response::{Html, IntoResponse},
+    Json,
+};
+use chrono::Duration;
+use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
 
@@ -51,18 +52,18 @@ pub struct Form {
 
 impl FormData {
     /// If the form is a code grant form, return it otherwise return a rejection
-    pub fn code_grant(self) -> Result<FormCodeGrant, Rejection> {
+    pub fn code_grant(self) -> Result<FormCodeGrant, Error> {
         match self {
             Self::CodeGrant(form) => Ok(form),
-            _ => Err(Error::InvalidRequest.into()),
+            _ => Err(Error::InvalidRequest),
         }
     }
 
     /// If the form is a password grant form, return it otherwise return a rejection
-    pub fn password_grant(self) -> Result<FormPasswordGrant, Rejection> {
+    pub fn password_grant(self) -> Result<FormPasswordGrant, Error> {
         match self {
             Self::PasswordGrant(form) => Ok(form),
-            _ => Err(Error::InvalidRequest.into()),
+            _ => Err(Error::InvalidRequest),
         }
     }
 }
@@ -97,7 +98,7 @@ async fn code_grant(
         code,
         ..
     }: FormCodeGrant,
-) -> Result<Response, Rejection> {
+) -> Result<impl IntoResponse, Error> {
     let client = OAuthApplication::by_client_id(&state.db_pool, &client_id).await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
@@ -127,7 +128,7 @@ async fn code_grant(
         }
         .render()?;
 
-        Ok(warp::reply::html(page).into_response())
+        Ok(Html(page).into_response())
     } else {
         let response = AccessTokenResponse {
             access_token: access_token.access_token,
@@ -135,7 +136,7 @@ async fn code_grant(
             ..AccessTokenResponse::default()
         };
 
-        Ok(warp::reply::json(&response).into_response())
+        Ok(Json(&response).into_response())
     }
 }
 
@@ -144,7 +145,7 @@ async fn password_grant(
     FormPasswordGrant {
         username, password, ..
     }: FormPasswordGrant,
-) -> Result<impl Reply, Rejection> {
+) -> Result<impl IntoResponse, Error> {
     let actor = Actor::by_username_local(&state.db_pool, username.as_str()).await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
@@ -171,10 +172,10 @@ async fn password_grant(
         ..AccessTokenResponse::default()
     };
 
-    Ok(warp::reply::json(&response))
+    Ok(Json(response))
 }
 
-pub async fn token(state: ArcState, form: Form) -> Result<Response, Rejection> {
+pub async fn token(state: ArcState, form: Form) -> Result<impl IntoResponse, Error> {
     let response = match form.grant_type.as_str() {
         "authorization_code" => {
             let form_data = form.data.code_grant()?;

@@ -1,19 +1,20 @@
-use {
-    super::{TokenTemplate, AUTHORIZE_FORM},
-    crate::{
-        crypto::password,
-        database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
-        error::Error,
-        state::ArcState,
-    },
-    askama::Template,
-    chrono::Duration,
-    once_cell::sync::Lazy,
-    serde::Deserialize,
-    std::convert::TryFrom,
-    uuid::Uuid,
-    warp::{http::Uri, reply::Response, Rejection, Reply},
+use super::{TokenTemplate, AUTHORIZE_FORM};
+use crate::{
+    crypto::password,
+    database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
+    error::Error,
+    state::ArcState,
 };
+use askama::Template;
+use axum::{
+    http::Uri,
+    response::{Html, IntoResponse, Redirect},
+};
+use chrono::Duration;
+use once_cell::sync::Lazy;
+use serde::Deserialize;
+use std::convert::TryFrom;
+use uuid::Uuid;
 
 static AUTHORIZATION_CODE_VALIDITY: Lazy<Duration> = Lazy::new(|| Duration::minutes(5));
 
@@ -34,11 +35,11 @@ pub struct Query {
 }
 
 #[allow(clippy::unused_async)]
-pub async fn get() -> Result<impl Reply, Rejection> {
-    Ok(warp::reply::html(AUTHORIZE_FORM.as_str()))
+pub async fn get() -> impl IntoResponse {
+    Ok(Html(AUTHORIZE_FORM.as_str()))
 }
 
-pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response, Rejection> {
+pub async fn post(state: ArcState, form: Form, query: Query) -> Result<impl IntoResponse, Error> {
     let actor = Actor::by_username_local(&state.db_pool, &form.username).await?;
     if !password::verify(form.password, actor.password_hash.unwrap()).await {
         return Err(Error::Unauthorized.into());
@@ -79,7 +80,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         }
         .render()?;
 
-        Ok(warp::reply::html(page).into_response())
+        Ok(Html(page).into_response())
     } else {
         let redirect_uri = format!(
             "{}?code={}&state={}",
@@ -89,6 +90,6 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         #[allow(clippy::map_err_ignore)]
         let redirect_uri: Uri = Uri::try_from(redirect_uri).map_err(|_| Error::InvalidRequest)?;
 
-        Ok(warp::redirect::temporary(redirect_uri).into_response())
+        Ok(Redirect::temporary(redirect_uri).into_response())
     }
 }
