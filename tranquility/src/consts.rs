@@ -3,9 +3,18 @@ pub mod activitypub {
 }
 
 pub mod cors {
-    pub const API_ALLOWED_METHODS: &[&str] = &["post", "put", "delete", "get", "patch", "options"];
-    pub const GENERAL_ALLOWED_METHODS: &[&str] = &["get"];
-    pub const OAUTH_TOKEN_ALLOWED_METHODS: &[&str] = &["post"];
+    use axum::http::Method;
+
+    pub const API_ALLOWED_METHODS: &[Method] = &[
+        Method::POST,
+        Method::PUT,
+        Method::DELETE,
+        Method::GET,
+        Method::PATCH,
+        Method::OPTIONS,
+    ];
+    pub const GENERAL_ALLOWED_METHODS: &[Method] = &[Method::GET];
+    pub const OAUTH_TOKEN_ALLOWED_METHODS: &[Method] = &[Method::POST];
 }
 
 pub mod crypto {

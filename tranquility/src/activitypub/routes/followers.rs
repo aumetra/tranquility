@@ -1,22 +1,20 @@
-use {
-    super::CollectionQuery,
-    crate::{
-        activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE,
-        database::Actor as DbActor, format_uuid, map_err, state::ArcState,
-    },
-    itertools::Itertools,
-    tranquility_types::activitypub::{
-        collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
-    },
-    uuid::Uuid,
-    warp::{Rejection, Reply},
+use super::CollectionQuery;
+use crate::{
+    activitypub::FollowActivity, consts::activitypub::ACTIVITIES_PER_PAGE,
+    database::Actor as DbActor, format_uuid, state::ArcState,
 };
+use axum::{response::IntoResponse, Json};
+use itertools::Itertools;
+use tranquility_types::activitypub::{
+    collection::Item, Actor, Collection, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
+};
+use uuid::Uuid;
 
 pub async fn followers(
     user_id: Uuid,
     state: ArcState,
     query: CollectionQuery,
-) -> Result<impl Reply, Rejection> {
+) -> impl IntoResponse {
     let latest_follow_activities = crate::database::follow::followers(
         &state.db_pool,
         user_id,
@@ -39,8 +37,8 @@ pub async fn followers(
         })
         .collect_vec();
 
-    let user_db = map_err!(DbActor::get(&state.db_pool, user_id).await)?;
-    let user: Actor = map_err!(serde_json::from_value(user_db.actor))?;
+    let user_db = DbActor::get(&state.db_pool, user_id).await?;
+    let user: Actor = serde_json::from_value(user_db.actor)?;
 
     let next = format!("{}?last_id={}", user.followers, last_id);
 
@@ -56,5 +54,5 @@ pub async fn followers(
         ..Collection::default()
     };
 
-    Ok(warp::reply::json(&followers_collection))
+    Ok(Json(&followers_collection))
 }

@@ -1,15 +1,15 @@
+use axum::Router;
+use tower_http::cors::CorsLayer;
+
 use {
     crate::{
         consts::cors::API_ALLOWED_METHODS,
         database::{Actor, OAuthToken},
         error::Error,
-        map_err,
         state::ArcState,
-        util::construct_cors,
     },
     headers::authorization::{Bearer, Credentials},
     once_cell::sync::Lazy,
-    serde::de::DeserializeOwned,
     tranquility_types::mastodon::App,
     warp::{
         hyper::header::{HeaderValue, AUTHORIZATION},
@@ -22,15 +22,6 @@ static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
     name: "Web".into(),
     ..App::default()
 });
-
-/// Filter that can decode the body as an URL-encoded or an JSON-encoded form
-pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
-) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
-    let urlencoded_filter = warp::body::form();
-    let json_filter = warp::body::json();
-
-    urlencoded_filter.or(json_filter).unify()
-}
 
 /// Same as [`authorise_user`] but makes the bearer token optional
 pub fn authorisation_optional(
@@ -56,8 +47,8 @@ async fn authorise_user(
     let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
     let token = credentials.token();
 
-    let access_token = map_err!(OAuthToken::by_access_token(&state.db_pool, token).await)?;
-    let actor = map_err!(Actor::get(&state.db_pool, access_token.actor_id).await)?;
+    let access_token = OAuthToken::by_access_token(&state.db_pool, token).await?;
+    let actor = Actor::get(&state.db_pool, access_token.actor_id).await?;
 
     Ok(actor)
 }
@@ -76,18 +67,16 @@ pub fn authorisation_required(
 pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     // Enable CORS for all API endpoints
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-    let cors = construct_cors(API_ALLOWED_METHODS);
 
-    let v1_prefix = warp::path!("api" / "v1" / ..);
+    let v1_router = Router::new()
+        .merge(accounts::routes())
+        .merge(apps::routes())
+        .merge(statuses::routes())
+        .merge(instance::routes());
 
-    let accounts = accounts::routes(state);
-    let apps = apps::routes(state);
-    let statuses = statuses::routes(state);
-    let instance = instance::routes(state);
-
-    let v1_routes = accounts.or(apps).or(statuses).or(instance);
-
-    v1_prefix.and(v1_routes).with(cors)
+    Router::new()
+        .nest("/api/v1", v1_router)
+        .layer(CorsLayer::new().allow_methods(API_ALLOWED_METHODS))
 }
 
 pub mod accounts;

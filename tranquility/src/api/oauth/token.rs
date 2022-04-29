@@ -4,7 +4,6 @@ use {
         crypto::password,
         database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
         error::Error,
-        map_err,
         state::ArcState,
     },
     askama::Template,
@@ -99,12 +98,12 @@ async fn code_grant(
         ..
     }: FormCodeGrant,
 ) -> Result<Response, Rejection> {
-    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &client_id).await)?;
+    let client = OAuthApplication::by_client_id(&state.db_pool, &client_id).await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
         return Err(Error::Unauthorized.into());
     }
 
-    let authorization_code = map_err!(OAuthAuthorization::by_code(&state.db_pool, &code).await)?;
+    let authorization_code = OAuthAuthorization::by_code(&state.db_pool, &code).await?;
 
     let valid_until = *ACCESS_TOKEN_VALID_DURATION;
     let valid_until = chrono::Utc::now() + valid_until;
@@ -123,10 +122,10 @@ async fn code_grant(
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = map_err!(TokenTemplate {
+        let page = TokenTemplate {
             token: access_token.access_token,
         }
-        .render())?;
+        .render()?;
 
         Ok(warp::reply::html(page).into_response())
     } else {

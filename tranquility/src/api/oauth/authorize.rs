@@ -4,7 +4,6 @@ use {
         crypto::password,
         database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
         error::Error,
-        map_err,
         state::ArcState,
     },
     askama::Template,
@@ -54,7 +53,7 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
         return Err(Error::InvalidRequest.into());
     }
 
-    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &query.client_id).await)?;
+    let client = OAuthApplication::by_client_id(&state.db_pool, &query.client_id).await?;
     if client.redirect_uris != query.redirect_uri {
         return Err(Error::InvalidRequest.into());
     }
@@ -75,10 +74,10 @@ pub async fn post(state: ArcState, form: Form, query: Query) -> Result<Response,
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if query.redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = map_err!(TokenTemplate {
+        let page = TokenTemplate {
             token: authorization_code.code,
         }
-        .render())?;
+        .render()?;
 
         Ok(warp::reply::html(page).into_response())
     } else {

@@ -3,7 +3,7 @@ use {
     crate::{
         activitypub::interactions,
         database::{Actor as DbActor, Object as DbObject},
-        format_uuid, map_err,
+        format_uuid,
         state::ArcState,
     },
     tranquility_types::{
@@ -19,7 +19,7 @@ async fn accounts(
     state: ArcState,
     authorized_db_actor: Option<DbActor>,
 ) -> Result<impl Reply, Rejection> {
-    let db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
+    let db_actor = DbActor::get(&state.db_pool, id).await?;
     let mut mastodon_account: Account = db_actor.into_mastodon(&state).await?;
 
     // Add the source field to the returned account if the requested account
@@ -39,8 +39,8 @@ async fn follow(
     state: ArcState,
     authorized_db_actor: DbActor,
 ) -> Result<impl Reply, Rejection> {
-    let followed_db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
-    let followed_actor: Actor = map_err!(serde_json::from_value(followed_db_actor.actor))?;
+    let followed_db_actor = DbActor::get(&state.db_pool, id).await?;
+    let followed_actor: Actor = serde_json::from_value(followed_db_actor.actor)?;
 
     interactions::follow(&state, authorized_db_actor, &followed_actor).await?;
 
@@ -62,8 +62,8 @@ async fn following(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
 }
 
 async fn followers(id: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
-    let db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
-    let actor: Actor = map_err!(serde_json::from_value(db_actor.actor))?;
+    let db_actor = DbActor::get(&state.db_pool, id).await?;
+    let actor: Actor = serde_json::from_value(db_actor.actor)?;
 
     let followed_activities =
         DbObject::by_type_and_object_url(&state.db_pool, "Follow", actor.id.as_str(), 10, 0)
@@ -83,7 +83,7 @@ async fn unfollow(
     authorized_db_actor: DbActor,
 ) -> Result<impl Reply, Rejection> {
     // Fetch the follow activity
-    let followed_db_actor = map_err!(DbActor::get(&state.db_pool, id).await)?;
+    let followed_db_actor = DbActor::get(&state.db_pool, id).await?;
     let followed_actor_id = format_uuid!(followed_db_actor.id);
 
     interactions::unfollow(&state, authorized_db_actor, followed_db_actor).await?;

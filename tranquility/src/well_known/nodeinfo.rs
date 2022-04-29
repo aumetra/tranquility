@@ -1,14 +1,12 @@
-use {
-    crate::{
-        consts::{SOFTWARE_NAME, VERSION},
-        state::ArcState,
-    },
-    tranquility_types::nodeinfo::{Link, LinkCollection, Nodeinfo, Services, Software, Usage},
-    warp::{Filter, Rejection, Reply},
+use crate::{
+    consts::{SOFTWARE_NAME, VERSION},
+    state::ArcState,
 };
+use axum::{response::IntoResponse, routing::get, Extension, Json, Router};
+use tranquility_types::nodeinfo::{Link, LinkCollection, Nodeinfo, Services, Software, Usage};
 
 #[allow(clippy::unused_async)]
-async fn nodeinfo(state: ArcState) -> Result<impl Reply, Rejection> {
+async fn nodeinfo(Extension(state): Extension<ArcState>) -> impl IntoResponse {
     let info = Nodeinfo {
         protocols: vec!["activitypub".into()],
         software: Software {
@@ -25,11 +23,11 @@ async fn nodeinfo(state: ArcState) -> Result<impl Reply, Rejection> {
         ..Nodeinfo::default()
     };
 
-    Ok(warp::reply::json(&info))
+    Json(&info)
 }
 
 #[allow(clippy::unused_async)]
-async fn nodeinfo_links(state: ArcState) -> Result<impl Reply, Rejection> {
+async fn nodeinfo_links(Extension(state): Extension<ArcState>) -> impl IntoResponse {
     let entity_link = format!(
         "https://{}/.well-known/nodeinfo/2.1",
         state.config.instance.domain
@@ -38,18 +36,11 @@ async fn nodeinfo_links(state: ArcState) -> Result<impl Reply, Rejection> {
     let link = Link::new(entity_link);
     let link_collection = LinkCollection { links: vec![link] };
 
-    Ok(warp::reply::json(&link_collection))
+    Json(link_collection)
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    let nodeinfo_links = warp::path!("nodeinfo")
-        .and(state.clone())
-        .and_then(nodeinfo_links);
-    let nodeinfo_entity = warp::path!("nodeinfo" / "2.1")
-        .and(state)
-        .and_then(nodeinfo);
-
-    nodeinfo_links.or(nodeinfo_entity)
+pub fn routes() -> Router {
+    Router::new()
+        .route("/nodeinfo", get(nodeinfo_links))
+        .route("/nodeinfo/2.1", get(nodeinfo))
 }

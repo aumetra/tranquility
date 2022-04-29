@@ -51,5 +51,5 @@ mod state;
 mod util;
 mod well_known;
 
-#[cfg(test)]
-mod tests;
+/*#[cfg(test)]
+mod tests;*/

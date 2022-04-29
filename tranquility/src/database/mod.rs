@@ -2,7 +2,7 @@
 #![allow(clippy::similar_names)]
 
 use {
-    crate::{error::Error, map_err},
+    crate::error::Error,
     async_trait::async_trait,
     chrono::{DateTime, Utc},
     sqlx::PgPool,
@@ -26,9 +26,9 @@ pub trait InsertExt: ormx::Insert {
         conn_pool: &sqlx::Pool<ormx::Db>,
     ) -> Result<<Self as ormx::Insert>::Table, Error> {
         // Acquire a connection from the database pool
-        let mut db_conn = map_err!(conn_pool.acquire().await)?;
+        let mut db_conn = conn_pool.acquire().await?;
 
-        map_err!(ormx::Insert::insert(self, &mut db_conn).await)
+        ormx::Insert::insert(self, &mut db_conn).await
     }
 }
 

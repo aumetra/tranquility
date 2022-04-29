@@ -71,3 +71,5 @@ pub mod handler;
 pub mod instantiate;
 pub mod interactions;
 pub mod routes;
+
+pub use routes::routes;

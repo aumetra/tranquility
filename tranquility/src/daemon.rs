@@ -1,8 +1,6 @@
-use {
-    crate::{consts::daemon::DELETE_INTERVAL, database::OAuthAuthorization, state::ArcState},
-    std::{future::Future, sync::Arc},
-    tokio::time,
-};
+use crate::{consts::daemon::DELETE_INTERVAL, database::OAuthAuthorization, state::ArcState};
+use std::{future::Future, sync::Arc};
+use tokio::time;
 
 // Keeping this for future use
 #[allow(dead_code)]

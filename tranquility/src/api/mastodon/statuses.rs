@@ -3,7 +3,6 @@ use {
     crate::{
         activitypub::Clean,
         database::{Actor as DbActor, InsertExt, InsertObject},
-        limit_body_size, map_err,
         state::ArcState,
         util::mention::FormatMention,
     },
@@ -37,7 +36,7 @@ async fn create(
         );
     }
 
-    let author: Actor = map_err!(serde_json::from_value(author_db.actor))?;
+    let author: Actor = serde_json::from_value(author_db.actor)?;
 
     let (object_id, mut object) = crate::activitypub::instantiate::object(
         &state.config,
@@ -58,7 +57,7 @@ async fn create(
 
     object.clean();
 
-    let object_value = map_err!(serde_json::to_value(&object))?;
+    let object_value = serde_json::to_value(&object)?;
 
     InsertObject {
         id: object_id,

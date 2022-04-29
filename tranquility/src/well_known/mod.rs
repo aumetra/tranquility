@@ -1,12 +1,11 @@
-use {
-    crate::state::ArcState,
-    warp::{Filter, Rejection, Reply},
-};
+use axum::Router;
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let routes = nodeinfo::routes(state).or(webfinger::routes(state));
+pub fn routes() -> Router {
+    let router = Router::new()
+        .merge(nodeinfo::routes())
+        .merge(webfinger::routes());
 
-    warp::path!(".well-known" / ..).and(routes)
+    Router::new().nest("/.well-known", router)
 }
 
 pub mod nodeinfo;

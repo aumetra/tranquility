@@ -73,6 +73,7 @@ impl Configuration {
 
     /// Set the ratelimiter active  
     /// (only really useful for user controlled configuration)  
+    #[must_use]
     pub fn active(mut self, active: bool) -> Self {
         self.active = active;
 
@@ -80,6 +81,7 @@ impl Configuration {
     }
 
     /// The quota resets every given duration  
+    #[must_use]
     pub fn period(mut self, period: Duration) -> Self {
         self.period = period;
 
@@ -87,6 +89,7 @@ impl Configuration {
     }
 
     /// The quota for every duration  
+    #[must_use]
     pub fn burst_quota(mut self, burst_quota: u32) -> Self {
         self.burst_quota = burst_quota;
 
@@ -210,7 +213,7 @@ macro_rules! ratelimit {
     // Create a `WrapFn` from the given filter using `ratelimit!(fn_from_filter: )`
     // Input: [warp filter]
     (from_filter: $ratelimit_filter:expr) => {{
-        warp::wrap_fn($crate::ratelimit!(fn_from_filter: $ratelimit_filter))
+        $crate::warp::wrap_fn($crate::ratelimit!(fn_from_filter: $ratelimit_filter))
     }};
 }
 

@@ -28,13 +28,13 @@ pub struct Collection {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Item {
-    Activity(super::Activity),
+    Activity(Box<super::Activity>),
     Url(String),
 }
 
 impl From<super::Activity> for Item {
     fn from(item: super::Activity) -> Self {
-        Self::Activity(item)
+        Self::Activity(Box::new(item))
     }
 }
 

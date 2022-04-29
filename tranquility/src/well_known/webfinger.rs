@@ -1,14 +1,12 @@
-use {
-    crate::{
-        consts::cors::GENERAL_ALLOWED_METHODS, database::Actor as DbActor, error::Error, map_err,
-        state::ArcState, util::construct_cors, util::HTTP_CLIENT,
-    },
-    serde::Deserialize,
-    tranquility_types::{
-        activitypub::Actor,
-        webfinger::{Link, Resource},
-    },
-    warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
+use crate::{database::Actor as DbActor, error::Error, state::ArcState, util::HTTP_CLIENT};
+use axum::{
+    extract::Query, http::StatusCode, response::IntoResponse, routing::get, Extension, Json, Router,
+};
+use serde::Deserialize;
+use tower_http::cors::CorsLayer;
+use tranquility_types::{
+    activitypub::Actor,
+    webfinger::{Link, Resource},
 };
 
 // Keeping this for future use
@@ -40,22 +38,23 @@ pub async fn fetch_actor(
 
 #[derive(Deserialize)]
 /// Query struct for a webfinger request
-pub struct Query {
+pub struct QueryParams {
     resource: String,
 }
 
-pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Rejection> {
-    let resource = query.resource;
+pub async fn webfinger(
+    Extension(state): Extension<ArcState>,
+    Query(QueryParams { resource }): Query<QueryParams>,
+) -> impl IntoResponse {
     let mut resource_tokens = resource.trim_start_matches("acct:").split('@');
-
     let username = resource_tokens.next().ok_or(Error::InvalidRequest)?;
 
     if resource_tokens.next().ok_or(Error::InvalidRequest)? != state.config.instance.domain {
-        return Ok(StatusCode::NOT_FOUND.into_response());
+        return Ok(StatusCode::NOT_FOUND);
     }
 
     let actor_db = DbActor::by_username_local(&state.db_pool, username).await?;
-    let actor: Actor = map_err!(serde_json::from_value(actor_db.actor))?;
+    let actor: Actor = serde_json::from_value(actor_db.actor)?;
 
     let link = Link {
         rel: "self".into(),
@@ -72,24 +71,11 @@ pub async fn webfinger(state: ArcState, query: Query) -> Result<Response, Reject
         ..Resource::default()
     };
 
-    Ok(warp::reply::with_header(
-        warp::reply::json(&resource),
-        "Content-Type",
-        "application/jrd+json",
-    )
-    .into_response())
+    Ok(([("Content-Type", "application/jrd+json")], Json(resource)))
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    // Enable CORS for the ".well-known" routes
-    // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-    let cors = construct_cors(GENERAL_ALLOWED_METHODS);
-
-    warp::path!("webfinger")
-        .and(state)
-        .and(warp::query())
-        .and_then(webfinger)
-        .with(cors)
+pub fn routes() -> Router {
+    Router::new()
+        .route("/webfinger", get(webfinger))
+        .layer(CorsLayer::very_permissive())
 }

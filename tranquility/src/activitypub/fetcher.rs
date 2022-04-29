@@ -4,7 +4,7 @@ use {
         attempt_fetch,
         database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
         error::Error,
-        impl_from, impl_into, impl_is_owned_by, map_err,
+        impl_from, impl_into, impl_is_owned_by,
         state::ArcState,
         util::HTTP_CLIENT,
     },
@@ -116,7 +116,7 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     if let Entity::Actor(mut actor) = fetch_entity(url).await? {
         actor.clean();
 
-        let actor_value = map_err!(serde_json::to_value(&actor))?;
+        let actor_value = serde_json::to_value(&actor)?;
         let db_actor = InsertActor {
             id: Uuid::new_v4(),
             username: actor.username.clone(),

@@ -1,3 +1,5 @@
+use axum::http::Request;
+
 use {
     crate::{
         activitypub::{
@@ -6,7 +8,7 @@ use {
         },
         crypto,
         error::Error,
-        map_err, match_handler,
+        match_handler,
         state::ArcState,
     },
     core::ops::Not,
@@ -58,21 +60,15 @@ async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activit
 }
 
 /// Verifies the HTTP signature with the public key of the owner of the activity
-async fn verify_signature(
+async fn verify_signature<B>(
     state: ArcState,
-    method: Method,
-    path: FullPath,
-    query: String,
-    headers: HeaderMap,
+    request: Request<B>,
     activity: Activity,
 ) -> Result<(ArcState, Activity), Rejection> {
-    let (remote_actor, _remote_actor_db) =
-        map_err!(fetcher::fetch_actor(&state, &activity.actor).await)?;
-
+    let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(&state, &activity.actor).await?;
     let public_key = remote_actor.public_key.public_key_pem;
-    let query = query.is_empty().not().then(|| query);
 
-    crypto::request::verify(method, path, query, headers, public_key)
+    crypto::request::verify(request, public_key)
         .await?
         .then(|| (state, activity))
         .ok_or_else(|| Error::Unauthorized.into())

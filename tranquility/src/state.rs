@@ -1,9 +1,6 @@
-use {
-    crate::config::Configuration,
-    sqlx::PgPool,
-    std::{convert::Infallible, sync::Arc},
-    warp::Filter,
-};
+use crate::config::Configuration;
+use sqlx::PgPool;
+use std::sync::Arc;
 
 #[allow(clippy::module_name_repetitions)]
 /// State wrapped into an arc
@@ -25,11 +22,4 @@ impl State {
     pub fn new_arcless(config: Configuration, db_pool: PgPool) -> Self {
         Self { config, db_pool }
     }
-}
-
-/// Create a filter that returns an arc-ed instance of the contained state
-pub fn filter(state: &ArcState) -> impl Filter<Extract = (ArcState,), Error = Infallible> + Clone {
-    let state = Arc::clone(state);
-
-    warp::any().map(move || Arc::clone(&state))
 }

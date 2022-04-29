@@ -146,35 +146,6 @@ macro_rules! impl_is_owned_by {
     }
 }
 
-/// Limit the body size of a filter
-#[macro_export(local_inner_macros)]
-macro_rules! limit_body_size {
-    // Use the default maximum body size
-    ($filter:expr) => {{
-        limit_body_size!($filter, crate::consts::MAX_BODY_SIZE)
-    }};
-    // Use the user-defined maximum body size
-    ($filter:expr, $limit:expr) => {{
-        warp::body::content_length_limit($limit).and($filter)
-    }};
-    // Multiply the user-defined maximum body size with the MB in bytes constant
-    ($filter:expr, $limit:ident MB) => {{
-        limit_body_size!($filter, $limit * crate::consts::MB_BYTES)
-    }};
-}
-
-/// Something like `map_err!(Err::<(), ()>(()))` expands to
-///
-/// ```rust
-/// Err::<(), ()>(()).map_err(crate::error::Error::from)
-/// ```
-#[macro_export]
-macro_rules! map_err {
-    ($op:expr) => {{
-        $op.map_err(crate::error::Error::from)
-    }};
-}
-
 /// This expands to a match expression with arms like these
 ///
 /// ```rust

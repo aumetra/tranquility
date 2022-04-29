@@ -1,8 +1,5 @@
 use {
-    crate::{
-        crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState,
-        util::HTTP_CLIENT,
-    },
+    crate::{crypto, database::Actor as DbActor, error::Error, state::ArcState, util::HTTP_CLIENT},
     futures_util::stream::{FuturesUnordered, StreamExt},
     itertools::Itertools,
     reqwest::{
@@ -53,7 +50,7 @@ fn construct_deliver_future<'a>(
 
         let request = prepare_request(&HTTP_CLIENT, &url, delivery_data).await?;
 
-        map_err!(HTTP_CLIENT.execute(request).await)
+        Ok(HTTP_CLIENT.execute(request).await?)
     }
 }
 
