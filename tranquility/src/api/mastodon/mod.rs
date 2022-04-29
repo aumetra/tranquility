@@ -1,70 +1,66 @@
-use axum::Router;
-use tower_http::cors::CorsLayer;
+use std::ops::{Deref, DerefMut};
 
-use {
-    crate::{
-        consts::cors::API_ALLOWED_METHODS,
-        database::{Actor, OAuthToken},
-        error::Error,
-        state::ArcState,
-    },
-    headers::authorization::{Bearer, Credentials},
-    once_cell::sync::Lazy,
-    tranquility_types::mastodon::App,
-    warp::{
-        hyper::header::{HeaderValue, AUTHORIZATION},
-        reject::MissingHeader,
-        Filter, Rejection, Reply,
-    },
+use crate::{
+    consts::cors::API_ALLOWED_METHODS,
+    database::{Actor, OAuthToken},
+    error::Error,
+    state::ArcState,
 };
+use async_trait::async_trait;
+use axum::{
+    extract::{FromRequest, RequestParts},
+    http::header::AUTHORIZATION,
+    Router,
+};
+use headers::authorization::{Bearer, Credentials};
+use once_cell::sync::Lazy;
+use tower_http::cors::CorsLayer;
+use tranquility_types::mastodon::App;
 
 static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
     name: "Web".into(),
     ..App::default()
 });
 
-/// Same as [`authorise_user`] but makes the bearer token optional
-pub fn authorisation_optional(
-    state: &ArcState,
-) -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Clone {
-    let or_none_fn = |error: Rejection| async move {
-        if error.find::<MissingHeader>().is_some() {
-            Ok((None,))
-        } else {
-            Err(error)
-        }
-    };
+pub struct Auth(pub Actor);
 
-    authorisation_required(state).map(Some).or_else(or_none_fn)
+impl Auth {
+    pub fn into_inner(self) -> Actor {
+        self.0
+    }
 }
 
-/// Parses a `HeaderValue` as the contents of an authorization header with bearer token contents
-/// and attempts to fetch the user from the database
-async fn authorise_user(
-    state: ArcState,
-    authorization_header: HeaderValue,
-) -> Result<Actor, Rejection> {
-    let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
-    let token = credentials.token();
+impl Deref for Auth {
+    type Target = Actor;
 
-    let access_token = OAuthToken::by_access_token(&state.db_pool, token).await?;
-    let actor = Actor::get(&state.db_pool, access_token.actor_id).await?;
-
-    Ok(actor)
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-/// Filter that gets the user associated with the bearer token from the database
-///
-/// Rejects if the user cannot be found
-pub fn authorisation_required(
-    state: &ArcState,
-) -> impl Filter<Extract = (Actor,), Error = Rejection> + Clone {
-    crate::state::filter(state)
-        .and(warp::header::value(AUTHORIZATION.as_ref()))
-        .and_then(authorise_user)
+#[async_trait]
+impl<B> FromRequest<B> for Auth {
+    type Rejection = Error;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let authorisation_header = req
+            .headers()
+            .get(AUTHORIZATION)
+            .ok_or(Error::Unauthorized)?;
+        let credentials = Bearer::decode(&authorisation_header).ok_or(Error::Unauthorized)?;
+        let token = credentials.token();
+
+        let state = req
+            .extensions()
+            .get::<ArcState>()
+            .expect("[Bug] Missing state in extensions");
+
+        let access_token = OAuthToken::by_access_token(&state.db_pool, token).await?;
+        let actor = Actor::get(&state.db_pool, access_token.actor_id).await?;
+    }
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+pub fn routes() -> Router {
     // Enable CORS for all API endpoints
     // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
 

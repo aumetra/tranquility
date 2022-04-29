@@ -1,16 +1,15 @@
-use {
-    super::{authorisation_required, convert::IntoMastodon, urlencoded_or_json},
-    crate::{
-        activitypub::Clean,
-        database::{Actor as DbActor, InsertExt, InsertObject},
-        state::ArcState,
-        util::mention::FormatMention,
-    },
-    serde::Deserialize,
-    std::sync::Arc,
-    tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER},
-    warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
+use super::{convert::IntoMastodon, Auth};
+use crate::{
+    activitypub::Clean,
+    database::{InsertExt, InsertObject},
+    error::Error,
+    state::ArcState,
+    util::{mention::FormatMention, Form},
 };
+use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
+use serde::Deserialize;
+use std::sync::Arc;
+use tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER};
 
 #[cfg(feature = "markdown")]
 use crate::api::ParseMarkdown;
@@ -26,14 +25,12 @@ struct CreateForm {
 }
 
 async fn create(
-    state: ArcState,
-    author_db: DbActor,
-    form: CreateForm,
-) -> Result<Response, Rejection> {
+    Extension(state): Extension<ArcState>,
+    Auth(author_db): Auth,
+    Form(form): Form<CreateForm>,
+) -> Result<impl IntoResponse, Error> {
     if state.config.instance.character_limit < form.status.chars().count() {
-        return Ok(
-            warp::reply::with_status("Status too long", StatusCode::BAD_REQUEST).into_response(),
-        );
+        return Ok((StatusCode::BAD_REQUEST, "Status too long").into_response());
     }
 
     let author: Actor = serde_json::from_value(author_db.actor)?;
@@ -79,16 +76,9 @@ async fn create(
     crate::activitypub::deliverer::deliver(create_activity, Arc::clone(&state)).await?;
 
     let mastodon_status = object.into_mastodon(&state).await?;
-    Ok(warp::reply::json(&mastodon_status).into_response())
+    Ok(Json(&mastodon_status).into_response())
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state_filter = crate::state::filter(state);
-
-    let create_status_logic = state_filter
-        .and(authorisation_required(state))
-        .and(urlencoded_or_json())
-        .and_then(create);
-    // Limit the body size
-    warp::path!("statuses").and(limit_body_size!(create_status_logic))
+pub fn routes() -> Router {
+    Router::new().route("/statuses", post(create))
 }

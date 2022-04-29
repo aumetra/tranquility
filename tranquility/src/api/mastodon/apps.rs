@@ -1,12 +1,12 @@
-use {
-    super::convert::IntoMastodon,
-    crate::{
-        database::{InsertExt, InsertOAuthApplication},
-        state::ArcState,
-    },
-    serde::Deserialize,
-    uuid::Uuid,
+use super::convert::IntoMastodon;
+use crate::{
+    database::{InsertExt, InsertOAuthApplication},
+    error::Error,
+    state::ArcState,
 };
+use axum::{extract::Form, response::IntoResponse, routing::post, Extension, Json, Router};
+use serde::Deserialize;
+use uuid::Uuid;
 
 fn default_scopes() -> String {
     "read".into()
@@ -22,7 +22,10 @@ pub struct RegisterForm {
     website: String,
 }
 
-async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejection> {
+async fn create(
+    Extension(state): Extension<ArcState>,
+    Form(form): Form<RegisterForm>,
+) -> Result<impl IntoResponse, Error> {
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate();
 
@@ -38,17 +41,9 @@ async fn create(state: ArcState, form: RegisterForm) -> Result<impl Reply, Rejec
     .await?;
     let mastodon_application = application.into_mastodon(&state).await?;
 
-    Ok(warp::reply::json(&mastodon_application))
+    Ok(Json(&mastodon_application))
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    let routes = warp::path!("apps")
-        .and(warp::post())
-        .and(state)
-        .and(urlencoded_or_json())
-        .and_then(create);
-    // Restrict the body size
-    limit_body_size!(routes)
+pub fn routes() -> Router {
+    Router::new().route("/apps", post(create))
 }
