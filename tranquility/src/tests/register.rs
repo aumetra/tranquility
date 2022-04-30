@@ -10,6 +10,7 @@ async fn closed_registrations() {
     let test_response = test_client
         .post(
             "/api/tranquility/v1/register",
+            None,
             "username=test&email=test@example.com&password=1234.",
         )
         .await
@@ -25,6 +26,7 @@ async fn register_endpoint() {
     let test_response = test_client
         .post(
             "/api/tranquility/v1/register",
+            None,
             "username=test&email=test@example.com&password=test1234.",
         )
         .await

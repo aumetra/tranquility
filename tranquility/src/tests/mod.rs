@@ -8,6 +8,7 @@ use crate::{
     state::{ArcState, State},
 };
 use axum::Server;
+use mime::Mime;
 use sqlx::PgPool;
 use std::{env, net::SocketAddr};
 
@@ -107,12 +108,22 @@ impl TestClient {
     }
 
     /// Send a POST request
-    async fn post<B>(&self, uri: &str, body: B) -> reqwest::Result<reqwest::Response>
+    ///
+    /// If `None` is passed as the content type it defaults to `application/x-www-form-urlencoded`
+    async fn post<B>(
+        &self,
+        uri: &str,
+        content_type: Option<Mime>,
+        body: B,
+    ) -> reqwest::Result<reqwest::Response>
     where
         B: Into<reqwest::Body>,
     {
+        let content_type = content_type.unwrap_or(mime::APPLICATION_WWW_FORM_URLENCODED);
+
         self.client
             .post(self.format_url(uri))
+            .header("Content-Type", content_type.as_ref())
             .body(body)
             .send()
             .await

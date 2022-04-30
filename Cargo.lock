@@ -2776,6 +2776,7 @@ dependencies = [
  "jsonschema",
  "lettre",
  "mimalloc",
+ "mime",
  "once_cell",
  "opentelemetry",
  "opentelemetry-jaeger",
