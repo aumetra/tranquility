@@ -25,9 +25,8 @@ pub fn routes() -> Router {
         .route("/token", post(token::token))
         .layer(CorsLayer::very_permissive().allow_methods(OAUTH_TOKEN_ALLOWED_METHODS.to_vec()));
 
-    let authorize_router = Router::new()
-        .route("/authorize", get(authorize::get))
-        .route("/authorize", post(authorize::post));
+    let authorize_router =
+        Router::new().route("/authorize", get(authorize::get).post(authorize::post));
 
     let router = Router::new().merge(authorize_router).merge(token_router);
     Router::new().nest("/oauth", router)
