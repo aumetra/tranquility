@@ -170,6 +170,24 @@ macro_rules! match_handler {
     }
 }
 
+/// Construct a new ratelimit layer that's compatible with axum
+#[macro_export]
+macro_rules! ratelimit_layer {
+    ($active:expr, $reqs_per_hour:expr $(,)+) => {{
+        let config = ::tranquility_ratelimit::Configuration::default()
+            .active($active)
+            .burst_quota($reqs_per_hour);
+
+        ::tower::ServiceBuilder::new()
+            .layer(::axum::error_handling::HandleErrorLayer::new(|err| async move {
+                error!(error = %err, "Ratelimiting call failed");
+
+                ::http::StatusCode::INTERNAL_SERVER_ERROR
+            }))
+            .layer(::tranquility_ratelimit::RatelimitLayer::new(config))
+    }};
+}
+
 /// Compiles the regex and saves it into a lazy (so that it doesn't have to be recompiled for every usage)
 ///
 /// This is comparable with the regex macro example from the OnceCell docs except that we use lazy instead of initialising a OnceCell ourselves.

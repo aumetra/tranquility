@@ -10,6 +10,9 @@ use std::ops::{Deref, DerefMut};
 const KILOBYTES_BYTES: u64 = 1024;
 const MEGABYTES_BYTES: u64 = KILOBYTES_BYTES.pow(2);
 
+/// Configuration for the content length limiter
+///
+/// Put this into the request extensions via the `Extension` layer
 #[derive(Clone, Copy, Debug)]
 pub struct ContentLengthLimitConfig(u64);
 

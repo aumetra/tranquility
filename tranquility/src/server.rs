@@ -12,7 +12,7 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 pub async fn run(state: ArcState) -> io::Result<()> {
     let router = Router::new()
         .merge(crate::activitypub::routes())
-        .merge(crate::api::routes())
+        .merge(crate::api::routes(&state))
         .merge(crate::well_known::routes())
         .layer(Extension(Arc::clone(&state)))
         .layer(TraceLayer::new_for_http())

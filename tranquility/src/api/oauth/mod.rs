@@ -1,4 +1,4 @@
-use crate::consts::cors::OAUTH_TOKEN_ALLOWED_METHODS;
+use crate::{consts::cors::OAUTH_TOKEN_ALLOWED_METHODS, ratelimit_layer, state::State};
 use askama::Template;
 use axum::{
     routing::{get, post},
@@ -20,7 +20,7 @@ struct TokenTemplate {
     token: String,
 }
 
-pub fn routes() -> Router {
+pub fn routes(state: &State) -> Router {
     let token_router = Router::new()
         .route("/token", post(token::token))
         .layer(CorsLayer::very_permissive().allow_methods(OAUTH_TOKEN_ALLOWED_METHODS.to_vec()));
@@ -29,7 +29,12 @@ pub fn routes() -> Router {
         Router::new().route("/authorize", get(authorize::get).post(authorize::post));
 
     let router = Router::new().merge(authorize_router).merge(token_router);
-    Router::new().nest("/oauth", router)
+    Router::new()
+        .nest("/oauth", router)
+        .route_layer(ratelimit_layer!(
+            state.config.ratelimit.active,
+            state.config.ratelimit.authentication_quota,
+        ))
 }
 
 pub mod authorize;

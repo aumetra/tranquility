@@ -3,8 +3,8 @@ use crate::{
     consts::{regex::USERNAME, MAX_BODY_SIZE},
     database::{InsertActor, InsertExt},
     error::Error,
-    format_uuid, regex,
-    state::ArcState,
+    format_uuid, ratelimit_layer, regex,
+    state::{ArcState, State},
     util::Form,
 };
 use axum::{
@@ -82,6 +82,11 @@ async fn register(
     Ok((StatusCode::CREATED, "Account created").into_response())
 }
 
-pub fn routes() -> Router {
-    Router::new().route("/api/tranqulity/v1/register", post(register))
+pub fn routes(state: &State) -> Router {
+    Router::new()
+        .route("/api/tranqulity/v1/register", post(register))
+        .route_layer(ratelimit_layer!(
+            state.config.ratelimit.active,
+            state.config.ratelimit.registration_quota,
+        ))
 }

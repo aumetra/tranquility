@@ -1,10 +1,12 @@
 use axum::Router;
 use cfg_if::cfg_if;
 
-pub fn routes() -> Router {
+use crate::state::State;
+
+pub fn routes(state: &State) -> Router {
     let router = Router::new()
-        .merge(oauth::routes())
-        .merge(register::routes());
+        .merge(oauth::routes(state))
+        .merge(register::routes(state));
 
     cfg_if! {
         if #[cfg(feature = "mastodon-api")] {
