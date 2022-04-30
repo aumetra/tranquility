@@ -6,7 +6,7 @@ use std::{
     net::{IpAddr, SocketAddr},
     sync::Arc,
 };
-use tower_http::{trace::TraceLayer, compression::CompressionLayer};
+use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
 /// Combine all route filters and start a warp server
 pub async fn run(state: ArcState) -> io::Result<()> {
