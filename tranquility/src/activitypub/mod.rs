@@ -1,8 +1,6 @@
-use {
-    chrono::SecondsFormat,
-    serde::{Deserialize, Serialize},
-    tranquility_types::activitypub::{Activity, Actor, IsPrivate, IsUnlisted, Object},
-};
+use chrono::SecondsFormat;
+use serde::{Deserialize, Serialize};
+use tranquility_types::activitypub::{Activity, Actor, IsPrivate, IsUnlisted, Object};
 
 #[derive(Clone, Deserialize)]
 #[serde(untagged)]

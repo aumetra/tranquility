@@ -1,7 +1,5 @@
-use {
-    serde::{Deserialize, Serialize},
-    std::collections::HashMap,
-};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub type KvPairs = HashMap<String, Option<String>>;
 

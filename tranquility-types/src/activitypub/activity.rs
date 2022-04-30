@@ -1,7 +1,5 @@
-use {
-    serde::{Deserialize, Serialize},
-    serde_json::Value,
-};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 /// Struct representing an [ActivityStreams activity](https://www.w3.org/TR/activitystreams-core/#activities)

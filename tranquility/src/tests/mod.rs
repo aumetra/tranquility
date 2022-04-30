@@ -1,18 +1,16 @@
 // i'll allow this lint module-wide because expanded tokio macros
 #![allow(clippy::semicolon_if_nothing_returned)]
 
-use {
-    crate::{
-        activitypub::FollowActivity,
-        config::{
-            Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationJaeger,
-            ConfigurationRatelimit, ConfigurationServer, ConfigurationTls,
-        },
-        state::State,
+use crate::{
+    activitypub::FollowActivity,
+    config::{
+        Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationJaeger,
+        ConfigurationRatelimit, ConfigurationServer, ConfigurationTls,
     },
-    sqlx::PgPool,
-    std::env,
+    state::State,
 };
+use sqlx::PgPool;
+use std::env;
 
 const FOLLOW_ACTIVITY: &str = r#"
 {

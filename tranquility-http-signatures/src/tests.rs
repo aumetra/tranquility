@@ -1,7 +1,5 @@
-use {
-    crate::Request,
-    http::{header::HeaderName, HeaderMap, HeaderValue},
-};
+use crate::Request;
+use http::{header::HeaderName, HeaderMap, HeaderValue};
 
 const RSA_PUBLIC_KEY: &str = r#"
 -----BEGIN PUBLIC KEY-----

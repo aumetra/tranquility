@@ -1,8 +1,6 @@
+use crate::error::{Error, Result};
 use pkcs8::der::Document;
-use {
-    crate::error::{Error, Result},
-    pkcs8::{PrivateKeyDocument, PublicKeyDocument},
-};
+use pkcs8::{PrivateKeyDocument, PublicKeyDocument};
 
 /// Convert/Decode PKCS#8 DER to PKCS#1 DER
 fn pkcs8_to_pkcs1(data: &[u8], is_public: bool) -> Result<Vec<u8>> {

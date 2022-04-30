@@ -1,7 +1,4 @@
-use {
-    serde::{Deserialize, Serialize},
-    std::boxed::Box,
-};
+use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
 /// Struct representing a [Mastodon status](https://docs.joinmastodon.org/entities/status/)

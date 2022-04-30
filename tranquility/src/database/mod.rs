@@ -1,16 +1,15 @@
 // Warnings related to those lints are caused by expanded SQLx code
 #![allow(clippy::similar_names)]
 
-use {
-    crate::error::Error,
-    async_trait::async_trait,
-    chrono::{DateTime, Utc},
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use crate::error::Error;
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 pub mod connection {
-    use {sqlx::PgPool, std::future::Future};
+    use sqlx::PgPool;
+    use std::future::Future;
 
     pub fn init_pool(db_url: &'_ str) -> impl Future<Output = Result<PgPool, sqlx::Error>> + '_ {
         PgPool::connect(db_url)

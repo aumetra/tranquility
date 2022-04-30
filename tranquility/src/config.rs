@@ -1,10 +1,8 @@
-use {
-    serde::Deserialize,
-    std::path::Path,
-    tokio::{
-        fs::File,
-        io::{AsyncReadExt, BufReader},
-    },
+use serde::Deserialize;
+use std::path::Path;
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt, BufReader},
 };
 
 #[derive(Deserialize)]

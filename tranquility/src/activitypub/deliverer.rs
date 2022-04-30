@@ -1,15 +1,12 @@
-use {
-    crate::{crypto, database::Actor as DbActor, error::Error, state::ArcState, util::HTTP_CLIENT},
-    futures_util::stream::{FuturesUnordered, StreamExt},
-    itertools::Itertools,
-    reqwest::{
-        header::{HeaderName, HeaderValue, DATE},
-        Client, Request, Response,
-    },
-    std::{future::Future, sync::Arc},
-    tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
+use crate::{crypto, database::Actor as DbActor, error::Error, state::ArcState, util::HTTP_CLIENT};
+use futures_util::stream::{FuturesUnordered, StreamExt};
+use itertools::Itertools;
+use reqwest::{
+    header::{HeaderName, HeaderValue, DATE},
+    Client, Request, Response,
 };
-
+use std::{future::Future, sync::Arc};
+use tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER};
 /// Structure that holds data relevant to delivering an activity
 struct DeliveryData {
     author: Actor,

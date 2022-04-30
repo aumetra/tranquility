@@ -1,7 +1,5 @@
-use {
-    crate::activitypub::{Activity, Object},
-    chrono::{DateTime, FixedOffset, ParseResult},
-};
+use crate::activitypub::{Activity, Object};
+use chrono::{DateTime, FixedOffset, ParseResult};
 
 /// Implement the macro for ActivityPub entities that have a `published` field
 macro_rules! impl_activitypub_published {

@@ -54,14 +54,13 @@ where
             .expect("[Bug] State missing in request extensions");
 
         let (remote_actor, _remote_actor_db) = fetcher::fetch_actor(state, &activity.actor).await?;
-        let public_key = remote_actor.public_key.public_key_pem;
 
         crypto::request::verify(
             req.method().as_str().to_string(),
             req.uri().path().to_string(),
             req.uri().query().map(ToString::to_string),
             req.headers().clone(),
-            public_key,
+            remote_actor.public_key.public_key_pem,
         )
         .await?
         .then(|| ())

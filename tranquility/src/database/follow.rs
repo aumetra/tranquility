@@ -1,11 +1,9 @@
-use {
-    crate::{
-        database::{last_activity_timestamp, Object},
-        error::Error,
-    },
-    sqlx::PgPool,
-    uuid::Uuid,
+use crate::{
+    database::{last_activity_timestamp, Object},
+    error::Error,
 };
+use sqlx::PgPool;
+use uuid::Uuid;
 
 /// Get follow activities addressed to the user
 pub async fn followers(

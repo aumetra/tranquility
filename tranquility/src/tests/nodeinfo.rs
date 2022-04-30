@@ -1,4 +1,5 @@
-use {super::test_state, std::sync::Arc};
+use super::test_state;
+use std::sync::Arc;
 
 const NODEINFO_21_SCHEMA: &str = r#"
 {

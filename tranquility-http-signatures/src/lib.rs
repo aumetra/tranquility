@@ -10,13 +10,10 @@
 //! Implementation of the HTTP signatures [spec](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12#appendix-C.1)
 //!
 
-use {
-    crate::{alg::Algorithm, error::Result, signature::Signature, sigstr::SignatureString},
-    http::header::{HeaderName, HeaderValue},
-    once_cell::sync::Lazy,
-};
+use crate::{alg::Algorithm, error::Result, signature::Signature, sigstr::SignatureString};
+use http::header::{HeaderName, HeaderValue};
 
-static SIGNATURE: Lazy<HeaderName> = Lazy::new(|| HeaderName::from_static("signature"));
+static SIGNATURE: HeaderName = HeaderName::from_static("signature");
 
 /// Sign an HTTP request
 pub fn sign<'r, 'k, R, K>(
@@ -105,8 +102,6 @@ mod util;
 #[cfg(test)]
 mod tests;
 
-pub use {
-    error::Error,
-    key::{PrivateKey, PublicKey},
-    request::Request,
-};
+pub use self::error::Error;
+pub use self::key::{PrivateKey, PublicKey};
+pub use self::request::Request;

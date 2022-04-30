@@ -1,8 +1,6 @@
-use {
-    crate::error::{Error, Result},
-    http::header::{AsHeaderName, HeaderMap, HeaderValue},
-    std::{collections::HashMap, hash::Hash, iter::FromIterator},
-};
+use crate::error::{Error, Result};
+use http::header::{AsHeaderName, HeaderMap, HeaderValue};
+use std::{collections::HashMap, hash::Hash, iter::FromIterator};
 
 pub trait HeaderMapExt {
     /// Convenience function. Is equivalent to `.get().ok_or(Error::MissingHeader)`

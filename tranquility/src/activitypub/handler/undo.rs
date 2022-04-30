@@ -1,8 +1,6 @@
-use {
-    crate::{database::Object, error::Error, state::ArcState},
-    http::StatusCode,
-    tranquility_types::activitypub::Activity,
-};
+use crate::{database::Object, error::Error, state::ArcState};
+use http::StatusCode;
+use tranquility_types::activitypub::Activity;
 
 pub async fn handle(state: &ArcState, delete_activity: Activity) -> Result<StatusCode, Error> {
     let activity_url = delete_activity

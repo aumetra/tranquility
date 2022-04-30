@@ -1,9 +1,7 @@
-use {
-    crate::{database::Object, error::Error, state::ArcState},
-    http::StatusCode,
-    ormx::Delete,
-    tranquility_types::activitypub::Activity,
-};
+use crate::{database::Object, error::Error, state::ArcState};
+use http::StatusCode;
+use ormx::Delete;
+use tranquility_types::activitypub::Activity;
 
 pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, Error> {
     let follow_activity_url = activity.object.as_url().ok_or(Error::UnknownActivity)?;

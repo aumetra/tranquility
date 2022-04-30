@@ -1,8 +1,6 @@
-use {
-    chrono::{DateTime, Utc},
-    ormx::Table,
-    uuid::Uuid,
-};
+use chrono::{DateTime, Utc};
+use ormx::Table;
+use uuid::Uuid;
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_tokens", deletable, insertable)]

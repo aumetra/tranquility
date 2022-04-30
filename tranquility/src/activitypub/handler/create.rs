@@ -1,14 +1,12 @@
-use {
-    crate::{
-        activitypub::{fetcher, Clean},
-        database::{InsertExt, InsertObject},
-        error::Error,
-        state::ArcState,
-    },
-    http::StatusCode,
-    tranquility_types::activitypub::{activity::ObjectField, Activity, Object},
-    uuid::Uuid,
+use crate::{
+    activitypub::{fetcher, Clean},
+    database::{InsertExt, InsertObject},
+    error::Error,
+    state::ArcState,
 };
+use http::StatusCode;
+use tranquility_types::activitypub::{activity::ObjectField, Activity, Object};
+use uuid::Uuid;
 
 async fn insert_object(state: &ArcState, activity: &Activity) -> Result<Object, Error> {
     let (_owner, owner_db) = fetcher::fetch_actor(state, &activity.actor).await?;

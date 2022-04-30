@@ -1,10 +1,8 @@
-use {
-    crate::{
-        error::{Error, Result},
-        SIGNATURE,
-    },
-    http::header::{HeaderMap, AUTHORIZATION},
+use crate::{
+    error::{Error, Result},
+    SIGNATURE,
 };
+use http::header::{HeaderMap, AUTHORIZATION};
 
 /// HTTP request that is being processed
 pub struct Request<'a> {
@@ -41,7 +39,7 @@ impl<'a> Request<'a> {
     /// Get the signature from the HTTP request
     pub(crate) fn signature(&self) -> Result<&str> {
         // Try to get the signature from the signature header
-        if let Some(header_value) = self.headers.get(&*SIGNATURE) {
+        if let Some(header_value) = self.headers.get(&SIGNATURE) {
             return Ok(header_value.to_str()?);
         }
 

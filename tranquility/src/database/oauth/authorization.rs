@@ -1,10 +1,8 @@
-use {
-    crate::error::Error,
-    chrono::{DateTime, Utc},
-    ormx::Table,
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use crate::error::Error;
+use chrono::{DateTime, Utc};
+use ormx::Table;
+use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_authorizations", deletable, insertable)]

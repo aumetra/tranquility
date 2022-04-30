@@ -1,11 +1,9 @@
-use {
-    crate::error::Error,
-    chrono::{DateTime, Utc},
-    ormx::Table,
-    serde_json::Value,
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use crate::error::Error;
+use chrono::{DateTime, Utc};
+use ormx::Table;
+use serde_json::Value;
+use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "objects", deletable, insertable)]

@@ -1,15 +1,13 @@
-use {
-    crate::{
-        activitypub::{self, deliverer, fetcher, FollowActivity},
-        database::{Actor, InsertExt, InsertObject},
-        error::Error,
-        state::ArcState,
-    },
-    http::StatusCode,
-    std::sync::Arc,
-    tranquility_types::activitypub::{activity::ObjectField, Activity},
-    uuid::Uuid,
+use crate::{
+    activitypub::{self, deliverer, fetcher, FollowActivity},
+    database::{Actor, InsertExt, InsertObject},
+    error::Error,
+    state::ArcState,
 };
+use http::StatusCode;
+use std::sync::Arc;
+use tranquility_types::activitypub::{activity::ObjectField, Activity};
+use uuid::Uuid;
 
 pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
     let actor_url = match activity.object {

@@ -1,9 +1,7 @@
-use {
-    super::current_datetime,
-    crate::{config::Configuration, format_uuid},
-    tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey},
-    uuid::Uuid,
-};
+use super::current_datetime;
+use crate::{config::Configuration, format_uuid};
+use tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey};
+use uuid::Uuid;
 
 /// Instantiate an ActivityPub activity
 pub fn activity<T: Into<ObjectField>>(

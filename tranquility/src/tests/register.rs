@@ -1,10 +1,8 @@
-use {
-    super::test_state,
-    std::sync::Arc,
-    warp::{
-        hyper::{body, StatusCode},
-        Reply,
-    },
+use super::test_state;
+use std::sync::Arc;
+use warp::{
+    hyper::{body, StatusCode},
+    Reply,
 };
 
 #[tokio::test]
