@@ -18,8 +18,8 @@ cfg_if::cfg_if! {
     }
 }
 
-// allow because of tokio macro
-#[allow(clippy::semicolon_if_nothing_returned)]
+use std::io;
+
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let state = cli::run().await;
@@ -53,7 +53,5 @@ mod state;
 mod util;
 mod well_known;
 
-/*#[cfg(test)]
-mod tests;*/
-
-use std::io;
+#[cfg(test)]
+mod tests;
