@@ -1,13 +1,16 @@
 use crate::{
     activitypub,
-    consts::regex::USERNAME,
+    consts::{regex::USERNAME, MAX_BODY_SIZE},
     database::{InsertActor, InsertExt},
     error::Error,
     format_uuid, regex,
     state::ArcState,
     util::Form,
 };
-use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Router};
+use axum::{
+    extract::ContentLengthLimit, http::StatusCode, response::IntoResponse, routing::post,
+    Extension, Router,
+};
 use serde::Deserialize;
 use uuid::Uuid;
 use validator::Validate;
@@ -36,7 +39,7 @@ pub struct RegistrationForm {
 
 async fn register(
     Extension(state): Extension<ArcState>,
-    Form(form): Form<RegistrationForm>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<RegistrationForm>, MAX_BODY_SIZE>,
 ) -> Result<impl IntoResponse, Error> {
     if state.config.instance.closed_registrations {
         return Ok(StatusCode::FORBIDDEN.into_response());

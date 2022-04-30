@@ -1,5 +1,6 @@
 use super::{TokenTemplate, AUTHORIZE_FORM};
 use crate::{
+    consts::MAX_BODY_SIZE,
     crypto::password,
     database::{Actor, InsertExt, InsertOAuthAuthorization, OAuthApplication},
     error::Error,
@@ -8,7 +9,7 @@ use crate::{
 };
 use askama::Template;
 use axum::{
-    extract::Query,
+    extract::{ContentLengthLimit, Query},
     response::{Html, IntoResponse, Redirect},
     Extension,
 };
@@ -43,7 +44,7 @@ pub async fn get() -> impl IntoResponse {
 #[debug_handler]
 pub async fn post(
     Extension(state): Extension<ArcState>,
-    Form(form): Form<AuthoriseForm>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<AuthoriseForm>, MAX_BODY_SIZE>,
     Query(query): Query<QueryParams>,
 ) -> Result<impl IntoResponse, Error> {
     let actor = Actor::by_username_local(&state.db_pool, &form.username).await?;

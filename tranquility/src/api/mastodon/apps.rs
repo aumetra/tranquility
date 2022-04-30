@@ -1,10 +1,16 @@
 use super::convert::IntoMastodon;
 use crate::{
+    consts::MAX_BODY_SIZE,
     database::{InsertExt, InsertOAuthApplication},
     error::Error,
     state::ArcState,
 };
-use axum::{extract::Form, response::IntoResponse, routing::post, Extension, Json, Router};
+use axum::{
+    extract::{ContentLengthLimit, Form},
+    response::IntoResponse,
+    routing::post,
+    Extension, Json, Router,
+};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -24,7 +30,7 @@ pub struct RegisterForm {
 
 async fn create(
     Extension(state): Extension<ArcState>,
-    Form(form): Form<RegisterForm>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<RegisterForm>, MAX_BODY_SIZE>,
 ) -> Result<impl IntoResponse, Error> {
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate();

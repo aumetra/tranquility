@@ -12,6 +12,7 @@ members = [
     "tranquility-types",
 ]
 
+# TODO: Remove once SQLx v0.6 is out
 [patch.crates-io]
 sqlx = { git = "https://github.com/launchbadge/sqlx.git", rev = "826e63fc11fc43ce92099b6844d8a9155bf38356" }
 sqlx-core = { git = "https://github.com/launchbadge/sqlx.git", rev = "826e63fc11fc43ce92099b6844d8a9155bf38356" }

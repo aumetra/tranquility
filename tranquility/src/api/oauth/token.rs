@@ -1,5 +1,6 @@
 use super::TokenTemplate;
 use crate::{
+    consts::MAX_BODY_SIZE,
     crypto::password,
     database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
     error::Error,
@@ -8,6 +9,7 @@ use crate::{
 };
 use askama::Template;
 use axum::{
+    extract::ContentLengthLimit,
     response::{Html, IntoResponse},
     Extension, Json,
 };
@@ -174,7 +176,7 @@ async fn password_grant(
 #[debug_handler]
 pub async fn token(
     Extension(state): Extension<ArcState>,
-    Form(form): Form<TokenForm>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<TokenForm>, MAX_BODY_SIZE>,
 ) -> Result<impl IntoResponse, Error> {
     let response = match form.grant_type.as_str() {
         "authorization_code" => {

@@ -1,12 +1,16 @@
 use super::{convert::IntoMastodon, Authorisation};
 use crate::{
     activitypub::Clean,
+    consts::MAX_BODY_SIZE,
     database::{InsertExt, InsertObject},
     error::Error,
     state::ArcState,
     util::{mention::FormatMention, Form},
 };
-use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
+use axum::{
+    extract::ContentLengthLimit, http::StatusCode, response::IntoResponse, routing::post,
+    Extension, Json, Router,
+};
 use serde::Deserialize;
 use std::sync::Arc;
 use tranquility_types::activitypub::{Actor, PUBLIC_IDENTIFIER};
@@ -27,7 +31,7 @@ struct CreateForm {
 async fn create(
     Extension(state): Extension<ArcState>,
     Authorisation(author_db): Authorisation,
-    Form(form): Form<CreateForm>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<CreateForm>, MAX_BODY_SIZE>,
 ) -> Result<impl IntoResponse, Error> {
     if state.config.instance.character_limit < form.status.chars().count() {
         return Ok((StatusCode::BAD_REQUEST, "Status too long").into_response());
