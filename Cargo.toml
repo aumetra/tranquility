@@ -5,6 +5,7 @@ opt-level = 3
 [workspace]
 members = [
     "tranquility",
+    "tranquility-content-length-limit",
     "tranquility-http-signatures",
     "tranquility-ratelimit",
     "tranquility-types",

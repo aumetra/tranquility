@@ -1,8 +1,12 @@
 use crate::state::ArcState;
 use axum::{Extension, Router};
 use axum_server::tls_rustls::RustlsConfig;
-use std::{io, net::IpAddr, sync::Arc};
-use tower_http::trace::TraceLayer;
+use std::{
+    io,
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
+};
+use tower_http::{trace::TraceLayer, compression::CompressionLayer};
 
 /// Combine all route filters and start a warp server
 pub async fn run(state: ArcState) -> io::Result<()> {
@@ -11,10 +15,13 @@ pub async fn run(state: ArcState) -> io::Result<()> {
         .merge(crate::api::routes())
         .merge(crate::well_known::routes())
         .layer(Extension(Arc::clone(&state)))
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .layer(CompressionLayer::new());
 
     #[cfg(feature = "email")]
     let router = router.merge(crate::email::routes());
+
+    let router_service = router.into_make_service_with_connect_info::<SocketAddr>();
 
     let config = &state.config;
 
@@ -29,12 +36,10 @@ pub async fn run(state: ArcState) -> io::Result<()> {
         .await?;
 
         axum_server::bind_rustls(addr.into(), config)
-            .serve(router.into_make_service())
+            .serve(router_service)
             .await?;
     } else {
-        axum_server::bind(addr.into())
-            .serve(router.into_make_service())
-            .await?;
+        axum_server::bind(addr.into()).serve(router_service).await?;
     }
 
     Ok(())
