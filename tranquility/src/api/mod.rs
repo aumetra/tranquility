@@ -10,7 +10,7 @@ pub fn routes() -> Router {
         if #[cfg(feature = "mastodon-api")] {
             router.merge(mastodon::routes())
         } else {
-            auth_api
+            router
         }
     }
 }
