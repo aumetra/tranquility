@@ -84,7 +84,7 @@ async fn register(
 
 pub fn routes(state: &State) -> Router {
     Router::new()
-        .route("/api/tranqulity/v1/register", post(register))
+        .route("/api/tranquility/v1/register", post(register))
         .route_layer(ratelimit_layer!(
             state.config.ratelimit.active,
             state.config.ratelimit.registration_quota,
