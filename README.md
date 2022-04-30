@@ -1,9 +1,13 @@
+<div align="center">
+
 # Tranquility 
 
-[![Checks](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml/badge.svg)](https://github.com/smallglitch/tranquility/actions/workflows/rust.yml)
-[![Dependency status](https://deps.rs/repo/github/smallglitch/tranquility/status.svg)](https://deps.rs/repo/github/smallglitch/tranquility)
-
 Small ActivityPub server written in Rust
+
+[![Checks](https://github.com/aumetra/tranquility/actions/workflows/rust.yml/badge.svg)](https://github.com/aumetra/tranquility/actions/workflows/rust.yml)
+[![Dependency status](https://deps.rs/repo/github/aumetra/tranquility/status.svg)](https://deps.rs/repo/github/aumetra/tranquility)
+
+</div>
 
 ### **Disclaimer**
 
@@ -12,7 +16,7 @@ Backwards incompatible changes might occur
 
 ## Requirements
 
-- **Rust** 1.51+  
+- **Rust** (assume it only compiles with the latest stable)  
 - **PostgreSQL** (9.5+ should be fine)  
 - **Git** (build-time dependency; see [`build.rs`](tranquility/build.rs))  
 
@@ -20,7 +24,7 @@ Backwards incompatible changes might occur
 
 Release binaries are built daily for Linux x86 and Linux ARMv7  
 
-[**Nightly tag**](https://github.com/smallglitch/tranquility/releases/tag/nightly)
+[**Nightly tag**](https://github.com/aumetra/tranquility/releases/tag/nightly)
 
 ## Email confirmation
 
@@ -55,5 +59,5 @@ To enable this feature, compile Tranquility with the `jaeger` feature flag
 
 ## Progress
 
-Implementation progress is being tracked [here](https://github.com/smallglitch/tranquility/issues/17)
+Implementation progress is being tracked [here](https://github.com/aumetra/tranquility/issues/17)
 
