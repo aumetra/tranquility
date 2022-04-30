@@ -13,12 +13,11 @@ use axum::{
     Extension,
 };
 use axum_macros::debug_handler;
-use chrono::Duration;
-use once_cell::sync::Lazy;
 use serde::Deserialize;
+use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
-static AUTHORIZATION_CODE_VALIDITY: Lazy<Duration> = Lazy::new(|| Duration::minutes(5));
+static AUTHORIZATION_CODE_VALIDITY: Duration = Duration::minutes(5);
 
 #[derive(Deserialize)]
 pub struct AuthoriseForm {
@@ -67,9 +66,7 @@ pub async fn post(
     }
 
     let authorization_code = crate::crypto::token::generate();
-
-    let validity_duration = *AUTHORIZATION_CODE_VALIDITY;
-    let valid_until = chrono::Utc::now() + validity_duration;
+    let valid_until = OffsetDateTime::now_utc() + AUTHORIZATION_CODE_VALIDITY;
 
     let authorization_code = InsertOAuthAuthorization {
         application_id: client.id,

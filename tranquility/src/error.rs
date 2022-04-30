@@ -12,6 +12,7 @@ use rsa::{
 };
 use serde_json::Error as SerdeJsonError;
 use sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError};
+use time::Error as TimeError;
 use tranquility_http_signatures::Error as HttpSignaturesError;
 use url::ParseError as UrlParseError;
 use uuid::Error as UuidError;
@@ -64,6 +65,9 @@ pub enum Error {
 
     #[error("serde-json operation failed: {0}")]
     SerdeJson(#[from] SerdeJsonError),
+
+    #[error("time operation failed: {0}")]
+    Time(#[from] TimeError),
 
     #[error("Unexpected webfinger resource")]
     UnexpectedWebfingerResource,

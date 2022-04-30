@@ -53,7 +53,7 @@ macro_rules! r#const {
 #[macro_export]
 macro_rules! format_uuid {
     ($uuid:expr) => {{
-        $uuid.to_simple_ref().to_string()
+        $uuid.as_simple().to_string()
     }};
 }
 

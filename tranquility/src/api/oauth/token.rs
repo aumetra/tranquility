@@ -12,12 +12,11 @@ use axum::{
     Extension, Json,
 };
 use axum_macros::debug_handler;
-use chrono::Duration;
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
-static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
+static ACCESS_TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 
 /// Form for password grant authorisation flows
 #[derive(Deserialize)]
@@ -107,10 +106,7 @@ async fn code_grant(
     }
 
     let authorization_code = OAuthAuthorization::by_code(&state.db_pool, &code).await?;
-
-    let valid_until = *ACCESS_TOKEN_VALID_DURATION;
-    let valid_until = chrono::Utc::now() + valid_until;
-
+    let valid_until = OffsetDateTime::now_utc() + ACCESS_TOKEN_VALID_DURATION;
     let access_token = crate::crypto::token::generate();
 
     let access_token = InsertOAuthToken {
@@ -134,7 +130,7 @@ async fn code_grant(
     } else {
         let response = AccessTokenResponse {
             access_token: access_token.access_token,
-            created_at: ACCESS_TOKEN_VALID_DURATION.num_seconds(),
+            created_at: ACCESS_TOKEN_VALID_DURATION.whole_seconds(),
             ..AccessTokenResponse::default()
         };
 
@@ -153,9 +149,7 @@ async fn password_grant(
         return Err(Error::Unauthorized);
     }
 
-    let valid_until = *ACCESS_TOKEN_VALID_DURATION;
-    let valid_until = chrono::Utc::now() + valid_until;
-
+    let valid_until = OffsetDateTime::now_utc() + ACCESS_TOKEN_VALID_DURATION;
     let access_token = crate::crypto::token::generate();
 
     let access_token = InsertOAuthToken {
@@ -170,7 +164,7 @@ async fn password_grant(
 
     let response = AccessTokenResponse {
         access_token: access_token.access_token,
-        created_at: access_token.created_at.timestamp(),
+        created_at: access_token.created_at.unix_timestamp(),
         ..AccessTokenResponse::default()
     };
 

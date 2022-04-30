@@ -3,7 +3,7 @@ use crate::{
     consts::regex::USERNAME,
     database::{InsertActor, InsertExt},
     error::Error,
-    regex,
+    format_uuid, regex,
     state::ArcState,
     util::Form,
 };
@@ -52,7 +52,7 @@ async fn register(
 
     let actor = activitypub::instantiate::actor(
         &state.config,
-        &user_id.to_hyphenated_ref().to_string(),
+        &format_uuid!(user_id),
         &form.username,
         public_key_pem,
     );

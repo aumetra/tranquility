@@ -1,7 +1,7 @@
 use crate::error::Error;
-use chrono::{DateTime, Utc};
 use ormx::Table;
 use sqlx::PgPool;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Clone, Table)]
@@ -15,12 +15,14 @@ pub struct OAuthAuthorization {
 
     #[ormx(get_one(&str))]
     pub code: String,
-    pub valid_until: DateTime<Utc>,
+
+    pub valid_until: OffsetDateTime,
 
     #[ormx(default)]
-    pub created_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
+
     #[ormx(default)]
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: OffsetDateTime,
 }
 
 impl OAuthAuthorization {

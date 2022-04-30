@@ -1,6 +1,7 @@
 [profile.release]
-lto = true
+lto = "thin"
 opt-level = 3
+strip = true
 
 [workspace]
 members = [
@@ -10,3 +11,7 @@ members = [
     "tranquility-ratelimit",
     "tranquility-types",
 ]
+
+[patch.crates-io]
+sqlx = { git = "https://github.com/launchbadge/sqlx.git", rev = "826e63fc11fc43ce92099b6844d8a9155bf38356" }
+sqlx-core = { git = "https://github.com/launchbadge/sqlx.git", rev = "826e63fc11fc43ce92099b6844d8a9155bf38356" }

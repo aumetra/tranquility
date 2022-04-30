@@ -1,6 +1,7 @@
 use super::{Attachment, Tag};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use time::OffsetDateTime;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,7 +17,10 @@ pub struct Object {
 
     pub summary: String,
     pub content: String,
-    pub published: String,
+
+    #[serde(with = "time::serde::rfc3339")]
+    pub published: OffsetDateTime,
+
     #[serde(default)]
     pub sensitive: bool,
 
@@ -41,7 +45,7 @@ impl Default for Object {
 
             summary: String::default(),
             content: String::default(),
-            published: String::default(),
+            published: OffsetDateTime::now_utc(),
             sensitive: false,
 
             attachment: Vec::default(),

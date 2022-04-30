@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use time::OffsetDateTime;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 /// Struct representing an [ActivityStreams activity](https://www.w3.org/TR/activitystreams-core/#activities)
@@ -14,8 +15,9 @@ pub struct Activity {
 
     /// This can either be an "Actor", "Object" or an URL to either of those
     pub object: ObjectField,
-    #[serde(default)]
-    pub published: String,
+
+    #[serde(with = "time::serde::rfc3339")]
+    pub published: OffsetDateTime,
 
     pub to: Vec<String>,
     #[serde(default)]
@@ -32,7 +34,7 @@ impl Default for Activity {
             actor: String::default(),
 
             object: ObjectField::default(),
-            published: String::default(),
+            published: OffsetDateTime::now_utc(),
 
             to: Vec::default(),
             cc: Vec::default(),

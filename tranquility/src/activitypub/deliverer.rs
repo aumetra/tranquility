@@ -6,6 +6,7 @@ use reqwest::{
     Client, Request, Response,
 };
 use std::{future::Future, sync::Arc};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER};
 /// Structure that holds data relevant to delivering an activity
 struct DeliveryData {
@@ -74,7 +75,10 @@ async fn prepare_request(
         .json(activity)
         .build()?;
 
-    let date_header_value = HeaderValue::from_str(chrono::Utc::now().to_rfc2822().as_str())?;
+    let rfc3339_timestamp = OffsetDateTime::now_utc()
+        .format(&Rfc3339)
+        .map_err(time::Error::from)?;
+    let date_header_value = HeaderValue::from_str(&rfc3339_timestamp)?;
 
     let activity_bytes = serde_json::to_vec(activity)?;
     let digest_header_value = crate::crypto::digest::http_header(activity_bytes).await?;
