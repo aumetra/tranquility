@@ -1,103 +1,23 @@
-use {
-    crate::{consts::MAX_BODY_SIZE, error::Error, map_err, state::ArcState},
-    serde::{de::DeserializeOwned, Deserialize},
-    uuid::Uuid,
-    warp::{hyper::body::Bytes, Filter, Rejection, Reply},
+use axum::{
+    routing::{get, post},
+    Router,
 };
-
-/// `warp::header::exact()` can't be used here because the value can look different for every implementation  
-///
-/// For example, Mastodon's fetcher look like "application/activity+json, application/ld+json".
-fn header_requirements() -> impl Filter<Extract = (), Error = Rejection> + Copy {
-    let header_requirements_fn = |accept_header_value: String| async move {
-        if accept_header_value.contains("application/activity+json")
-            || accept_header_value.contains("application/ld+json")
-        {
-            Ok(())
-        } else {
-            Err(Rejection::from(Error::InvalidRequest))
-        }
-    };
-
-    warp::header("accept")
-        .and_then(header_requirements_fn)
-        .untuple_one()
-}
-
-/// The standard `warp::body::json()` filter only decodes content from requests
-/// that have the header "Content-Type: application/json" but the inbox
-/// requests have the types of either "application/ld+json" or "application/activity+json"
-fn ap_json<T: DeserializeOwned>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
-    let json_parser_fn = |body: Bytes| async move {
-        let value = map_err!(serde_json::from_slice(&body))?;
-
-        Ok::<T, Rejection>(value)
-    };
-
-    warp::body::content_length_limit(MAX_BODY_SIZE)
-        .and(warp::body::bytes())
-        .and_then(json_parser_fn)
-}
-
-/// Filter returning a query if there's one
-/// Warp's standard behaviour is to reject
-fn optional_raw_query() -> impl Filter<Extract = (String,), Error = Rejection> + Copy {
-    warp::query::raw().or_else(|_| async { Ok::<_, Rejection>((String::new(),)) })
-}
+use serde::Deserialize;
+use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct CollectionQuery {
     last_id: Option<Uuid>,
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state_filter = crate::state::filter(state);
-
-    let followers = warp::path!("users" / Uuid / "followers")
-        .and(warp::get())
-        .and(state_filter.clone())
-        .and(warp::query())
-        .and(header_requirements())
-        .and_then(followers::followers);
-
-    let following = warp::path!("users" / Uuid / "following")
-        .and(warp::get())
-        .and(state_filter.clone())
-        .and(warp::query())
-        .and(header_requirements())
-        .and_then(following::following);
-
-    let inbox = warp::path!("users" / Uuid / "inbox")
-        .and(warp::post())
-        .and(state_filter.clone())
-        .and(inbox::validate_request(state))
-        .and_then(inbox::inbox);
-
-    let objects = warp::path!("objects" / Uuid)
-        .and(warp::get())
-        .and(state_filter.clone())
-        .and(header_requirements())
-        .and_then(objects::objects);
-
-    let outbox = warp::path!("users" / Uuid / "outbox")
-        .and(warp::get())
-        .and(state_filter.clone())
-        .and(warp::query())
-        .and(header_requirements())
-        .and_then(outbox::outbox);
-
-    let users = warp::path!("users" / Uuid)
-        .and(warp::get())
-        .and(state_filter)
-        .and(header_requirements())
-        .and_then(users::users);
-
-    followers
-        .or(following)
-        .or(inbox)
-        .or(objects)
-        .or(outbox)
-        .or(users)
+pub fn routes() -> Router {
+    Router::new()
+        .route("/users/:id", get(users::users))
+        .route("/users/:id/followers", get(followers::followers))
+        .route("/users/:id/following", get(following::following))
+        .route("/users/:id/inbox", post(inbox::inbox))
+        .route("/users/:id/outbox", get(outbox::outbox))
+        .route("/objects/:id", get(objects::objects))
 }
 
 pub mod followers;

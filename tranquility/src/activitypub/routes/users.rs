@@ -1,11 +1,12 @@
-use {
-    crate::{database::Actor, map_err, state::ArcState},
-    uuid::Uuid,
-    warp::{Rejection, Reply},
-};
+use crate::{database::Actor, error::Error, state::ArcState};
+use axum::{extract::Path, response::IntoResponse, Extension, Json};
+use uuid::Uuid;
 
-pub async fn users(uuid: Uuid, state: ArcState) -> Result<impl Reply, Rejection> {
-    let actor = map_err!(Actor::get(&state.db_pool, uuid).await)?;
+pub async fn users(
+    Path(id): Path<Uuid>,
+    Extension(state): Extension<ArcState>,
+) -> Result<impl IntoResponse, Error> {
+    let actor = Actor::get(&state.db_pool, id).await?;
 
-    Ok(warp::reply::json(&actor.actor))
+    Ok(Json(actor.actor))
 }

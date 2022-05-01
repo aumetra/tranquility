@@ -1,20 +1,18 @@
-use {
-    crate::state::ArcState,
-    cfg_if::cfg_if,
-    warp::{Filter, Rejection, Reply},
-};
+use axum::Router;
+use cfg_if::cfg_if;
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let oauth = oauth::routes(state);
-    let register = register::routes(state);
+use crate::state::State;
 
-    let auth_api = oauth.or(register);
+pub fn routes(state: &State) -> Router {
+    let router = Router::new()
+        .merge(oauth::routes(state))
+        .merge(register::routes(state));
 
     cfg_if! {
         if #[cfg(feature = "mastodon-api")] {
-            mastodon::routes(state).or(auth_api)
+            router.merge(mastodon::routes())
         } else {
-            auth_api
+            router
         }
     }
 }

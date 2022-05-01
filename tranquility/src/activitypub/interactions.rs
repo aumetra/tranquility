@@ -1,12 +1,10 @@
-use {
-    crate::{
-        database::{Actor as DbActor, InsertExt, InsertObject, Object as DbObject},
-        error::Error,
-        state::ArcState,
-    },
-    std::sync::Arc,
-    tranquility_types::activitypub::{Activity, Actor},
+use crate::{
+    database::{Actor as DbActor, InsertExt, InsertObject, Object as DbObject},
+    error::Error,
+    state::ArcState,
 };
+use std::sync::Arc;
+use tranquility_types::activitypub::{Activity, Actor};
 
 /// Create an Follow activity for a follow, save it and send it out
 pub async fn follow(state: &ArcState, db_actor: DbActor, followed: &Actor) -> Result<(), Error> {

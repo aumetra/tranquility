@@ -1,19 +1,20 @@
-use {
-    crate::error::{Error, Result},
-    pkcs8::{PrivateKeyDocument, PublicKeyDocument},
-};
+use crate::error::{Error, Result};
+use pkcs8::der::Document;
+use pkcs8::{PrivateKeyDocument, PublicKeyDocument};
 
 /// Convert/Decode PKCS#8 DER to PKCS#1 DER
 fn pkcs8_to_pkcs1(data: &[u8], is_public: bool) -> Result<Vec<u8>> {
     // PKCS#8 is nothing else than PKCS#1 with some additional metadata about the key
     let der_key = if is_public {
         let pub_key = PublicKeyDocument::from_der(data).map_err(|_| Error::UnknownKeyType)?;
+        let pub_key = pub_key.decode();
 
-        pub_key.spki().subject_public_key.to_vec()
+        pub_key.subject_public_key.to_vec()
     } else {
         let priv_key = PrivateKeyDocument::from_der(data).map_err(|_| Error::UnknownKeyType)?;
+        let priv_key = priv_key.decode();
 
-        priv_key.private_key_info().private_key.to_vec()
+        priv_key.private_key.to_vec()
     };
 
     Ok(der_key)

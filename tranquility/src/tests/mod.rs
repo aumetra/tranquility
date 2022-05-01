@@ -1,18 +1,16 @@
-// i'll allow this lint module-wide because expanded tokio macros
-#![allow(clippy::semicolon_if_nothing_returned)]
-
-use {
-    crate::{
-        activitypub::FollowActivity,
-        config::{
-            Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationJaeger,
-            ConfigurationRatelimit, ConfigurationServer, ConfigurationTls,
-        },
-        state::State,
+use crate::{
+    activitypub::FollowActivity,
+    config::{
+        Configuration, ConfigurationEmail, ConfigurationInstance, ConfigurationJaeger,
+        ConfigurationRatelimit, ConfigurationServer, ConfigurationTls,
     },
-    sqlx::PgPool,
-    std::env,
+    server::create_router_make_service,
+    state::{ArcState, State},
 };
+use axum::Server;
+use mime::Mime;
+use sqlx::PgPool;
+use std::{env, net::SocketAddr};
 
 const FOLLOW_ACTIVITY: &str = r#"
 {
@@ -84,6 +82,72 @@ async fn test_state() -> State {
     let db_pool = init_db().await;
 
     State::new_arcless(config, db_pool)
+}
+
+struct TestClient {
+    address: SocketAddr,
+    client: reqwest::Client,
+}
+
+impl TestClient {
+    /// Construct a new test client
+    fn new(address: SocketAddr) -> Self {
+        Self {
+            address,
+            client: reqwest::Client::new(),
+        }
+    }
+
+    fn format_url(&self, uri: &str) -> String {
+        format!("http://{}{uri}", self.address)
+    }
+
+    /// Send a GET request
+    async fn get(&self, uri: &str) -> reqwest::Result<reqwest::Response> {
+        self.client.get(self.format_url(uri)).send().await
+    }
+
+    /// Send a POST request
+    ///
+    /// If `None` is passed as the content type it defaults to `application/x-www-form-urlencoded`
+    async fn post<B>(
+        &self,
+        uri: &str,
+        content_type: Option<Mime>,
+        body: B,
+    ) -> reqwest::Result<reqwest::Response>
+    where
+        B: Into<reqwest::Body>,
+    {
+        let content_type = content_type.unwrap_or(mime::APPLICATION_WWW_FORM_URLENCODED);
+
+        self.client
+            .post(self.format_url(uri))
+            .header("Content-Type", content_type.as_ref())
+            .body(body)
+            .send()
+            .await
+    }
+}
+
+/// Start an axum server bound to a random port
+///
+/// # Returns
+///
+/// Returns a client that can send HTTP requests to the test server
+fn start_test_server<S>(state: S) -> TestClient
+where
+    S: Into<ArcState>,
+{
+    let state = state.into();
+    let router_service = create_router_make_service(&state);
+
+    let server = Server::bind(&SocketAddr::from(([127, 0, 0, 1], 0))).serve(router_service);
+    let bound_address = server.local_addr();
+
+    tokio::spawn(server);
+
+    TestClient::new(bound_address)
 }
 
 #[test]

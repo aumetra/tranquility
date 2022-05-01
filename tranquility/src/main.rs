@@ -18,10 +18,10 @@ cfg_if::cfg_if! {
     }
 }
 
-// allow because of tokio macro
-#[allow(clippy::semicolon_if_nothing_returned)]
+use std::io;
+
 #[tokio::main]
-async fn main() {
+async fn main() -> io::Result<()> {
     let state = cli::run().await;
 
     database::migrate(&state.db_pool)
@@ -29,7 +29,9 @@ async fn main() {
         .expect("Database migration failed");
     daemon::start(&state);
 
-    server::run(state).await;
+    server::run(state).await?;
+
+    Ok(())
 }
 
 mod activitypub;

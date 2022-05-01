@@ -1,10 +1,8 @@
-use {
-    crate::{
-        error::Result,
-        util::{HashMapExt as _, IteratorExt as _},
-    },
-    http::header::HeaderValue,
+use crate::{
+    error::Result,
+    util::{HashMapExt as _, IteratorExt as _},
 };
+use http::header::HeaderValue;
 
 /// Parsed form of a signature header
 pub struct Signature<'a> {

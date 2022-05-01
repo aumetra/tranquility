@@ -1,22 +1,22 @@
-use {
-    crate::map_err,
-    argon2::Error as Argon2Error,
-    askama::Error as AskamaError,
-    reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError},
-    rsa::{errors::Error as RsaError, pkcs8::Error as Pkcs8Error},
-    serde_json::Error as SerdeJsonError,
-    sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError},
-    tranquility_http_signatures::Error as HttpSignaturesError,
-    url::ParseError as UrlParseError,
-    uuid::Error as UuidError,
-    validator::ValidationErrors,
-    warp::{
-        http::StatusCode,
-        reject::{Reject, Rejection},
-        reply::Response,
-        Reply,
-    },
+use argon2::Error as Argon2Error;
+use askama::Error as AskamaError;
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
 };
+use reqwest::{header::InvalidHeaderValue as ReqwestInvalidHeaderValue, Error as ReqwestError};
+use rsa::{
+    errors::Error as RsaError,
+    pkcs8::{spki::Error as SpkiError, Error as Pkcs8Error},
+};
+use serde_json::Error as SerdeJsonError;
+use sqlx::{migrate::MigrateError as SqlxMigrationError, Error as SqlxError};
+use time::Error as TimeError;
+use tranquility_http_signatures::Error as HttpSignaturesError;
+use url::ParseError as UrlParseError;
+use uuid::Error as UuidError;
+use validator::ValidationErrors;
 
 #[derive(Debug, thiserror::Error)]
 /// Combined error enum for converting errors into rejections
@@ -54,6 +54,9 @@ pub enum Error {
     #[error("RSA operation failed: {0}")]
     Rsa(#[from] RsaError),
 
+    #[error("SPKI operation failed: {0}")]
+    Spki(#[from] SpkiError),
+
     #[error("Database operation failed: {0}")]
     Sqlx(#[from] SqlxError),
 
@@ -62,6 +65,9 @@ pub enum Error {
 
     #[error("serde-json operation failed: {0}")]
     SerdeJson(#[from] SerdeJsonError),
+
+    #[error("time operation failed: {0}")]
+    Time(#[from] TimeError),
 
     #[error("Unexpected webfinger resource")]
     UnexpectedWebfingerResource,
@@ -79,48 +85,38 @@ pub enum Error {
     Validation(#[from] ValidationErrors),
 }
 
-impl Reject for Error {}
+impl From<Error> for Response {
+    fn from(err: Error) -> Self {
+        err.into_response()
+    }
+}
 
-/// Recover function for recovering from some of the errors with a custom error status
-#[allow(clippy::unused_async)]
-pub async fn recover(rejection: Rejection) -> Result<Response, Rejection> {
-    if let Some(error) = rejection.find::<Error>() {
-        let error_text = error.to_string();
+impl IntoResponse for Error {
+    fn into_response(self) -> Response {
+        let error_text = self.to_string();
 
-        match error {
+        match self {
             Error::InvalidRequest
             | Error::UnknownActivity
             | Error::MalformedUrl
-            | Error::Uuid(..) => {
-                Ok(warp::reply::with_status(error_text, StatusCode::BAD_REQUEST).into_response())
-            }
+            | Error::Uuid(..) => (StatusCode::BAD_REQUEST, error_text).into_response(),
 
             // Add special case to send the previously defined error messages
-            Error::Validation(err) => {
-                let response_payload = map_err!(serde_json::to_string(err))?;
-                let response = warp::reply::with_status(response_payload, StatusCode::BAD_REQUEST)
-                    .into_response();
+            Error::Validation(err) => (StatusCode::BAD_REQUEST, Json(err)).into_response(),
 
-                Ok(response)
-            }
-
-            Error::Unauthorized => {
-                Ok(warp::reply::with_status(error_text, StatusCode::UNAUTHORIZED).into_response())
-            }
+            Error::Unauthorized => (StatusCode::UNAUTHORIZED, error_text).into_response(),
 
             Error::Argon2(..)
             | Error::Pkcs8(..)
             | Error::Sqlx(..)
             | Error::SqlxMigration(..)
             | Error::Rsa(..) => {
-                error!(?error, "Internal error occurred");
+                error!(error = ?self, "Internal error occurred");
 
-                Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response())
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
 
-            _ => Err(rejection),
+            _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         }
-    } else {
-        Err(rejection)
     }
 }

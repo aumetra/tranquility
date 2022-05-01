@@ -1,8 +1,6 @@
-use {
-    crate::{activitypub::fetcher, database::Object, error::Error, state::ArcState},
-    tranquility_types::activitypub::{activity::ObjectField, Activity},
-    warp::http::StatusCode,
-};
+use crate::{activitypub::fetcher, database::Object, error::Error, state::ArcState};
+use http::StatusCode;
+use tranquility_types::activitypub::{activity::ObjectField, Activity};
 
 pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
     // Normalize activity

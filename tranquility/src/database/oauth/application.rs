@@ -1,8 +1,6 @@
-use {
-    chrono::{DateTime, Utc},
-    ormx::Table,
-    uuid::Uuid,
-};
+use ormx::Table;
+use time::OffsetDateTime;
+use uuid::Uuid;
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "oauth_applications", deletable, insertable)]
@@ -20,7 +18,8 @@ pub struct OAuthApplication {
     pub website: String,
 
     #[ormx(default)]
-    pub created_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
+
     #[ormx(default)]
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: OffsetDateTime,
 }

@@ -1,17 +1,19 @@
-use {
-    crate::{
-        activitypub,
-        consts::regex::USERNAME,
-        database::{InsertActor, InsertExt},
-        limit_body_size, map_err, regex,
-        state::ArcState,
-    },
-    serde::Deserialize,
-    tranquility_ratelimit::{ratelimit, Configuration},
-    uuid::Uuid,
-    validator::Validate,
-    warp::{http::StatusCode, reply::Response, Filter, Rejection, Reply},
+use crate::{
+    activitypub,
+    consts::{regex::USERNAME, MAX_BODY_SIZE},
+    database::{InsertActor, InsertExt},
+    error::Error,
+    format_uuid, ratelimit_layer, regex,
+    state::{ArcState, State},
+    util::Form,
 };
+use axum::{
+    extract::ContentLengthLimit, http::StatusCode, response::IntoResponse, routing::post,
+    Extension, Router,
+};
+use serde::Deserialize;
+use uuid::Uuid;
+use validator::Validate;
 
 regex!(USERNAME_REGEX = USERNAME);
 
@@ -35,12 +37,15 @@ pub struct RegistrationForm {
     password: String,
 }
 
-async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, Rejection> {
+async fn register(
+    Extension(state): Extension<ArcState>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<RegistrationForm>, MAX_BODY_SIZE>,
+) -> Result<impl IntoResponse, Error> {
     if state.config.instance.closed_registrations {
         return Ok(StatusCode::FORBIDDEN.into_response());
     }
 
-    map_err!(form.validate())?;
+    form.validate()?;
 
     let user_id = Uuid::new_v4();
     let password_hash = crate::crypto::password::hash(form.password).await?;
@@ -50,11 +55,11 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
 
     let actor = activitypub::instantiate::actor(
         &state.config,
-        &user_id.to_hyphenated_ref().to_string(),
+        &format_uuid!(user_id),
         &form.username,
         public_key_pem,
     );
-    let actor = map_err!(serde_json::to_value(&actor))?;
+    let actor = serde_json::to_value(&actor)?;
 
     let _user = InsertActor {
         id: user_id,
@@ -74,29 +79,15 @@ async fn register(state: ArcState, form: RegistrationForm) -> Result<Response, R
     #[cfg(feature = "email")]
     crate::email::send_confirmation(&state, _user);
 
-    Ok(warp::reply::with_status("Account created", StatusCode::CREATED).into_response())
+    Ok((StatusCode::CREATED, "Account created").into_response())
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let active = state.config.ratelimit.active;
-    let registration_quota = state.config.ratelimit.registration_quota;
-
-    let ratelimit_config = Configuration::new()
-        .active(active)
-        .burst_quota(registration_quota);
-
-    let state_filter = crate::state::filter(state);
-
-    // Ratelimit only the logic
-    let ratelimit_wrapper =
-        ratelimit!(from_config: ratelimit_config).expect("Couldn't construct ratelimit wrapper");
-    let register_logic = warp::post()
-        .and(state_filter)
-        .and(warp::body::form())
-        .and_then(register)
-        .with(ratelimit_wrapper);
-    // Restrict the body size
-    let register_logic = limit_body_size!(register_logic);
-
-    warp::path!("api" / "tranquility" / "v1" / "register").and(register_logic)
+pub fn routes(state: &State) -> Router {
+    Router::new()
+        .route("/api/tranquility/v1/register", post(register))
+        .route_layer(ratelimit_layer!(
+            state.config.ratelimit.active,
+            !state.config.tls.serve_tls_directly,
+            state.config.ratelimit.registration_quota,
+        ))
 }

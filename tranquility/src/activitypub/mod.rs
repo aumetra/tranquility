@@ -1,14 +1,11 @@
-use {
-    chrono::SecondsFormat,
-    serde::{Deserialize, Serialize},
-    tranquility_types::activitypub::{Activity, Actor, IsPrivate, IsUnlisted, Object},
-};
+use serde::{Deserialize, Serialize};
+use tranquility_types::activitypub::{Activity, Actor, IsPrivate, IsUnlisted, Object};
 
 #[derive(Clone, Deserialize)]
 #[serde(untagged)]
 pub enum ActivityObject {
-    Activity(Activity),
-    Object(Object),
+    Activity(Box<Activity>),
+    Object(Box<Object>),
 }
 
 impl IsPrivate for ActivityObject {
@@ -38,13 +35,6 @@ pub struct FollowActivity {
     pub approved: bool,
 }
 
-/// Get the current timestamp in the RFC 3339 format
-///
-/// ActivityPub technically uses the ISO 8601 format but RFC 3339 should be fine in most cases
-fn current_datetime() -> String {
-    chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true)
-}
-
 /// Extension trait for cleaning objects from potentially malicious HTML
 pub trait Clean {
     /// Clean any fields that could potentially contain malicious HTML
@@ -71,3 +61,5 @@ pub mod handler;
 pub mod instantiate;
 pub mod interactions;
 pub mod routes;
+
+pub use routes::routes;

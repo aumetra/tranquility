@@ -1,10 +1,8 @@
-use {
-    serde::Deserialize,
-    std::path::Path,
-    tokio::{
-        fs::File,
-        io::{AsyncReadExt, BufReader},
-    },
+use serde::Deserialize;
+use std::path::Path;
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt, BufReader},
 };
 
 #[derive(Deserialize)]
@@ -31,7 +29,7 @@ pub struct ConfigurationInstance {
     pub description: String,
 
     pub character_limit: usize,
-    pub upload_limit: usize,
+    pub upload_limit: u64,
 
     pub moderators: Vec<String>,
 }

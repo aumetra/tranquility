@@ -1,7 +1,5 @@
-use {
-    serde::{Deserialize, Serialize},
-    serde_json::{Map, Value},
-};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 /// Struct representing an entry in the "links" array

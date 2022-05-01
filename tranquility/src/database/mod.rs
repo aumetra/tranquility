@@ -1,16 +1,12 @@
-// Warnings related to those lints are caused by expanded SQLx code
-#![allow(clippy::similar_names)]
-
-use {
-    crate::{error::Error, map_err},
-    async_trait::async_trait,
-    chrono::{DateTime, Utc},
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use crate::error::Error;
+use async_trait::async_trait;
+use sqlx::PgPool;
+use time::OffsetDateTime;
+use uuid::Uuid;
 
 pub mod connection {
-    use {sqlx::PgPool, std::future::Future};
+    use sqlx::PgPool;
+    use std::future::Future;
 
     pub fn init_pool(db_url: &'_ str) -> impl Future<Output = Result<PgPool, sqlx::Error>> + '_ {
         PgPool::connect(db_url)
@@ -26,9 +22,9 @@ pub trait InsertExt: ormx::Insert {
         conn_pool: &sqlx::Pool<ormx::Db>,
     ) -> Result<<Self as ormx::Insert>::Table, Error> {
         // Acquire a connection from the database pool
-        let mut db_conn = map_err!(conn_pool.acquire().await)?;
+        let mut db_conn = conn_pool.acquire().await?;
 
-        map_err!(ormx::Insert::insert(self, &mut db_conn).await)
+        Ok(ormx::Insert::insert(self, &mut db_conn).await?)
     }
 }
 
@@ -37,21 +33,23 @@ impl<T> InsertExt for T where T: ormx::Insert {}
 
 /// Wrapper struct for the query of the [last_activity_timestamp] function
 struct ObjectTimestamp {
-    timestamp: DateTime<Utc>,
+    timestamp: OffsetDateTime,
 }
 
-impl From<ObjectTimestamp> for DateTime<Utc> {
+impl From<ObjectTimestamp> for OffsetDateTime {
     fn from(timestamp: ObjectTimestamp) -> Self {
         timestamp.timestamp
     }
 }
 
 #[inline]
-/// Get the timestamp of the activity. If the activity doesn't exist, default to the current time
+/// Get the timestamp of the activity
+///
+/// If the activity doesn't exist the current time is returned
 async fn last_activity_timestamp(
     conn_pool: &PgPool,
     last_activity_id: Option<Uuid>,
-) -> Result<DateTime<Utc>, Error> {
+) -> Result<OffsetDateTime, Error> {
     let last_timestamp = sqlx::query_as!(
         ObjectTimestamp,
         r#"
@@ -63,7 +61,7 @@ async fn last_activity_timestamp(
     .fetch_one(conn_pool)
     .await
     // Either return the current time or convert it via the `Into` trait
-    .map_or_else(|_| Utc::now(), Into::into);
+    .map_or_else(|_| OffsetDateTime::now_utc(), Into::into);
 
     Ok(last_timestamp)
 }

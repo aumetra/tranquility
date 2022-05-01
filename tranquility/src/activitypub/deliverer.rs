@@ -1,18 +1,13 @@
-use {
-    crate::{
-        crypto, database::Actor as DbActor, error::Error, map_err, state::ArcState,
-        util::HTTP_CLIENT,
-    },
-    futures_util::stream::{FuturesUnordered, StreamExt},
-    itertools::Itertools,
-    reqwest::{
-        header::{HeaderName, HeaderValue, DATE},
-        Client, Request, Response,
-    },
-    std::{future::Future, sync::Arc},
-    tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER},
+use crate::{crypto, database::Actor as DbActor, error::Error, state::ArcState, util::HTTP_CLIENT};
+use futures_util::stream::{FuturesUnordered, StreamExt};
+use itertools::Itertools;
+use reqwest::{
+    header::{HeaderName, HeaderValue, DATE},
+    Client, Request, Response,
 };
-
+use std::{future::Future, sync::Arc};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use tranquility_types::activitypub::{Activity, Actor, PUBLIC_IDENTIFIER};
 /// Structure that holds data relevant to delivering an activity
 struct DeliveryData {
     author: Actor,
@@ -53,7 +48,7 @@ fn construct_deliver_future<'a>(
 
         let request = prepare_request(&HTTP_CLIENT, &url, delivery_data).await?;
 
-        map_err!(HTTP_CLIENT.execute(request).await)
+        Ok(HTTP_CLIENT.execute(request).await?)
     }
 }
 
@@ -80,7 +75,10 @@ async fn prepare_request(
         .json(activity)
         .build()?;
 
-    let date_header_value = HeaderValue::from_str(chrono::Utc::now().to_rfc2822().as_str())?;
+    let rfc3339_timestamp = OffsetDateTime::now_utc()
+        .format(&Rfc3339)
+        .map_err(time::Error::from)?;
+    let date_header_value = HeaderValue::from_str(&rfc3339_timestamp)?;
 
     let activity_bytes = serde_json::to_vec(activity)?;
     let digest_header_value = crate::crypto::digest::http_header(activity_bytes).await?;

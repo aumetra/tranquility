@@ -14,11 +14,9 @@ where
 }
 
 pub mod digest {
-    use {
-        crate::{error::Error, util::cpu_intensive_task},
-        reqwest::header::HeaderValue,
-        sha2::{Digest, Sha256},
-    };
+    use crate::{error::Error, util::cpu_intensive_task};
+    use reqwest::header::HeaderValue;
+    use sha2::{Digest, Sha256};
 
     /// Calculate the digest HTTP header
     pub async fn http_header(data: Vec<u8>) -> Result<HeaderValue, Error> {
@@ -36,10 +34,8 @@ pub mod digest {
 }
 
 pub mod password {
-    use {
-        crate::{error::Error, util::cpu_intensive_task},
-        argon2::Config,
-    };
+    use crate::{error::Error, util::cpu_intensive_task};
+    use argon2::Config;
 
     /// Hash the password using the standard rust-argon2 config
     pub async fn hash(password: String) -> Result<String, Error> {
@@ -62,13 +58,11 @@ pub mod password {
 }
 
 pub mod rsa {
-    use {
-        crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_task},
-        rand::rngs::OsRng,
-        rsa::{
-            pkcs8::{ToPrivateKey, ToPublicKey},
-            RsaPrivateKey,
-        },
+    use crate::{consts::crypto::KEY_SIZE, error::Error, util::cpu_intensive_task};
+    use rand::rngs::OsRng;
+    use rsa::{
+        pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
+        RsaPrivateKey,
     };
 
     /// Generate an RSA key pair (key size defined in the `consts` file)
@@ -78,8 +72,8 @@ pub mod rsa {
 
     /// Get the public key from the private key and encode both in the PKCS#8 PEM format
     pub fn to_pem(rsa_key: &RsaPrivateKey) -> Result<(String, String), Error> {
-        let public_key = rsa_key.to_public_key_pem()?;
-        let private_key = rsa_key.to_pkcs8_pem()?.to_string();
+        let public_key = rsa_key.to_public_key_pem(LineEnding::LF)?;
+        let private_key = rsa_key.to_pkcs8_pem(LineEnding::LF)?.to_string(); // Having this zeroised would be nice but SQLx has no support at the moment. Maybe there's some workaround?
 
         Ok((public_key, private_key))
     }
@@ -98,18 +92,14 @@ pub mod token {
 }
 
 pub mod request {
-    use {
-        crate::{error::Error, map_err, util::cpu_intensive_task},
-        std::future::Future,
-        tranquility_http_signatures::Request,
-        warp::{
-            http::{
-                header::{HeaderMap, HeaderName, HeaderValue},
-                Method,
-            },
-            path::FullPath,
-        },
+    use crate::{error::Error, util::cpu_intensive_task};
+    use http::{
+        self,
+        header::{HeaderName, HeaderValue},
+        HeaderMap,
     };
+    use std::future::Future;
+    use tranquility_http_signatures::Request;
 
     /// Sign a reqwest HTTP request
     pub fn sign(
@@ -124,18 +114,18 @@ pub mod request {
             let key_id = key_id.as_str();
             let private_key = private_key.as_bytes();
 
-            map_err!(tranquility_http_signatures::sign(
+            Ok(tranquility_http_signatures::sign(
                 request,
                 &["(request-target)", "date", "digest"],
                 (key_id, private_key),
-            ))
+            )?)
         })
     }
 
     /// Verify an HTTP request using parameters obtained from warp
     pub fn verify(
-        method: Method,
-        path: FullPath,
+        method: String,
+        path: String,
         query: Option<String>,
         headers: HeaderMap,
         // The public key is provided in the PEM format
@@ -143,15 +133,10 @@ pub mod request {
         public_key: String,
     ) -> impl Future<Output = Result<bool, Error>> + Send {
         cpu_intensive_task(move || {
-            let method = method.as_str();
-            let path = path.as_str();
-            let query = query.as_deref();
-            let headers = &headers;
+            let request = Request::new(&method, &path, query.as_deref(), &headers);
             let public_key = public_key.as_bytes();
 
-            let request = Request::new(method, path, query, headers);
-
-            map_err!(tranquility_http_signatures::verify(request, public_key))
+            Ok(tranquility_http_signatures::verify(request, public_key)?)
         })
     }
 }

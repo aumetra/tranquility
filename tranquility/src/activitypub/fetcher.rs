@@ -1,19 +1,17 @@
-use {
-    crate::{
-        activitypub::Clean,
-        attempt_fetch,
-        database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
-        error::Error,
-        impl_from, impl_into, impl_is_owned_by, map_err,
-        state::ArcState,
-        util::HTTP_CLIENT,
-    },
-    reqwest::IntoUrl,
-    serde_json::Value,
-    std::fmt::Debug,
-    tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object},
-    uuid::Uuid,
+use crate::{
+    activitypub::Clean,
+    attempt_fetch,
+    database::{Actor as DbActor, InsertActor, InsertExt, InsertObject, Object as DbObject},
+    error::Error,
+    impl_from, impl_into, impl_is_owned_by,
+    state::ArcState,
+    util::HTTP_CLIENT,
 };
+use reqwest::IntoUrl;
+use serde_json::Value;
+use std::fmt::Debug;
+use tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object};
+use uuid::Uuid;
 
 pub enum Entity {
     Activity(Activity),
@@ -66,6 +64,11 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
         let (_actor, actor_db) = fetch_actor(state, &activity.actor).await?;
         // Normalize the activity
         if let Some(object) = activity.object.as_mut_object() {
+            // If the object is embedded into the activity itself:
+            // - Take the object
+            // - Insert it into the database
+            // - Replace the object reference in the activity with the ID of the object
+
             object.clean();
 
             let object_value = serde_json::to_value(&object)?;
@@ -79,7 +82,7 @@ pub async fn fetch_activity(state: &ArcState, url: &str) -> Result<Activity, Err
 
             activity.object = ObjectField::Url(object.id.clone());
         } else if activity.object.as_actor().is_some() {
-            return Err(Error::UnknownActivity);
+            return Err(Error::UnknownActivity); // You shouldn't be able to fetch an update activity?
         }
 
         let activity_value = serde_json::to_value(&activity)?;
@@ -116,7 +119,7 @@ pub async fn fetch_actor(state: &ArcState, url: &str) -> Result<(Actor, DbActor)
     if let Entity::Actor(mut actor) = fetch_entity(url).await? {
         actor.clean();
 
-        let actor_value = map_err!(serde_json::to_value(&actor))?;
+        let actor_value = serde_json::to_value(&actor)?;
         let db_actor = InsertActor {
             id: Uuid::new_v4(),
             username: actor.username.clone(),

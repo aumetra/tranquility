@@ -1,21 +1,24 @@
-use {
-    super::TokenTemplate,
-    crate::{
-        crypto::password,
-        database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
-        error::Error,
-        map_err,
-        state::ArcState,
-    },
-    askama::Template,
-    chrono::Duration,
-    once_cell::sync::Lazy,
-    serde::{Deserialize, Serialize},
-    uuid::Uuid,
-    warp::{reply::Response, Rejection, Reply},
+use super::TokenTemplate;
+use crate::{
+    consts::MAX_BODY_SIZE,
+    crypto::password,
+    database::{Actor, InsertExt, InsertOAuthToken, OAuthApplication, OAuthAuthorization},
+    error::Error,
+    state::ArcState,
+    util::Form,
 };
+use askama::Template;
+use axum::{
+    extract::ContentLengthLimit,
+    response::{Html, IntoResponse},
+    Extension, Json,
+};
+use axum_macros::debug_handler;
+use serde::{Deserialize, Serialize};
+use time::{Duration, OffsetDateTime};
+use uuid::Uuid;
 
-static ACCESS_TOKEN_VALID_DURATION: Lazy<Duration> = Lazy::new(|| Duration::hours(1));
+static ACCESS_TOKEN_VALID_DURATION: Duration = Duration::hours(1);
 
 /// Form for password grant authorisation flows
 #[derive(Deserialize)]
@@ -43,7 +46,7 @@ enum FormData {
 }
 
 #[derive(Deserialize)]
-pub struct Form {
+pub struct TokenForm {
     grant_type: String,
 
     #[serde(flatten)]
@@ -52,18 +55,18 @@ pub struct Form {
 
 impl FormData {
     /// If the form is a code grant form, return it otherwise return a rejection
-    pub fn code_grant(self) -> Result<FormCodeGrant, Rejection> {
+    pub fn code_grant(self) -> Result<FormCodeGrant, Error> {
         match self {
             Self::CodeGrant(form) => Ok(form),
-            _ => Err(Error::InvalidRequest.into()),
+            _ => Err(Error::InvalidRequest),
         }
     }
 
     /// If the form is a password grant form, return it otherwise return a rejection
-    pub fn password_grant(self) -> Result<FormPasswordGrant, Rejection> {
+    pub fn password_grant(self) -> Result<FormPasswordGrant, Error> {
         match self {
             Self::PasswordGrant(form) => Ok(form),
-            _ => Err(Error::InvalidRequest.into()),
+            _ => Err(Error::InvalidRequest),
         }
     }
 }
@@ -98,17 +101,14 @@ async fn code_grant(
         code,
         ..
     }: FormCodeGrant,
-) -> Result<Response, Rejection> {
-    let client = map_err!(OAuthApplication::by_client_id(&state.db_pool, &client_id).await)?;
+) -> Result<impl IntoResponse, Error> {
+    let client = OAuthApplication::by_client_id(&state.db_pool, &client_id).await?;
     if client.client_secret != client_secret || client.redirect_uris != redirect_uri {
-        return Err(Error::Unauthorized.into());
+        return Err(Error::Unauthorized);
     }
 
-    let authorization_code = map_err!(OAuthAuthorization::by_code(&state.db_pool, &code).await)?;
-
-    let valid_until = *ACCESS_TOKEN_VALID_DURATION;
-    let valid_until = chrono::Utc::now() + valid_until;
-
+    let authorization_code = OAuthAuthorization::by_code(&state.db_pool, &code).await?;
+    let valid_until = OffsetDateTime::now_utc() + ACCESS_TOKEN_VALID_DURATION;
     let access_token = crate::crypto::token::generate();
 
     let access_token = InsertOAuthToken {
@@ -123,20 +123,20 @@ async fn code_grant(
 
     // Display the code to the user if the redirect URI is "urn:ietf:wg:oauth:2.0:oob"
     if redirect_uri == "urn:ietf:wg:oauth:2.0:oob" {
-        let page = map_err!(TokenTemplate {
+        let page = TokenTemplate {
             token: access_token.access_token,
         }
-        .render())?;
+        .render()?;
 
-        Ok(warp::reply::html(page).into_response())
+        Ok(Html(page).into_response())
     } else {
         let response = AccessTokenResponse {
             access_token: access_token.access_token,
-            created_at: ACCESS_TOKEN_VALID_DURATION.num_seconds(),
+            created_at: ACCESS_TOKEN_VALID_DURATION.whole_seconds(),
             ..AccessTokenResponse::default()
         };
 
-        Ok(warp::reply::json(&response).into_response())
+        Ok(Json(&response).into_response())
     }
 }
 
@@ -145,15 +145,13 @@ async fn password_grant(
     FormPasswordGrant {
         username, password, ..
     }: FormPasswordGrant,
-) -> Result<impl Reply, Rejection> {
+) -> Result<impl IntoResponse, Error> {
     let actor = Actor::by_username_local(&state.db_pool, username.as_str()).await?;
     if !password::verify(password, actor.password_hash.unwrap()).await {
-        return Err(Error::Unauthorized.into());
+        return Err(Error::Unauthorized);
     }
 
-    let valid_until = *ACCESS_TOKEN_VALID_DURATION;
-    let valid_until = chrono::Utc::now() + valid_until;
-
+    let valid_until = OffsetDateTime::now_utc() + ACCESS_TOKEN_VALID_DURATION;
     let access_token = crate::crypto::token::generate();
 
     let access_token = InsertOAuthToken {
@@ -168,14 +166,18 @@ async fn password_grant(
 
     let response = AccessTokenResponse {
         access_token: access_token.access_token,
-        created_at: access_token.created_at.timestamp(),
+        created_at: access_token.created_at.unix_timestamp(),
         ..AccessTokenResponse::default()
     };
 
-    Ok(warp::reply::json(&response))
+    Ok(Json(response))
 }
 
-pub async fn token(state: ArcState, form: Form) -> Result<Response, Rejection> {
+#[debug_handler]
+pub async fn token(
+    Extension(state): Extension<ArcState>,
+    ContentLengthLimit(Form(form)): ContentLengthLimit<Form<TokenForm>, MAX_BODY_SIZE>,
+) -> Result<impl IntoResponse, Error> {
     let response = match form.grant_type.as_str() {
         "authorization_code" => {
             let form_data = form.data.code_grant()?;
@@ -185,7 +187,7 @@ pub async fn token(state: ArcState, form: Form) -> Result<Response, Rejection> {
             let form_data = form.data.password_grant()?;
             password_grant(&state, form_data).await?.into_response()
         }
-        _ => return Err(Error::InvalidRequest.into()),
+        _ => return Err(Error::InvalidRequest),
     };
 
     Ok(response)

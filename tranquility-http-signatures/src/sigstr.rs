@@ -1,11 +1,9 @@
-use {
-    crate::{
-        error::{Error, Result},
-        request::Request,
-        util::{HeaderMapExt as _, IteratorExt as _},
-    },
-    http::header::DATE,
+use crate::{
+    error::{Error, Result},
+    request::Request,
+    util::{HeaderMapExt as _, IteratorExt as _},
 };
+use http::header::DATE;
 
 #[derive(Debug, PartialEq)]
 pub enum Part<'a> {

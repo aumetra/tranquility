@@ -1,93 +1,75 @@
-use {
-    crate::{
-        consts::cors::API_ALLOWED_METHODS,
-        database::{Actor, OAuthToken},
-        error::Error,
-        map_err,
-        state::ArcState,
-        util::construct_cors,
-    },
-    headers::authorization::{Bearer, Credentials},
-    once_cell::sync::Lazy,
-    serde::de::DeserializeOwned,
-    tranquility_types::mastodon::App,
-    warp::{
-        hyper::header::{HeaderValue, AUTHORIZATION},
-        reject::MissingHeader,
-        Filter, Rejection, Reply,
-    },
+use crate::{
+    consts::cors::API_ALLOWED_METHODS,
+    database::{Actor, OAuthToken},
+    error::Error,
+    state::ArcState,
 };
+use async_trait::async_trait;
+use axum::{
+    extract::{FromRequest, RequestParts},
+    Router,
+};
+use headers::{authorization::Bearer, Authorization, HeaderMapExt};
+use once_cell::sync::Lazy;
+use std::ops::Deref;
+use tower_http::cors::CorsLayer;
+use tranquility_types::mastodon::App;
 
 static DEFAULT_APPLICATION: Lazy<App> = Lazy::new(|| App {
     name: "Web".into(),
     ..App::default()
 });
 
-/// Filter that can decode the body as an URL-encoded or an JSON-encoded form
-pub fn urlencoded_or_json<T: DeserializeOwned + Send>(
-) -> impl Filter<Extract = (T,), Error = Rejection> + Copy {
-    let urlencoded_filter = warp::body::form();
-    let json_filter = warp::body::json();
-
-    urlencoded_filter.or(json_filter).unify()
-}
-
-/// Same as [`authorise_user`] but makes the bearer token optional
-pub fn authorisation_optional(
-    state: &ArcState,
-) -> impl Filter<Extract = (Option<Actor>,), Error = Rejection> + Clone {
-    let or_none_fn = |error: Rejection| async move {
-        if error.find::<MissingHeader>().is_some() {
-            Ok((None,))
-        } else {
-            Err(error)
-        }
-    };
-
-    authorisation_required(state).map(Some).or_else(or_none_fn)
-}
-
-/// Parses a `HeaderValue` as the contents of an authorization header with bearer token contents
-/// and attempts to fetch the user from the database
-async fn authorise_user(
-    state: ArcState,
-    authorization_header: HeaderValue,
-) -> Result<Actor, Rejection> {
-    let credentials = Bearer::decode(&authorization_header).ok_or(Error::Unauthorized)?;
-    let token = credentials.token();
-
-    let access_token = map_err!(OAuthToken::by_access_token(&state.db_pool, token).await)?;
-    let actor = map_err!(Actor::get(&state.db_pool, access_token.actor_id).await)?;
-
-    Ok(actor)
-}
-
-/// Filter that gets the user associated with the bearer token from the database
+/// Authorisation extractor
 ///
-/// Rejects if the user cannot be found
-pub fn authorisation_required(
-    state: &ArcState,
-) -> impl Filter<Extract = (Actor,), Error = Rejection> + Clone {
-    crate::state::filter(state)
-        .and(warp::header::value(AUTHORIZATION.as_ref()))
-        .and_then(authorise_user)
+/// It takes the `Authorization` header and tries to decodes it as an `Bearer` authorisation.  
+/// Then it fetches the actor associated with the token
+pub struct Authorisation(pub Actor);
+
+impl Deref for Authorisation {
+    type Target = Actor;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    // Enable CORS for all API endpoints
-    // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-    let cors = construct_cors(API_ALLOWED_METHODS);
+#[async_trait]
+impl<B> FromRequest<B> for Authorisation
+where
+    B: Send,
+{
+    type Rejection = Error;
 
-    let v1_prefix = warp::path!("api" / "v1" / ..);
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let credentials = req
+            .headers()
+            .typed_get::<Authorization<Bearer>>()
+            .ok_or(Error::Unauthorized)?;
+        let token = credentials.token();
 
-    let accounts = accounts::routes(state);
-    let apps = apps::routes(state);
-    let statuses = statuses::routes(state);
-    let instance = instance::routes(state);
+        let state = req
+            .extensions()
+            .get::<ArcState>()
+            .expect("[Bug] Missing state in extensions");
 
-    let v1_routes = accounts.or(apps).or(statuses).or(instance);
+        let access_token = OAuthToken::by_access_token(&state.db_pool, token).await?;
+        let actor = Actor::get(&state.db_pool, access_token.actor_id).await?;
 
-    v1_prefix.and(v1_routes).with(cors)
+        Ok(Self(actor))
+    }
+}
+
+pub fn routes() -> Router {
+    let v1_router = Router::new()
+        .merge(accounts::routes())
+        .merge(apps::routes())
+        .merge(statuses::routes())
+        .merge(instance::routes());
+
+    Router::new()
+        .nest("/api/v1", v1_router)
+        .layer(CorsLayer::permissive().allow_methods(API_ALLOWED_METHODS.to_vec()))
 }
 
 pub mod accounts;

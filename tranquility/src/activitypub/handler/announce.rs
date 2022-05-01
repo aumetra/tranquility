@@ -1,14 +1,12 @@
-use {
-    crate::{
-        activitypub::fetcher,
-        database::{Actor, InsertExt, InsertObject},
-        error::Error,
-        state::ArcState,
-    },
-    tranquility_types::activitypub::Activity,
-    uuid::Uuid,
-    warp::http::StatusCode,
+use crate::{
+    activitypub::fetcher,
+    database::{Actor, InsertExt, InsertObject},
+    error::Error,
+    state::ArcState,
 };
+use http::StatusCode;
+use tranquility_types::activitypub::Activity;
+use uuid::Uuid;
 
 pub async fn handle(state: &ArcState, activity: Activity) -> Result<StatusCode, Error> {
     let object_url = activity.object.as_url().ok_or(Error::UnknownActivity)?;

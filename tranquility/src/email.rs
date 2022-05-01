@@ -1,15 +1,14 @@
-use {
-    crate::{database::Actor, error::Error as OtherError, map_err, state::ArcState},
-    lettre::{
-        error::Error as ContentError,
-        transport::smtp::{authentication::Credentials, Error as SmtpError},
-        AsyncTransport, Message, Tokio1Executor,
-    },
-    once_cell::sync::OnceCell,
-    ormx::Table,
-    std::sync::Arc,
-    warp::{Filter, Rejection, Reply},
+use crate::{database::Actor, error::Error as OtherError, state::ArcState};
+use axum::{extract::Path, response::IntoResponse, routing::get, Extension, Router};
+use axum_macros::debug_handler;
+use lettre::{
+    error::Error as ContentError,
+    transport::smtp::{authentication::Credentials, Error as SmtpError},
+    AsyncTransport, Message, Tokio1Executor,
 };
+use once_cell::sync::OnceCell;
+use ormx::Table;
+use std::sync::Arc;
 
 type AsyncSmtpTransport = lettre::AsyncSmtpTransport<Tokio1Executor>;
 
@@ -97,21 +96,18 @@ pub fn send_confirmation(state: &ArcState, mut user: Actor) {
     });
 }
 
+#[debug_handler]
 async fn confirm_account(
-    confirmation_code: String,
-    state: ArcState,
-) -> Result<impl Reply, Rejection> {
-    let mut user = map_err!(Actor::by_confirmation_code(&state.db_pool, &confirmation_code).await)?;
+    Path(confirmation_code): Path<String>,
+    Extension(state): Extension<ArcState>,
+) -> Result<impl IntoResponse, OtherError> {
+    let mut user = Actor::by_confirmation_code(&state.db_pool, &confirmation_code).await?;
     user.is_confirmed = true;
-    map_err!(user.update(&state.db_pool).await)?;
+    user.update(&state.db_pool).await?;
 
     Ok("Account confirmed!")
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    warp::path!("confirm-account" / String)
-        .and(state)
-        .and_then(confirm_account)
+pub fn routes() -> Router {
+    Router::new().route("/confirm-account/:confirmation_code", get(confirm_account))
 }

@@ -1,9 +1,7 @@
-use {
-    crate::error::{Error, Result},
-    ring::{
-        rand,
-        signature::{RsaKeyPair, UnparsedPublicKey, VerificationAlgorithm},
-    },
+use crate::error::{Error, Result};
+use ring::{
+    rand,
+    signature::{RsaKeyPair, UnparsedPublicKey, VerificationAlgorithm},
 };
 
 #[cfg(not(test))]

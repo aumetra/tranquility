@@ -1,7 +1,5 @@
-use {
-    serde::{Deserialize, Serialize},
-    serde_json::Value,
-};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,13 +26,13 @@ pub struct Collection {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Item {
-    Activity(super::Activity),
+    Activity(Box<super::Activity>),
     Url(String),
 }
 
 impl From<super::Activity> for Item {
     fn from(item: super::Activity) -> Self {
-        Self::Activity(item)
+        Self::Activity(Box::new(item))
     }
 }
 

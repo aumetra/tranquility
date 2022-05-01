@@ -1,16 +1,11 @@
-// Allow this because of expanded code of `argh`
-#![allow(clippy::default_trait_access)]
-
-use {
-    crate::{
-        config::Configuration,
-        consts::PROPER_VERSION,
-        state::{ArcState, State},
-    },
-    argh::FromArgs,
-    std::process,
-    tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry},
+use crate::{
+    config::Configuration,
+    consts::PROPER_VERSION,
+    state::{ArcState, State},
 };
+use argh::FromArgs;
+use std::process;
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 
 #[cfg(feature = "jaeger")]
 use tracing_opentelemetry::OpenTelemetryLayer;

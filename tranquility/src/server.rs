@@ -1,38 +1,52 @@
-use {crate::state::ArcState, std::net::IpAddr, warp::Filter};
+use crate::state::ArcState;
+use axum::{extract::connect_info::IntoMakeServiceWithConnectInfo, Extension, Router};
+use axum_server::tls_rustls::RustlsConfig;
+use std::{
+    io,
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
+};
+use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
-/// Combine all route filters and start a warp server
-pub async fn run(state: ArcState) {
-    let logging = warp::trace::request();
-
-    let activitypub = crate::activitypub::routes::routes(&state);
-    let api = crate::api::routes(&state);
-    let well_known = crate::well_known::routes(&state);
-
-    let routes = activitypub.or(api).or(well_known);
+/// Construct the combined router
+pub fn create_router_make_service(
+    state: &ArcState,
+) -> IntoMakeServiceWithConnectInfo<Router, SocketAddr> {
+    let router = Router::new()
+        .merge(crate::activitypub::routes())
+        .merge(crate::api::routes(state))
+        .merge(crate::well_known::routes());
 
     #[cfg(feature = "email")]
-    let routes = {
-        let email = crate::email::routes(&state);
-        routes.or(email)
-    };
+    let router = router.merge(crate::email::routes());
 
-    let routes = routes.with(logging).recover(crate::error::recover);
+    let router = router
+        .layer(Extension(Arc::clone(state)))
+        .layer(TraceLayer::new_for_http())
+        .layer(CompressionLayer::new());
 
-    let server = warp::serve(routes);
+    router.into_make_service_with_connect_info()
+}
 
-    let config = &state.config;
+/// Combine all routers and start the webserver
+pub async fn run(state: ArcState) -> io::Result<()> {
+    let router_service = create_router_make_service(&state);
+    let interface = state.config.server.interface.parse::<IpAddr>().unwrap();
+    let addr = (interface, state.config.server.port);
 
-    let interface = config.server.interface.parse::<IpAddr>().unwrap();
-    let addr = (interface, config.server.port);
+    if state.config.tls.serve_tls_directly {
+        let config = RustlsConfig::from_pem_file(
+            &state.config.tls.certificate,
+            &state.config.tls.secret_key,
+        )
+        .await?;
 
-    if config.tls.serve_tls_directly {
-        server
-            .tls()
-            .cert_path(&config.tls.certificate)
-            .key_path(&config.tls.secret_key)
-            .run(addr)
-            .await;
+        axum_server::bind_rustls(addr.into(), config)
+            .serve(router_service)
+            .await?;
     } else {
-        server.run(addr).await;
+        axum_server::bind(addr.into()).serve(router_service).await?;
     }
+
+    Ok(())
 }

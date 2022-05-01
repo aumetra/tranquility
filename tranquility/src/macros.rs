@@ -53,7 +53,7 @@ macro_rules! r#const {
 #[macro_export]
 macro_rules! format_uuid {
     ($uuid:expr) => {{
-        $uuid.to_simple_ref().to_string()
+        $uuid.as_simple().to_string()
     }};
 }
 
@@ -146,35 +146,6 @@ macro_rules! impl_is_owned_by {
     }
 }
 
-/// Limit the body size of a filter
-#[macro_export(local_inner_macros)]
-macro_rules! limit_body_size {
-    // Use the default maximum body size
-    ($filter:expr) => {{
-        limit_body_size!($filter, crate::consts::MAX_BODY_SIZE)
-    }};
-    // Use the user-defined maximum body size
-    ($filter:expr, $limit:expr) => {{
-        warp::body::content_length_limit($limit).and($filter)
-    }};
-    // Multiply the user-defined maximum body size with the MB in bytes constant
-    ($filter:expr, $limit:ident MB) => {{
-        limit_body_size!($filter, $limit * crate::consts::MB_BYTES)
-    }};
-}
-
-/// Something like `map_err!(Err::<(), ()>(()))` expands to
-///
-/// ```rust
-/// Err::<(), ()>(()).map_err(crate::error::Error::from)
-/// ```
-#[macro_export]
-macro_rules! map_err {
-    ($op:expr) => {{
-        $op.map_err(crate::error::Error::from)
-    }};
-}
-
 /// This expands to a match expression with arms like these
 ///
 /// ```rust
@@ -197,6 +168,25 @@ macro_rules! match_handler {
             }
         }
     }
+}
+
+/// Construct a new ratelimit layer that's compatible with axum
+#[macro_export]
+macro_rules! ratelimit_layer {
+    ($active:expr, $use_forwarded_header:expr, $reqs_per_hour:expr $(,)+) => {{
+        let config = ::tranquility_ratelimit::Configuration::default()
+            .active($active)
+            .burst_quota($reqs_per_hour)
+            .trust_proxy($use_forwarded_header);
+
+        ::tower::ServiceBuilder::new()
+            .layer(::axum::error_handling::HandleErrorLayer::new(|err| async move {
+                error!(error = %err, "Ratelimiting call failed");
+
+                ::http::StatusCode::INTERNAL_SERVER_ERROR
+            }))
+            .layer(::tranquility_ratelimit::RatelimitLayer::new(config))
+    }};
 }
 
 /// Compiles the regex and saves it into a lazy (so that it doesn't have to be recompiled for every usage)

@@ -1,24 +1,25 @@
-use {
-    super::CollectionQuery,
-    crate::{
-        consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, format_uuid, map_err,
-        state::ArcState,
-    },
-    itertools::Itertools,
-    std::ops::Not,
-    tranquility_types::activitypub::{
-        collection::Item, Activity, Actor, Collection, IsPrivate,
-        OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
-    },
-    uuid::Uuid,
-    warp::{Rejection, Reply},
+use super::CollectionQuery;
+use crate::{
+    consts::activitypub::ACTIVITIES_PER_PAGE, database::Actor as DbActor, error::Error,
+    format_uuid, state::ArcState,
 };
+use axum::{
+    extract::{Path, Query},
+    response::IntoResponse,
+    Extension, Json,
+};
+use itertools::Itertools;
+use std::ops::Not;
+use tranquility_types::activitypub::{
+    collection::Item, Activity, Actor, Collection, IsPrivate, OUTBOX_FOLLOW_COLLECTIONS_PAGE_TYPE,
+};
+use uuid::Uuid;
 
 pub async fn outbox(
-    user_id: Uuid,
-    state: ArcState,
-    query: CollectionQuery,
-) -> Result<impl Reply, Rejection> {
+    Path(user_id): Path<Uuid>,
+    Extension(state): Extension<ArcState>,
+    Query(query): Query<CollectionQuery>,
+) -> Result<impl IntoResponse, Error> {
     let latest_activities = crate::database::outbox::activities(
         &state.db_pool,
         user_id,
@@ -39,12 +40,12 @@ pub async fn outbox(
             create_activity
                 .is_private()
                 .not()
-                .then(|| Item::Activity(create_activity))
+                .then(|| Item::Activity(Box::new(create_activity)))
         })
         .collect_vec();
 
-    let user_db = map_err!(DbActor::get(&state.db_pool, user_id).await)?;
-    let user: Actor = map_err!(serde_json::from_value(user_db.actor))?;
+    let user_db = DbActor::get(&state.db_pool, user_id).await?;
+    let user: Actor = serde_json::from_value(user_db.actor)?;
 
     let next = format!("{}?last_id={}", user.outbox, last_id);
 
@@ -60,5 +61,5 @@ pub async fn outbox(
         ..Collection::default()
     };
 
-    Ok(warp::reply::json(&outbox_collection))
+    Ok(Json(outbox_collection))
 }

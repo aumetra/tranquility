@@ -1,13 +1,11 @@
-use {
-    crate::{
-        consts::regex::MENTION, database::Actor as DbActor, error::Error, regex, state::ArcState,
-        well_known::webfinger,
-    },
-    async_trait::async_trait,
-    regex::{Captures, Match},
-    tokio::runtime::Handle,
-    tranquility_types::activitypub::{Actor, Object, Tag},
+use crate::{
+    consts::regex::MENTION, database::Actor as DbActor, error::Error, regex, state::ArcState,
+    well_known::webfinger,
 };
+use async_trait::async_trait;
+use regex::{Captures, Match};
+use tokio::runtime::Handle;
+use tranquility_types::activitypub::{Actor, Object, Tag};
 
 regex!(MENTION_REGEX = MENTION);
 

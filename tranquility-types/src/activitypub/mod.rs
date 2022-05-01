@@ -24,4 +24,4 @@ pub use attachment::Attachment;
 pub use collection::Collection;
 pub use object::Object;
 pub use tag::Tag;
-pub use traits::{ApPublished, IsPrivate, IsPublic, IsUnlisted};
+pub use traits::{IsPrivate, IsPublic, IsUnlisted};

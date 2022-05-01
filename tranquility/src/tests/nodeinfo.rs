@@ -1,4 +1,4 @@
-use {super::test_state, std::sync::Arc};
+use crate::tests::{start_test_server, test_state};
 
 const NODEINFO_21_SCHEMA: &str = r#"
 {
@@ -192,20 +192,19 @@ const NODEINFO_21_SCHEMA: &str = r#"
 
 #[tokio::test]
 async fn nodeinfo() {
-    let state = Arc::new(test_state().await);
+    let state = test_state().await;
+    let test_client = start_test_server(state);
 
-    let well_known = crate::well_known::routes(&state);
-
-    let response = warp::test::request()
-        .path("/.well-known/nodeinfo/2.1")
-        .reply(&well_known)
-        .await;
+    let response = test_client
+        .get("/.well-known/nodeinfo/2.1")
+        .await
+        .expect("Failed to get nodeinfo");
     assert!(response.status().is_success());
 
-    let response_body = response.body();
-    let response_body =
-        serde_json::from_slice(response_body).expect("Couldn't parse nodeinfo entity");
-
+    let response_body = response
+        .json()
+        .await
+        .expect("Failed to decode nodeinfo entity");
     let schema = serde_json::from_str(NODEINFO_21_SCHEMA).expect("Couldn't parse nodeinfo schema");
 
     assert!(jsonschema::is_valid(&schema, &response_body));

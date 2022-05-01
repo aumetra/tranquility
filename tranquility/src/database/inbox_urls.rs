@@ -1,8 +1,6 @@
-use {
-    crate::error::Error,
-    futures_util::stream::{StreamExt, TryStreamExt},
-    sqlx::PgPool,
-};
+use crate::error::Error;
+use futures_util::stream::{StreamExt, TryStreamExt};
+use sqlx::PgPool;
 
 // Required because of the "query_as" macro
 // Otherwise we couldn't use compile-time verified SQL queries

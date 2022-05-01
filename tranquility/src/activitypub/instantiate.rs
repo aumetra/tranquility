@@ -1,9 +1,7 @@
-use {
-    super::current_datetime,
-    crate::{config::Configuration, format_uuid},
-    tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey},
-    uuid::Uuid,
-};
+use crate::{config::Configuration, format_uuid};
+use time::OffsetDateTime;
+use tranquility_types::activitypub::{activity::ObjectField, Activity, Actor, Object, PublicKey};
+use uuid::Uuid;
 
 /// Instantiate an ActivityPub activity
 pub fn activity<T: Into<ObjectField>>(
@@ -26,7 +24,7 @@ pub fn activity<T: Into<ObjectField>>(
         actor: owner_url.into(),
 
         object: object.into(),
-        published: current_datetime(),
+        published: OffsetDateTime::now_utc(),
 
         to,
         cc,
@@ -80,8 +78,10 @@ pub fn actor(
 }
 
 /// Instantiate an ActivityPub object
+#[allow(clippy::too_many_arguments)]
 pub fn object(
     config: &Configuration,
+    r#type: &str,
     owner_url: &str,
     summary: &str,
     content: &str,
@@ -96,11 +96,12 @@ pub fn object(
 
     let object = Object {
         id,
+        r#type: r#type.into(),
 
         summary: summary.into(),
         content: content.into(),
         sensitive,
-        published: current_datetime(),
+        published: OffsetDateTime::now_utc(),
 
         attributed_to: owner_url.into(),
 

@@ -1,7 +1,5 @@
-use {
-    super::Account,
-    serde::{Deserialize, Serialize},
-};
+use super::Account;
+use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
 /// Struct representing the `stats` field of an [Instance]

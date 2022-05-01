@@ -1,14 +1,12 @@
-use {
-    crate::{consts::VERSION, state::ArcState},
-    tranquility_types::mastodon::{
-        instance::{Stats, Urls},
-        Instance,
-    },
-    warp::{Filter, Rejection, Reply},
+use crate::{consts::VERSION, error::Error, state::ArcState};
+use axum::{response::IntoResponse, routing::get, Extension, Json, Router};
+use tranquility_types::mastodon::{
+    instance::{Stats, Urls},
+    Instance,
 };
 
 #[allow(clippy::unused_async)]
-async fn instance(state: ArcState) -> Result<impl Reply, Rejection> {
+async fn instance(Extension(state): Extension<ArcState>) -> Result<impl IntoResponse, Error> {
     let streaming_api = format!("wss://{}", state.config.instance.domain);
 
     let instance = Instance {
@@ -31,11 +29,9 @@ async fn instance(state: ArcState) -> Result<impl Reply, Rejection> {
         ..Instance::default()
     };
 
-    Ok(warp::reply::json(&instance))
+    Ok(Json(instance))
 }
 
-pub fn routes(state: &ArcState) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
-    let state = crate::state::filter(state);
-
-    warp::path!("instance").and(state).and_then(instance)
+pub fn routes() -> Router {
+    Router::new().route("/instance", get(instance))
 }

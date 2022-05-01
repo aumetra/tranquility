@@ -1,20 +1,18 @@
-use {
-    crate::{
-        database::{Actor as DbActor, OAuthApplication, Object as DbObject},
-        error::Error,
-        format_uuid,
-        state::ArcState,
-    },
-    async_trait::async_trait,
-    itertools::Itertools,
-    serde::Serialize,
-    tranquility_types::{
-        activitypub::{Activity, Actor, Object},
-        mastodon::{Account, App, Source, Status},
-    },
-    url::Url,
-    warp::Rejection,
+use crate::{
+    database::{Actor as DbActor, OAuthApplication, Object as DbObject},
+    error::Error,
+    format_uuid,
+    state::ArcState,
 };
+use async_trait::async_trait;
+use axum::response::IntoResponse;
+use itertools::Itertools;
+use serde::Serialize;
+use tranquility_types::{
+    activitypub::{Activity, Actor, Object},
+    mastodon::{Account, App, Source, Status},
+};
+use url::Url;
 
 #[async_trait]
 /// Trait for converting any object into an Mastodon API entity
@@ -23,7 +21,7 @@ where
     ApiEntity: Serialize + 'static,
 {
     /// Possible error that can occur
-    type Error: Into<Rejection>;
+    type Error: IntoResponse;
 
     /// Convert the object into an Mastodon API entity
     async fn into_mastodon(self, state: &ArcState) -> Result<ApiEntity, Self::Error>;

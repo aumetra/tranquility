@@ -1,39 +1,49 @@
 #![forbid(unsafe_code)]
 #![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::missing_errors_doc, clippy::must_use_candidate)]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::must_use_candidate
+)]
 
-//! Ratelimit library based on governor for warp
 //!
-//! Example:
-//! ```rust
-//! use {tranquility_ratelimit::{Configuration, ratelimit}, warp::Filter};
-//!
-//! // This filter can only be accessed 100 times per hour per IP address
-//! let filter =
-//!     warp::any()
-//!         .map(|| "Hello (ratelimited) world!")
-//!         .with(ratelimit!(from_config: Configuration::new()).unwrap());
-//!
-//! warp::serve(filter).run(([127, 0, 0, 1], 8080))/* .await */;
-//! ```
+//! Ratelimit library based on governor for axum
 //!
 
-use {
-    governor::{
-        clock::{Clock, DefaultClock},
-        state::keyed::DefaultKeyedStateStore,
-        Quota, RateLimiter,
+#[macro_use]
+extern crate tracing;
+
+use axum::{
+    extract::{ConnectInfo, FromRequest, RequestParts},
+    http::{
+        header::{HeaderName, RETRY_AFTER},
+        Request, StatusCode,
     },
-    std::{convert::TryInto, net::SocketAddr, num::NonZeroU32, sync::Arc, time::Duration},
-    warp::{
-        http::{header::RETRY_AFTER, StatusCode},
-        reject::Reject,
-        Filter, Rejection, Reply,
-    },
+    response::{IntoResponse, Response},
 };
+use futures_util::future::{BoxFuture, FutureExt};
+use governor::{
+    clock::{Clock, DefaultClock},
+    state::keyed::DefaultKeyedStateStore,
+    Quota, RateLimiter,
+};
+use std::{
+    convert::TryInto,
+    error::Error as StdError,
+    net::{IpAddr, SocketAddr},
+    num::NonZeroU32,
+    str::FromStr,
+    sync::Arc,
+    task::{Context, Poll},
+    time::Duration,
+};
+use tower_layer::Layer;
+use tower_service::Service;
 
-type ArcRatelimiter =
-    Arc<RateLimiter<SocketAddr, DefaultKeyedStateStore<SocketAddr>, DefaultClock>>;
+static PROXY_HEADER: HeaderName = HeaderName::from_static("x-forwarded-for");
+
+type ArcRatelimiter = Arc<RateLimiter<IpAddr, DefaultKeyedStateStore<IpAddr>, DefaultClock>>;
+type BoxError = Box<dyn StdError + Send + Sync + 'static>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -47,7 +57,17 @@ pub enum Error {
 #[derive(Debug)]
 struct WaitUntil(u64);
 
-impl Reject for WaitUntil {}
+impl IntoResponse for WaitUntil {
+    fn into_response(self) -> Response {
+        let wait_until = self.0;
+
+        let http_reply = (
+            [(RETRY_AFTER, wait_until)],
+            format!("Too many requests. Retry in {} seconds", wait_until),
+        );
+        (StatusCode::TOO_MANY_REQUESTS, http_reply).into_response()
+    }
+}
 
 /// Ratelimit configuration  
 ///
@@ -56,6 +76,7 @@ impl Reject for WaitUntil {}
 #[derive(Clone, Copy)]
 pub struct Configuration {
     active: bool,
+    trust_proxy: bool,
     period: Duration,
     burst_quota: u32,
 }
@@ -63,40 +84,49 @@ pub struct Configuration {
 impl Configuration {
     /// Create a new instance of `Configuration`
     pub fn new() -> Self {
-        Self {
-            active: true,
-            // 50 request per hour per IP
-            period: Duration::from_secs(3600),
-            burst_quota: 50,
-        }
+        Self::default()
     }
 
     /// Set the ratelimiter active  
     /// (only really useful for user controlled configuration)  
+    #[must_use]
     pub fn active(mut self, active: bool) -> Self {
         self.active = active;
-
         self
     }
 
     /// The quota resets every given duration  
+    #[must_use]
     pub fn period(mut self, period: Duration) -> Self {
         self.period = period;
+        self
+    }
 
+    /// Trust the value of the `X-Forwarded-For` header
+    #[must_use]
+    pub fn trust_proxy(mut self, trust_proxy: bool) -> Self {
+        self.trust_proxy = trust_proxy;
         self
     }
 
     /// The quota for every duration  
+    #[must_use]
     pub fn burst_quota(mut self, burst_quota: u32) -> Self {
         self.burst_quota = burst_quota;
-
         self
     }
 }
 
 impl Default for Configuration {
     fn default() -> Self {
-        Self::new()
+        Self {
+            active: true,
+            // Trust the `X-Forwarded-For` header
+            trust_proxy: true,
+            // 50 request per hour per IP
+            period: Duration::from_secs(3600),
+            burst_quota: 50,
+        }
     }
 }
 
@@ -110,109 +140,108 @@ impl TryInto<Quota> for Configuration {
     }
 }
 
-/// Check if the IP is ratelimited. If it is, reject the request
-fn check_ratelimit(
-    rate_limiter: &ArcRatelimiter,
-    ip_address: Option<SocketAddr>,
-) -> Result<(), Rejection> {
-    let ip_address = ip_address.unwrap();
-
-    rate_limiter.check_key(&ip_address).map_err(|not_until| {
-        let wait_duration = not_until
-            .wait_time_from(DefaultClock::default().now())
-            .as_secs();
-
-        WaitUntil(wait_duration).into()
-    })
+/// Ratelimit service for axum servers
+#[derive(Clone)]
+pub struct RatelimitService<S> {
+    inner: S,
+    config: Configuration,
+    limiter: ArcRatelimiter,
 }
 
-/// Use this as your recover function for the filter  
-///
-/// This is required because we throw a rejection to skip the execution of any filters after the ratelimiter  
-/// (I currently don't know any other way to achieve this with warp)
-///
-#[doc(hidden)]
-// this function needs to return a `TryFuture`
-#[allow(clippy::unused_async)]
-pub async fn __recover_fn(rejection: Rejection) -> Result<impl Reply, Rejection> {
-    if let Some(wait_until) = rejection.find::<WaitUntil>() {
-        let wait_until = wait_until.0;
-
-        let http_reply = warp::reply::with_header(
-            format!("Too many requests. Retry in {} seconds", wait_until),
-            RETRY_AFTER,
-            wait_until,
-        );
-        Ok(warp::reply::with_status(
-            http_reply,
-            StatusCode::TOO_MANY_REQUESTS,
-        ))
-    } else {
-        Err(rejection)
+impl<S> RatelimitService<S> {
+    /// Construct a new ratelimit service
+    pub fn new(
+        inner: S,
+        config: Configuration,
+    ) -> Result<Self, <Configuration as TryInto<Quota>>::Error> {
+        Ok(Self {
+            inner,
+            config,
+            limiter: Arc::new(RateLimiter::keyed(config.try_into()?)),
+        })
     }
 }
 
-/// Filter that ratelimits all logic that follows this filter
-pub fn ratelimit(
-    config: Configuration,
-) -> Result<impl Filter<Extract = (), Error = Rejection> + Clone, Error> {
-    let active = config.active;
-    let rate_limiter = Arc::new(RateLimiter::keyed(config.try_into()?));
+impl<S, B> Service<Request<B>> for RatelimitService<S>
+where
+    S: Service<Request<B>, Response = Response> + Clone + Send + 'static,
+    S::Error: Into<BoxError>,
+    S::Future: Send,
+    B: Send + 'static,
+{
+    type Error = BoxError;
+    type Response = Response;
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    let filter = warp::addr::remote()
-        .and_then(move |ip_address| {
-            let rate_limiter = Arc::clone(&rate_limiter);
+    #[inline]
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx).map_err(Into::into)
+    }
 
-            async move {
-                if active {
-                    check_ratelimit(&rate_limiter, ip_address)
+    fn call(&mut self, req: Request<B>) -> Self::Future {
+        let mut inner = self.inner.clone();
+        let config = self.config;
+        let limiter = Arc::clone(&self.limiter);
+
+        async move {
+            if config.active {
+                let mut req_parts = RequestParts::new(req);
+                let ip_addr = if config.trust_proxy {
+                    // Read the value of the `X-Forwarded-For` header and attempt to parse it into an IP address
+                    // We ignore all errors here since they are most likely the result of a reverse proxy misconfiguration
+                    // Just logging a generic message out should be enough
+                    if let Some(Ok(Ok(ip_addr))) = req_parts
+                        .headers()
+                        .get(&PROXY_HEADER)
+                        .map(|header_value| header_value.to_str().map(FromStr::from_str))
+                    {
+                        ip_addr
+                    } else {
+                        error!("Failed to parse the value of the {PROXY_HEADER} header into an IP address. Check your reverse proxy configuration!");
+                        return Ok(StatusCode::BAD_REQUEST.into_response());
+                    }
                 } else {
-                    Ok(())
+                    let ConnectInfo(socket_addr) =
+                        ConnectInfo::<SocketAddr>::from_request(&mut req_parts).await?;
+
+                    socket_addr.ip()
+                };
+
+                if let Err(not_until) = limiter.check_key(&ip_addr) {
+                    let wait_until = not_until
+                        .wait_time_from(DefaultClock::default().now())
+                        .as_secs();
+
+                    return Ok(WaitUntil(wait_until).into_response());
                 }
+
+                inner.call(req_parts.try_into_request().unwrap()).await.map_err(Into::into)
+            } else {
+                inner.call(req).await.map_err(Into::into)
             }
-        })
-        .untuple_one();
-
-    Ok(filter)
-}
-
-/// Use this on with `.with`
-/// Like: `warp::any().with(ratelimit!(Config::default())?)`
-///
-#[macro_export]
-macro_rules! ratelimit {
-    // Create a `WrapFn` using `ratelimit!(fn_from_config: )`
-    // Input: [ratelimit configuration]
-    (from_config: $config:expr) => {{
-        $crate::ratelimit!(fn_from_config: $config).map($crate::warp::wrap_fn)
-    }};
-
-    // Create a function that can be used for the `warp::wrap_fn` function
-    // Input: [ratelimit configuration]
-    (fn_from_config: $config:expr) => {{
-        $crate::ratelimit($config)
-            .map(|ratelimit_filter| $crate::ratelimit!(fn_from_filter: ratelimit_filter))
-    }};
-
-    // Create a `warp::wrap_fn` compatible function that uses the `__recover_fn` for recovering
-    // Input: [warp filter]
-    (fn_from_filter: $ratelimit_filter:expr) => {{
-        let ratelimit_filter = $ratelimit_filter;
-
-        move |filter| {
-            ratelimit_filter
-                .clone()
-                .and(filter)
-                .recover($crate::__recover_fn)
         }
-    }};
-
-    // Create a `WrapFn` from the given filter using `ratelimit!(fn_from_filter: )`
-    // Input: [warp filter]
-    (from_filter: $ratelimit_filter:expr) => {{
-        warp::wrap_fn($crate::ratelimit!(fn_from_filter: $ratelimit_filter))
-    }};
+        .boxed()
+    }
 }
 
-#[doc(hidden)]
-pub use warp;
+/// Layer for the ratelimit service
+#[derive(Clone, Copy)]
+pub struct RatelimitLayer {
+    config: Configuration,
+}
+
+impl RatelimitLayer {
+    /// Construct a new ratelimit layer
+    pub fn new(config: Configuration) -> Self {
+        Self { config }
+    }
+}
+
+impl<S> Layer<S> for RatelimitLayer {
+    type Service = RatelimitService<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        RatelimitService::new(inner, self.config)
+            .expect("Broken configuration passed to ratelimit layer")
+    }
+}

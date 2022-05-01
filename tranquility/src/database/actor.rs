@@ -1,11 +1,9 @@
-use {
-    crate::error::Error,
-    chrono::{DateTime, Utc},
-    ormx::Table,
-    serde_json::Value,
-    sqlx::PgPool,
-    uuid::Uuid,
-};
+use crate::error::Error;
+use ormx::Table;
+use serde_json::Value;
+use sqlx::PgPool;
+use time::OffsetDateTime;
+use uuid::Uuid;
 
 #[derive(Clone, Table)]
 #[ormx(id = id, table = "actors", deletable, insertable)]
@@ -26,9 +24,10 @@ pub struct Actor {
     pub remote: bool,
 
     #[ormx(default)]
-    pub created_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
+
     #[ormx(default)]
-    pub updated_at: DateTime<Utc>,
+    pub updated_at: OffsetDateTime,
 }
 
 impl Actor {

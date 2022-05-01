@@ -1,14 +1,12 @@
-use {
-    crate::{
-        activitypub::{fetcher, Clean},
-        database::Actor,
-        error::Error,
-        state::ArcState,
-    },
-    ormx::Table,
-    tranquility_types::activitypub::Activity,
-    warp::http::StatusCode,
+use crate::{
+    activitypub::{fetcher, Clean},
+    database::Actor,
+    error::Error,
+    state::ArcState,
 };
+use http::StatusCode;
+use ormx::Table;
+use tranquility_types::activitypub::Activity;
 
 pub async fn handle(state: &ArcState, mut activity: Activity) -> Result<StatusCode, Error> {
     // Update activities are usually only used to update the actor
