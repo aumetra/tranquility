@@ -1,6 +1,3 @@
-// Warnings related to those lints are caused by expanded SQLx code
-#![allow(clippy::similar_names)]
-
 use crate::error::Error;
 use async_trait::async_trait;
 use sqlx::PgPool;
@@ -46,7 +43,9 @@ impl From<ObjectTimestamp> for OffsetDateTime {
 }
 
 #[inline]
-/// Get the timestamp of the activity. If the activity doesn't exist, default to the current time
+/// Get the timestamp of the activity
+///
+/// If the activity doesn't exist the current time is returned
 async fn last_activity_timestamp(
     conn_pool: &PgPool,
     last_activity_id: Option<Uuid>,

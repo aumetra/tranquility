@@ -4,12 +4,10 @@ use crate::{
     database::{InsertExt, InsertOAuthApplication},
     error::Error,
     state::ArcState,
+    util::Form,
 };
 use axum::{
-    extract::{ContentLengthLimit, Form},
-    response::IntoResponse,
-    routing::post,
-    Extension, Json, Router,
+    extract::ContentLengthLimit, response::IntoResponse, routing::post, Extension, Json, Router,
 };
 use serde::Deserialize;
 use uuid::Uuid;
@@ -32,6 +30,7 @@ async fn create(
     Extension(state): Extension<ArcState>,
     ContentLengthLimit(Form(form)): ContentLengthLimit<Form<RegisterForm>, MAX_BODY_SIZE>,
 ) -> Result<impl IntoResponse, Error> {
+    debug!("hewwo");
     let client_id = Uuid::new_v4();
     let client_secret = crate::crypto::token::generate();
 

@@ -23,7 +23,7 @@ struct TokenTemplate {
 pub fn routes(state: &State) -> Router {
     let token_router = Router::new()
         .route("/token", post(token::token))
-        .layer(CorsLayer::very_permissive().allow_methods(OAUTH_TOKEN_ALLOWED_METHODS.to_vec()));
+        .layer(CorsLayer::permissive().allow_methods(OAUTH_TOKEN_ALLOWED_METHODS.to_vec()));
 
     let authorize_router =
         Router::new().route("/authorize", get(authorize::get).post(authorize::post));
@@ -33,6 +33,7 @@ pub fn routes(state: &State) -> Router {
         .nest("/oauth", router)
         .route_layer(ratelimit_layer!(
             state.config.ratelimit.active,
+            state.config.ratelimit.use_forwarded_header,
             state.config.ratelimit.authentication_quota,
         ))
 }

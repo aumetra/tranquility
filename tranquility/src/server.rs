@@ -15,13 +15,15 @@ pub fn create_router_make_service(
     let router = Router::new()
         .merge(crate::activitypub::routes())
         .merge(crate::api::routes(state))
-        .merge(crate::well_known::routes())
-        .layer(Extension(Arc::clone(state)))
-        .layer(TraceLayer::new_for_http())
-        .layer(CompressionLayer::new());
+        .merge(crate::well_known::routes());
 
     #[cfg(feature = "email")]
     let router = router.merge(crate::email::routes());
+
+    let router = router
+        .layer(Extension(Arc::clone(state)))
+        .layer(TraceLayer::new_for_http())
+        .layer(CompressionLayer::new());
 
     router.into_make_service_with_connect_info()
 }

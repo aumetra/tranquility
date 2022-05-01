@@ -78,8 +78,10 @@ pub fn actor(
 }
 
 /// Instantiate an ActivityPub object
+#[allow(clippy::too_many_arguments)]
 pub fn object(
     config: &Configuration,
+    r#type: &str,
     owner_url: &str,
     summary: &str,
     content: &str,
@@ -94,6 +96,7 @@ pub fn object(
 
     let object = Object {
         id,
+        r#type: r#type.into(),
 
         summary: summary.into(),
         content: content.into(),

@@ -61,9 +61,6 @@ where
 }
 
 pub fn routes() -> Router {
-    // Enable CORS for all API endpoints
-    // See: https://github.com/tootsuite/mastodon/blob/85324837ea1089c00fb4aefc31a7242847593b52/config/initializers/cors.rb
-
     let v1_router = Router::new()
         .merge(accounts::routes())
         .merge(apps::routes())
@@ -72,7 +69,7 @@ pub fn routes() -> Router {
 
     Router::new()
         .nest("/api/v1", v1_router)
-        .layer(CorsLayer::very_permissive().allow_methods(API_ALLOWED_METHODS.to_vec()))
+        .layer(CorsLayer::permissive().allow_methods(API_ALLOWED_METHODS.to_vec()))
 }
 
 pub mod accounts;

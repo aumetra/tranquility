@@ -41,6 +41,7 @@ async fn create(
 
     let (object_id, mut object) = crate::activitypub::instantiate::object(
         &state.config,
+        "Note",
         author.id.as_str(),
         form.spoiler_text.as_str(),
         form.status.as_str(),

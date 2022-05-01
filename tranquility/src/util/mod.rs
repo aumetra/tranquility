@@ -29,11 +29,13 @@ where
     type Rejection = <AxumForm<T> as FromRequest<B>>::Rejection;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        if let Ok(Json(val)) = Json::<T>::from_request(req).await {
-            Ok(Self(val))
-        } else {
-            let AxumForm(val) = AxumForm::from_request(req).await?;
-            Ok(Self(val))
+        match Json::from_request(req).await {
+            Ok(Json(val)) => Ok(Self(val)),
+            Err(err) => {
+                trace!(error = %err, "Form could not get deserialised as JSON. Attempting URL encoded");
+                let AxumForm(val) = AxumForm::from_request(req).await?;
+                Ok(Self(val))
+            }
         }
     }
 }

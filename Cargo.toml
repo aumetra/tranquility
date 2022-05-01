@@ -1,6 +1,5 @@
 [profile.release]
 lto = "thin"
-opt-level = 3
 strip = true
 
 [workspace]
@@ -15,4 +14,3 @@ members = [
 # TODO: Remove once SQLx v0.6 is out
 [patch.crates-io]
 sqlx = { git = "https://github.com/launchbadge/sqlx.git", rev = "826e63fc11fc43ce92099b6844d8a9155bf38356" }
-sqlx-core = { git = "https://github.com/launchbadge/sqlx.git", rev = "826e63fc11fc43ce92099b6844d8a9155bf38356" }

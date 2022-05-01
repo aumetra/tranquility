@@ -29,7 +29,7 @@ pub struct ConfigurationInstance {
     pub description: String,
 
     pub character_limit: usize,
-    pub upload_limit: usize,
+    pub upload_limit: u64,
 
     pub moderators: Vec<String>,
 }
@@ -48,6 +48,7 @@ pub struct ConfigurationJaeger {
 /// Struct holding the ratelimit specific configuration values
 pub struct ConfigurationRatelimit {
     pub active: bool,
+    pub use_forwarded_header: bool,
 
     pub authentication_quota: u32,
     pub registration_quota: u32,
