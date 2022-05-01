@@ -54,8 +54,6 @@ port = 6831
 [ratelimit]
 # Activates ratelimiting for routes responsible for authentication and for the registration endpoint
 active = true
-# Use the value of the X-Forwarded-For header instead of the socket address. Enable this when running Tranquility behind a reverse proxy
-use-forwarded-header = true
 # Those values are quotas per hour respectively
 authentication-quota = 50
 registration-quota = 10

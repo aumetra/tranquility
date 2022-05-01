@@ -52,7 +52,6 @@ fn test_config() -> Configuration {
         },
         ratelimit: ConfigurationRatelimit {
             active: false,
-            use_forwarded_header: false,
             authentication_quota: 1,
             registration_quota: 1,
         },

@@ -87,7 +87,7 @@ pub fn routes(state: &State) -> Router {
         .route("/api/tranquility/v1/register", post(register))
         .route_layer(ratelimit_layer!(
             state.config.ratelimit.active,
-            state.config.ratelimit.use_forwarded_header,
+            !state.config.tls.serve_tls_directly,
             state.config.ratelimit.registration_quota,
         ))
 }

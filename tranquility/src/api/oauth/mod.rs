@@ -33,7 +33,7 @@ pub fn routes(state: &State) -> Router {
         .nest("/oauth", router)
         .route_layer(ratelimit_layer!(
             state.config.ratelimit.active,
-            state.config.ratelimit.use_forwarded_header,
+            !state.config.tls.serve_tls_directly,
             state.config.ratelimit.authentication_quota,
         ))
 }
