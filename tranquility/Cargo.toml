@@ -37,7 +37,7 @@ sha2 = "0.10.2"
 sqlx = { version = "0.5.12", features = ["json", "offline", "postgres", "runtime-tokio-rustls", "time", "uuid"] } # Needs to be v0.5.12 for the crates.io patch to work
 thiserror = "1.0.31"
 time = { version = "0.3.9", features = ["formatting"] }
-tokio = { version = "1.18.1", features = ["full", "tracing"] }
+tokio = { version = "1.18.2", features = ["full", "tracing"] }
 toml = "0.5.9"
 tower = "0.4.12"
 tower-http = { version = "0.3.3", features = ["compression-full", "cors", "trace"] }
