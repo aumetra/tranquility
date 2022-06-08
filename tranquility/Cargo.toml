@@ -53,7 +53,7 @@ lettre = { version = "0.10.0-rc.7", default-features = false, features = ["build
 # Jaeger/OpenTelemetry (optional)
 opentelemetry = { version = "0.17.0", features = ["rt-tokio"], optional = true }
 opentelemetry-jaeger = { version = "0.16.0", features = ["rt-tokio"], optional = true }
-tracing-opentelemetry = { version = "0.17.2", optional = true }
+tracing-opentelemetry = { version = "0.17.3", optional = true }
 
 # Markdown posts (optional)
 pulldown-cmark = { version = "0.9.1", default-features = false, optional = true }
