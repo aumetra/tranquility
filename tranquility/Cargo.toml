@@ -41,7 +41,7 @@ tokio = { version = "1.19.2", features = ["full", "tracing"] }
 toml = "0.5.9"
 tower = "0.4.12"
 tower-http = { version = "0.3.4", features = ["compression-full", "cors", "trace"] }
-tracing = { version = "0.1.34", features = ["attributes"] }
+tracing = { version = "0.1.35", features = ["attributes"] }
 tracing-subscriber = { version = "0.3.11", features = ["env-filter", "parking_lot"] }
 url = "2.2.2"
 uuid = { version = "1.1.1", features = ["serde", "v4"] }
