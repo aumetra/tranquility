@@ -10,7 +10,7 @@ ammonia = "3.2.0"
 argh = "0.1.7"
 askama = "0.11.1"
 async-trait = "0.1.56"
-axum = "0.5.8"
+axum = "0.5.9"
 axum-macros = "0.2.2"
 axum-server = { version = "0.4.0", features = ["tls-rustls"] }
 base64 = "0.13.0"
