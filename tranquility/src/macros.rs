@@ -162,9 +162,9 @@ macro_rules! match_handler {
             match $activity.r#type.as_str() {
                 $(
                     stringify!($type) =>
-                        crate::activitypub::handler::[<$type:lower>]::handle(&$state, $activity).await,
+                        $crate::activitypub::handler::[<$type:lower>]::handle(&$state, $activity).await,
                 )+
-                _ => Err(crate::error::Error::UnknownActivity),
+                _ => Err($crate::error::Error::UnknownActivity),
             }
         }
     }
