@@ -32,7 +32,7 @@ rsa = "0.6.1"
 rust-argon2 = "1.0.0"
 serde = { version = "1.0.139", features = ["derive"] }
 serde_json = "1.0.82"
-serde_qs = "0.10.0"
+serde_qs = "0.10.1"
 sha2 = "0.10.2"
 sqlx = { version = "0.5.12", features = ["json", "offline", "postgres", "runtime-tokio-rustls", "time", "uuid"] } # Needs to be v0.5.12 for the crates.io patch to work
 thiserror = "1.0.31"
