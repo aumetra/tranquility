@@ -42,7 +42,7 @@ toml = "0.5.9"
 tower = "0.4.13"
 tower-http = { version = "0.3.4", features = ["compression-full", "cors", "trace"] }
 tracing = { version = "0.1.35", features = ["attributes"] }
-tracing-subscriber = { version = "0.3.14", features = ["env-filter", "parking_lot"] }
+tracing-subscriber = { version = "0.3.15", features = ["env-filter", "parking_lot"] }
 url = "2.2.2"
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
 validator = { version = "0.15.0", features = ["derive"] }
