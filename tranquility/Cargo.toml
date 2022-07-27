@@ -56,7 +56,7 @@ opentelemetry-jaeger = { version = "0.16.0", features = ["rt-tokio"], optional =
 tracing-opentelemetry = { version = "0.17.4", optional = true }
 
 # Markdown posts (optional)
-pulldown-cmark = { version = "0.9.1", default-features = false, optional = true }
+pulldown-cmark = { version = "0.9.2", default-features = false, optional = true }
 
 # Memory allocators (optional)
 jemalloc = { package = "jemallocator", version = "0.5.0", optional = true }
