@@ -11,6 +11,6 @@ governor = "0.4.2"
 thiserror = "1.0.31"
 tower-layer = "0.3.1"
 tower-service = "0.3.2"
-tracing = "0.1.35"
+tracing = "0.1.36"
 
 [features]
