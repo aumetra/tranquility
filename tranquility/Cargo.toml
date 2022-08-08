@@ -12,7 +12,7 @@ askama = "0.11.1"
 async-trait = "0.1.57"
 axum = "0.5.13"
 axum-macros = "0.2.3"
-axum-server = { version = "0.4.1", features = ["tls-rustls"] }
+axum-server = { version = "0.4.2", features = ["tls-rustls"] }
 base64 = "0.13.0"
 cfg-if = "1.0.0"
 futures-util = "0.3.21"
