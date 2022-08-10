@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { version = "0.5.13", default-features = false }
+axum = { version = "0.5.15", default-features = false }
 headers = "0.3.7"
