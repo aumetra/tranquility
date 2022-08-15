@@ -15,7 +15,7 @@ axum-macros = "0.2.3"
 axum-server = { version = "0.4.2", features = ["tls-rustls"] }
 base64 = "0.13.0"
 cfg-if = "1.0.0"
-futures-util = "0.3.21"
+futures-util = "0.3.23"
 headers = "0.3.7"
 hex = "0.4.3"
 http = "0.2.8"
