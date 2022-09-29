@@ -34,9 +34,9 @@ fn init_tracing(_config: &Configuration) {
             let host = _config.jaeger.host.as_str();
             let port = _config.jaeger.port;
 
-            let jaeger_endpoint = opentelemetry_jaeger::new_pipeline()
+            let jaeger_endpoint = opentelemetry_jaeger::new_agent_pipeline()
                 .with_service_name(env!("CARGO_PKG_NAME"))
-                .with_agent_endpoint((host, port))
+                .with_endpoint((host, port))
                 .install_batch(opentelemetry::runtime::Tokio)
                 .expect("Couldn't install jaeger pipeline");
 

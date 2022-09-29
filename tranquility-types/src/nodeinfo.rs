@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 /// Struct representing an entry in the "links" array
 pub struct Link {
     pub rel: String,
@@ -20,13 +20,13 @@ impl Link {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 /// Struct representing a collection of links pointing to Nodeinfo entities
 pub struct LinkCollection {
     pub links: Vec<Link>,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing a [Nodeinfo 2.1](https://github.com/jhass/nodeinfo/blob/1fcd229a84031253eb73a315e89d3f7f13f117b4/PROTOCOL.md) entity
 pub struct Nodeinfo {
@@ -55,7 +55,7 @@ impl Default for Nodeinfo {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing the `usage` field of a Nodeinfo entity
 pub struct Usage {
@@ -64,7 +64,7 @@ pub struct Usage {
     pub local_comments: u64,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 /// Struct representing the `users` field of a "Usage" entity
 pub struct UsageUsers {
@@ -73,7 +73,7 @@ pub struct UsageUsers {
     pub active_month: u64,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 /// Struct representing the `software` field of a Nodeinfo entity
 pub struct Software {
     pub name: String,
@@ -82,7 +82,7 @@ pub struct Software {
     pub homepage: String,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 /// Struct representing the `services` field of a Nodeinfo entity
 pub struct Services {
     pub inbound: Vec<String>,
