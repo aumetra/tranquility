@@ -5,7 +5,7 @@ use crate::{
 };
 use http::header::DATE;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Part<'a> {
     /// Header with key and value
     Header(&'a str, &'a str),

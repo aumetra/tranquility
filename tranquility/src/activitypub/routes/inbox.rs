@@ -26,7 +26,7 @@ async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activit
         }
     };
 
-    identity_match.then(|| activity).ok_or(Error::Unauthorized)
+    identity_match.then_some(activity).ok_or(Error::Unauthorized)
 }
 
 /// Inbox payload extractor
@@ -63,7 +63,7 @@ where
             remote_actor.public_key.public_key_pem,
         )
         .await?
-        .then(|| ())
+        .then_some(())
         .ok_or_else(|| StatusCode::UNAUTHORIZED.into_response())?;
 
         let activity = verify_ownership(Arc::clone(state), activity).await?;
