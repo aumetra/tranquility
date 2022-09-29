@@ -26,7 +26,9 @@ async fn verify_ownership(state: ArcState, activity: Activity) -> Result<Activit
         }
     };
 
-    identity_match.then_some(activity).ok_or(Error::Unauthorized)
+    identity_match
+        .then_some(activity)
+        .ok_or(Error::Unauthorized)
 }
 
 /// Inbox payload extractor
