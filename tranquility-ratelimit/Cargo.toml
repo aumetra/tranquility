@@ -6,7 +6,7 @@ license = "MIT"
 
 [dependencies]
 axum = { version = "0.5.16", default-features = false }
-futures-util = "0.3.24"
+futures-util = "0.3.25"
 governor = "0.5.0"
 thiserror = "1.0.37"
 tower-layer = "0.3.2"
