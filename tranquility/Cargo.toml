@@ -85,4 +85,4 @@ markdown = ["pulldown-cmark"]
 mastodon-api = ["tranquility-types/mastodon"]
 
 [dev-dependencies]
-jsonschema = { version = "0.16.0", default-features = false }
+jsonschema = { version = "0.16.1", default-features = false }
