@@ -24,7 +24,7 @@
               [
                 nixpkgs-fmt
                 (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
-              ];
+              ] ++ lib.optional stdenv.isDarwin [ libiconv darwin.apple_sdk.frameworks.SystemConfiguration ];
           };
         });
 }
