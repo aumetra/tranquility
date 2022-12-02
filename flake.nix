@@ -25,6 +25,7 @@
                 postgresql_14
                 nixpkgs-fmt
                 (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
+                sqlx-cli
               ] ++ lib.optional stdenv.isDarwin [ libiconv darwin.apple_sdk.frameworks.SystemConfiguration ];
           };
         });
